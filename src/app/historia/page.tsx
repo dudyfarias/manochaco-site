@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { ButtonLink } from "@/components/ButtonLink";
 import { SectionTitle } from "@/components/SectionTitle";
+import { SmartImage } from "@/components/SmartImage";
 import { StatCard } from "@/components/StatCard";
-import { clubStats } from "@/data/stats";
+import { clubStats } from "@/data";
 
 export const metadata: Metadata = {
   title: "História",
@@ -38,9 +38,11 @@ export default function HistoriaPage() {
   return (
     <div className="bg-[#f7f5ef]">
       <section className="relative overflow-hidden bg-black text-white">
-        <Image
-          src="/team/history-hero.png"
-          alt="Placeholder visual histórico do Clube Atlético Manochaco"
+        <SmartImage
+          src="/team/bastidores.jpg"
+          alt="Foto real de bastidores do Clube Atlético Manochaco"
+          fallbackLabel="História Manochaco"
+          fallbackText="Foto histórica em breve"
           fill
           priority
           sizes="100vw"

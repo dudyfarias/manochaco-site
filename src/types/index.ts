@@ -5,30 +5,54 @@ export type CompetitionKind =
   | "chuteira"
   | "amistoso";
 
+export type CompetitionType = "league" | "cup" | "friendly" | "other";
+
 export type MatchStatus = "played" | "scheduled";
+
+export type MatchResult = "win" | "draw" | "loss";
 
 export type PlayerPosition =
   | "Goleiro"
-  | "Fixo"
   | "Ala"
-  | "Meia"
-  | "Pivô";
+  | "Meio Campo"
+  | "Zagueiro"
+  | "Atacante";
+
+export type PlayerStatus = "active" | "former" | "staff";
+
+export type {
+  Album,
+  BoundingBox,
+  FaceDetectionSuggestion,
+  FaceRecognitionStatus,
+  Photo,
+  PhotoCategory,
+  PhotoPlayerTag,
+  PhotoTagType,
+  PlayerFaceReference,
+} from "./photos";
 
 export type Player = {
   id: string;
   slug: string;
+  name?: string;
   fullName: string;
   nickname: string;
   position: PlayerPosition;
   number?: number;
+  shirtNumber?: number;
+  status: PlayerStatus;
   image: string;
+  profileImage?: string;
   joinedYear: number;
   bio: string;
   stats: {
     matches: number;
     goals: number;
     assists: number;
-    titles: number;
+    yellowCards?: number;
+    redCards?: number;
+    goalParticipation?: number;
   };
 };
 
@@ -38,6 +62,16 @@ export type Competition = {
   name: string;
   shortName: string;
   description: string;
+  type: CompetitionType;
+};
+
+export type Season = {
+  id: string;
+  year: number;
+  name: string;
+  slug: string;
+  label: string;
+  sourceSheets: string[];
 };
 
 export type MatchTeam = {
@@ -59,6 +93,16 @@ export type Match = {
   round: string;
   venue: string;
   status: MatchStatus;
+  opponent?: string;
+  competition?: string;
+  competitionSlug?: string;
+  season?: string;
+  seasonSlug?: string;
+  manochacoScore?: number;
+  opponentScore?: number;
+  result?: MatchResult;
+  stage?: string;
+  location?: string;
   home: MatchTeam;
   away: MatchTeam;
   image: string;
@@ -67,6 +111,24 @@ export type Match = {
   contributions: MatchContribution[];
   relatedPlayerSlugs: string[];
   photoIds: string[];
+};
+
+export type PlayerStatLine = {
+  id: string;
+  playerSlug: string;
+  fullName: string;
+  nickname: string;
+  competitionId?: string;
+  competitionSlug?: string;
+  season?: string;
+  seasonSlug?: string;
+  sourceSheet: string;
+  matches: number;
+  goals: number;
+  assists: number;
+  yellowCards?: number;
+  redCards?: number;
+  goalParticipation: number;
 };
 
 export type RankingRow = {
@@ -78,6 +140,7 @@ export type RankingRow = {
 };
 
 export type ClubStats = {
+  totalMatches: number;
   matches: number;
   wins: number;
   draws: number;
@@ -85,31 +148,20 @@ export type ClubStats = {
   goalsFor: number;
   goalsAgainst: number;
   goalDifference: number;
+  winRate: number;
+  titles: number;
   futFudasTitles: number;
 };
 
-export type Photo = {
+export type StaffMember = {
   id: string;
+  name: string;
   slug: string;
-  title: string;
-  albumId: string;
+  playerSlug?: string;
+  role: string;
+  period: string;
+  status: "current" | "former";
   image: string;
-  alt: string;
-  date: string;
-  caption: string;
-};
-
-export type PhotoPlayer = {
-  photoId: string;
-  playerSlug: string;
-};
-
-export type Album = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  coverImage: string;
-  photoIds: string[];
-  date: string;
+  summary: string;
+  highlights: string[];
 };

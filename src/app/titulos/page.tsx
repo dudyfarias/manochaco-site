@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CompetitionBadge } from "@/components/CompetitionBadge";
 import { SectionTitle } from "@/components/SectionTitle";
-import { competitions } from "@/data/competitions";
+import { competitions } from "@/data";
 
 export const metadata: Metadata = {
   title: "Títulos e campanhas",

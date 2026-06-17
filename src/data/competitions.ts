@@ -8,6 +8,7 @@ export const competitions: Competition[] = [
     shortName: "Liga7",
     description:
       "Competição da Playball em que o Manochaco iniciou na Série D e chegou à Série B.",
+    type: "league",
   },
   {
     id: "copa-futfudas",
@@ -16,6 +17,7 @@ export const competitions: Competition[] = [
     shortName: "FutFudas",
     description:
       "Campeonato à parte da Playball Pompeia, em jogo único: quem vence é campeão.",
+    type: "cup",
   },
   {
     id: "copa-amstel",
@@ -24,6 +26,7 @@ export const competitions: Competition[] = [
     shortName: "Amstel",
     description:
       "Torneio de sábado no calendário competitivo do Clube Atlético Manochaco.",
+    type: "cup",
   },
   {
     id: "chuteira",
@@ -32,6 +35,7 @@ export const competitions: Competition[] = [
     shortName: "Chuteira",
     description:
       "Competição que amplia o calendário do clube contra adversários tradicionais do futebol 7.",
+    type: "league",
   },
   {
     id: "amistoso",
@@ -40,5 +44,6 @@ export const competitions: Competition[] = [
     shortName: "Amistoso",
     description:
       "Jogos de preparação, integração do elenco e testes para novas formações.",
+    type: "friendly",
   },
 ];

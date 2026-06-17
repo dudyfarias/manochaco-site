@@ -33,6 +33,11 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# raw private data
+/data/raw/*
+!/data/raw/.gitkeep
+!/data/raw/README.md
+
 # vercel
 .vercel
 

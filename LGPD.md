@@ -36,6 +36,22 @@ uso real:
 - Manter revisão humana obrigatória.
 - Permitir revogação de consentimento.
 - Evitar retenção de embeddings faciais quando não forem necessários.
+- Manter fotos de referência fora do site público.
+- Exibir publicamente apenas marcações confirmadas.
+- Tratar sugestões de IA como internas até aprovação.
+- Registrar finalidade: organização do acervo esportivo do clube.
+- Permitir remoção de foto, marcação e referência facial.
+
+## Consentimento futuro
+
+Uma futura tela `/admin/consentimentos` deve registrar:
+
+- jogador;
+- status de consentimento;
+- data da autorização;
+- finalidade;
+- opção de revogar;
+- observações administrativas.
 
 ## Supabase e Storage
 

@@ -1,6 +1,7 @@
 import type { ClubStats, RankingRow } from "@/types";
 
 export const clubStats: ClubStats = {
+  totalMatches: 36,
   matches: 36,
   wins: 17,
   draws: 7,
@@ -8,6 +9,8 @@ export const clubStats: ClubStats = {
   goalsFor: 113,
   goalsAgainst: 83,
   goalDifference: 30,
+  winRate: 47.22,
+  titles: 2,
   futFudasTitles: 2,
 };
 

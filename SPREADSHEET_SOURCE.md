@@ -121,6 +121,20 @@ O site público deve consumir apenas:
 - títulos
 - fotos e marcações aprovadas
 
+## Uso na versão estática atual
+
+Nesta versão, `src/data/players.ts` usa a aba `Estatística Histórica` como
+referência para os perfis públicos de jogadores. Foram considerados apenas os
+campos esportivos: jogador, apelido, posição, número de camisa, data de
+ingresso, presença, gols, assistências e status `Saiu do time`.
+
+O campo `Saiu do time` foi convertido para `status`:
+
+- `Não`: atleta ativo.
+- `Sim`: jogador histórico/ex-jogador.
+
+As informações financeiras da planilha continuam fora do site público.
+
 O painel admin poderá consumir:
 
 - importações da planilha

@@ -1,23 +1,36 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CompetitionBadge } from "@/components/CompetitionBadge";
+import { EmptyState } from "@/components/EmptyState";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { SectionTitle } from "@/components/SectionTitle";
+import { SmartImage } from "@/components/SmartImage";
 import { StatCard } from "@/components/StatCard";
-import { matches } from "@/data/matches";
+import { matches } from "@/data";
 import {
+  getAlbumForMatch,
   getCompetitionById,
   getMatchBySlug,
+  getPhotosForMatch,
   getPlayerBySlug,
 } from "@/lib/data";
-import { formatDateTime } from "@/lib/format";
-import { photos } from "@/data/photos";
+import { formatDate, formatDateTime } from "@/lib/format";
+import type { Player } from "@/types";
 
 type MatchPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+const resultLabels = {
+  win: "Vitória",
+  draw: "Empate",
+  loss: "Derrota",
+} as const;
+
+function isPlayer(player: Player | undefined): player is Player {
+  return Boolean(player);
+}
 
 export function generateStaticParams() {
   return matches.map((match) => ({
@@ -54,14 +67,22 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const competition = getCompetitionById(match.competitionId);
   const hasScore =
     typeof match.home.score === "number" && typeof match.away.score === "number";
-  const matchPhotos = photos.filter((photo) => match.photoIds.includes(photo.id));
+  const matchPhotos = getPhotosForMatch(match.id, match.photoIds);
+  const matchAlbum = getAlbumForMatch(match.id);
+  const resultLabel = match.result ? resultLabels[match.result] : null;
+  const season = match.season ?? match.seasonSlug ?? new Date(match.date).getFullYear();
+  const relatedPlayers = match.relatedPlayerSlugs
+    .map((playerSlug) => getPlayerBySlug(playerSlug))
+    .filter(isPlayer);
 
   return (
     <div className="bg-[#f7f5ef]">
       <section className="relative overflow-hidden bg-black text-white">
-        <Image
+        <SmartImage
           src={match.image}
           alt={`Imagem da partida ${match.home.name} contra ${match.away.name}`}
+          fallbackLabel={`${match.home.name} x ${match.away.name}`}
+          fallbackText="Foto da partida em breve"
           fill
           priority
           sizes="100vw"
@@ -76,8 +97,15 @@ export default async function MatchPage({ params }: MatchPageProps) {
                   {competition.shortName}
                 </CompetitionBadge>
               ) : null}
+              {resultLabel ? (
+                <span className="rounded-md border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-black uppercase text-zinc-100">
+                  {resultLabel}
+                </span>
+              ) : null}
               <span className="text-sm font-semibold text-zinc-300">
-                {formatDateTime(match.date)}
+                {match.status === "scheduled"
+                  ? formatDateTime(match.date)
+                  : formatDate(match.date)}
               </span>
             </div>
             <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
@@ -94,21 +122,34 @@ export default async function MatchPage({ params }: MatchPageProps) {
             <p className="mt-6 max-w-3xl text-lg leading-8 text-zinc-200">
               {match.summary}
             </p>
+            <div className="mt-8">
+              <Link
+                href="/jogos"
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:border-[#d1a137] hover:text-[#f0c35d]"
+              >
+                Voltar aos jogos
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-16 sm:px-6 lg:grid-cols-4 lg:px-8">
-        <StatCard label="Competição" value={competition?.shortName ?? "-"} detail={match.round} />
-        <StatCard label="Local" value={match.venue} detail="Campo ou arena" />
+      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-16 sm:px-6 lg:grid-cols-5 lg:px-8">
+        <StatCard
+          label="Competição"
+          value={competition?.shortName ?? "-"}
+          detail={match.stage ?? match.round}
+        />
+        <StatCard label="Temporada" value={season} detail="recorte anual" />
+        <StatCard label="Local" value={match.location ?? match.venue} detail="Campo ou arena" />
         <StatCard
           label="Status"
           value={match.status === "played" ? "Finalizado" : "Agendado"}
-          detail="Dados mockados"
+          detail={match.status === "played" ? "Planilha" : "Agenda local"}
         />
         <StatCard
           label="Fotos"
-          value={match.photoIds.length}
+          value={matchPhotos.length}
           detail="Relacionadas à partida"
         />
       </section>
@@ -123,27 +164,34 @@ export default async function MatchPage({ params }: MatchPageProps) {
             />
           </div>
           <div className="space-y-3">
-            {match.highlights.map((highlight) => (
-              <article
-                key={highlight}
-                className="rounded-lg border border-zinc-200 bg-[#f7f5ef] p-5"
-              >
-                <p className="text-base font-bold leading-7 text-zinc-950">
-                  {highlight}
-                </p>
-              </article>
-            ))}
+            {match.highlights.length > 0 ? (
+              match.highlights.map((highlight) => (
+                <article
+                  key={highlight}
+                  className="rounded-lg border border-zinc-200 bg-[#f7f5ef] p-5"
+                >
+                  <p className="text-base font-bold leading-7 text-zinc-950">
+                    {highlight}
+                  </p>
+                </article>
+              ))
+            ) : (
+              <EmptyState
+                title="Resumo em construção"
+                description="A súmula detalhada desta partida será adicionada quando os dados por jogo forem normalizados."
+              />
+            )}
           </div>
         </div>
       </section>
 
-      {match.contributions.length > 0 ? (
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <SectionTitle
-            eyebrow="Participações"
-            title="Gols e assistências"
-            description="Contribuições mockadas por jogador, ligadas pelo slug do atleta."
-          />
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <SectionTitle
+          eyebrow="Participações"
+          title="Jogadores relacionados"
+          description="Contribuições por jogador serão preenchidas quando a súmula por partida estiver normalizada."
+        />
+        {match.contributions.length > 0 ? (
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {match.contributions.map((contribution) => {
               const player = getPlayerBySlug(contribution.playerSlug);
@@ -174,24 +222,65 @@ export default async function MatchPage({ params }: MatchPageProps) {
               );
             })}
           </div>
-        </section>
-      ) : null}
-
-      {matchPhotos.length > 0 ? (
-        <section className="bg-zinc-950 py-16 text-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <SectionTitle
-              eyebrow="Galeria"
-              title="Fotos relacionadas"
-              description="Registros conectados à partida e às marcações de jogadores."
-              tone="dark"
-            />
-            <div className="mt-10">
-              <PhotoGrid photos={matchPhotos} />
-            </div>
+        ) : relatedPlayers.length > 0 ? (
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedPlayers.map((player) => (
+              <Link
+                key={`${match.id}-${player.slug}`}
+                href={`/jogadores/${player.slug}`}
+                className="rounded-lg border border-zinc-200 bg-white p-5 hover:border-[#d1a137]"
+              >
+                <p className="text-sm font-semibold uppercase text-[#9a6a12]">
+                  {player.position}
+                </p>
+                <h3 className="mt-2 text-xl font-black text-zinc-950">
+                  {player.nickname}
+                </h3>
+                <p className="mt-3 text-sm text-zinc-600">{player.fullName}</p>
+              </Link>
+            ))}
           </div>
-        </section>
-      ) : null}
+        ) : (
+          <div className="mt-10">
+            <EmptyState
+              title="Jogadores relacionados ainda não cadastrados"
+              description="A estrutura está pronta para receber escalação, gols e assistências por partida em uma próxima fase."
+            />
+          </div>
+        )}
+      </section>
+
+      <section className="bg-zinc-950 py-16 text-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <SectionTitle
+            eyebrow="Galeria"
+            title="Fotos relacionadas"
+            description="Registros conectados à partida e às marcações de jogadores."
+            tone="dark"
+          />
+          {matchAlbum ? (
+            <div className="mt-5">
+              <Link
+                href={`/galeria/${matchAlbum.slug}`}
+                className="inline-flex min-h-11 items-center rounded-md border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:border-[#d1a137] hover:text-[#f0c35d]"
+              >
+                Ver álbum completo
+              </Link>
+            </div>
+          ) : null}
+          <div className="mt-10">
+            {matchPhotos.length > 0 ? (
+              <PhotoGrid photos={matchPhotos} tone="dark" featured />
+            ) : (
+              <EmptyState
+                dark
+                title="Sem fotos relacionadas"
+                description="Quando as fotos por jogo forem marcadas, este bloco será preenchido automaticamente."
+              />
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

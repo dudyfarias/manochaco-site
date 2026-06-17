@@ -11,7 +11,7 @@ export const matches: Match[] = [
     status: "played",
     home: { name: "Manochaco", score: 6 },
     away: { name: "Panelinha", score: 1 },
-    image: "/team/match-panelinha.png",
+    image: "/team/comemoracao.jpg",
     summary:
       "Vitória de controle, intensidade e aproveitamento alto no terço final.",
     highlights: [
@@ -25,8 +25,15 @@ export const matches: Match[] = [
       { playerSlug: "bruninho", goals: 1, assists: 2 },
       { playerSlug: "madeus", assists: 2 },
     ],
-    relatedPlayerSlugs: ["torres", "dudu", "bruninho", "madeus", "nikollas"],
-    photoIds: ["photo-3", "photo-6"],
+    relatedPlayerSlugs: [
+      "torres",
+      "dudu",
+      "bruninho",
+      "madeus",
+      "nikollas",
+      "raphael-casanova",
+    ],
+    photoIds: ["photo-liga7-2024", "photo-elenco-principal-2024"],
   },
   {
     id: "match-expulsos-2024",
@@ -38,7 +45,7 @@ export const matches: Match[] = [
     status: "played",
     home: { name: "Manochaco", score: 6 },
     away: { name: "Expulsos do Samba", score: 0 },
-    image: "/team/match-expulsos.png",
+    image: "/photos/jogos/manochaco-vs-expulsos-2024-01.jpg",
     summary:
       "Atuação segura, sem sofrer gols, com placar construído em ritmo constante.",
     highlights: [
@@ -53,7 +60,7 @@ export const matches: Match[] = [
       { playerSlug: "victor-erik", assists: 1 },
     ],
     relatedPlayerSlugs: ["torres", "pedrinho", "madeus", "victor-erik"],
-    photoIds: ["photo-2"],
+    photoIds: ["photo-expulsos-2024"],
   },
   {
     id: "match-dopinham-2024",
@@ -65,7 +72,7 @@ export const matches: Match[] = [
     status: "played",
     home: { name: "Manochaco", score: 8 },
     away: { name: "Dopinham Forest", score: 0 },
-    image: "/team/match-dopinham.png",
+    image: "/photos/jogos/liga7-playball-2024-01.jpg",
     summary:
       "Uma das maiores vitórias registradas do clube, com atuação coletiva dominante.",
     highlights: [
@@ -79,8 +86,14 @@ export const matches: Match[] = [
       { playerSlug: "torres", goals: 2 },
       { playerSlug: "ed-gou", assists: 1 },
     ],
-    relatedPlayerSlugs: ["dudu", "bruninho", "torres", "ed-gou"],
-    photoIds: ["photo-1", "photo-5"],
+    relatedPlayerSlugs: [
+      "dudu",
+      "bruninho",
+      "torres",
+      "ed-gou",
+      "raphael-casanova",
+    ],
+    photoIds: ["photo-jose-galante-2024", "photo-bastidores-2024"],
   },
   {
     id: "match-inimigos-2023",
@@ -92,7 +105,7 @@ export const matches: Match[] = [
     status: "played",
     home: { name: "Manochaco", score: 7 },
     away: { name: "Inimigos do Fim", score: 1 },
-    image: "/team/match-futfudas.png",
+    image: "/photos/jogos/manochaco-vs-inimigos-do-fim-2023-01.jpg",
     summary:
       "Jogo único com peso de final, vencido com autoridade pelo Manochaco.",
     highlights: [
@@ -106,8 +119,14 @@ export const matches: Match[] = [
       { playerSlug: "pedrinho", goals: 1, assists: 1 },
       { playerSlug: "victor-erik", assists: 1 },
     ],
-    relatedPlayerSlugs: ["torres", "dudu", "pedrinho", "victor-erik"],
-    photoIds: ["photo-4"],
+    relatedPlayerSlugs: [
+      "torres",
+      "dudu",
+      "pedrinho",
+      "victor-erik",
+      "andre-gouveia",
+    ],
+    photoIds: ["photo-inimigos-2023", "photo-titulos-futfudas-2023"],
   },
   {
     id: "match-next-amstel-2026",
@@ -119,7 +138,7 @@ export const matches: Match[] = [
     status: "scheduled",
     home: { name: "Manochaco" },
     away: { name: "Raízes FC" },
-    image: "/team/match-upcoming.png",
+    image: "/team/hero-home.jpg",
     summary:
       "Próximo compromisso mockado para demonstrar a estrutura de agenda do portal.",
     highlights: [

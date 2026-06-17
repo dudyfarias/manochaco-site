@@ -22,12 +22,12 @@ export function SectionTitle({
       }`}
     >
       {eyebrow ? (
-        <p className="mb-3 text-sm font-semibold uppercase text-[#d1a137]">
+        <p className="mb-3 text-xs font-black uppercase text-[#b9872a]">
           {eyebrow}
         </p>
       ) : null}
       <h2
-        className={`text-3xl font-black sm:text-4xl ${
+        className={`text-3xl font-black leading-tight sm:text-4xl ${
           isDark ? "text-white" : "text-zinc-950"
         }`}
       >

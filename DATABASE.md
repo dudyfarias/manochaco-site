@@ -34,6 +34,8 @@ Registro de origem e alterações feitas em dados esportivos e administrativos.
 
 - `id`
 - `year`
+- `slug`
+- `name`
 - `label`
 
 ### competitions
@@ -43,6 +45,7 @@ Registro de origem e alterações feitas em dados esportivos e administrativos.
 - `name`
 - `short_name`
 - `description`
+- `type`
 - `is_public`
 
 ### players
@@ -53,6 +56,7 @@ Registro de origem e alterações feitas em dados esportivos e administrativos.
 - `nickname`
 - `position`
 - `number`
+- `status`
 - `image_url`
 - `joined_year`
 - `bio`
@@ -67,9 +71,14 @@ Registro de origem e alterações feitas em dados esportivos e administrativos.
 - `slug`
 - `date`
 - `competition_id`
+- `season_id`
+- `competition_slug`
+- `season_slug`
 - `round`
 - `venue`
 - `status`
+- `result`
+- `opponent`
 - `home_team`
 - `away_team`
 - `home_score`
@@ -86,6 +95,8 @@ Registro de origem e alterações feitas em dados esportivos e administrativos.
 - `player_id`
 - `goals`
 - `assists`
+- `yellow_cards`
+- `red_cards`
 
 ### player_competition_stats
 
@@ -195,6 +206,10 @@ Admin-only. Valores monetários sempre em centavos.
 - `title`
 - `description`
 - `cover_photo_id`
+- `category`
+- `match_id`
+- `competition_id`
+- `season_id`
 - `date`
 
 ### photos
@@ -202,25 +217,67 @@ Admin-only. Valores monetários sempre em centavos.
 - `id`
 - `slug`
 - `album_id`
+- `match_id`
+- `competition_id`
+- `season_id`
 - `title`
 - `storage_path`
 - `alt`
 - `caption`
+- `category`
+- `face_recognition_status`
 - `taken_at`
 - `uploaded_by`
+- `created_at`
 
 ### photo_players
 
 - `id`
 - `photo_id`
 - `player_id`
-- `source`
+- `tag_type`
+- `confidence`
+- `confirmed_by_admin`
+- `bounding_box_x`
+- `bounding_box_y`
+- `bounding_box_width`
+- `bounding_box_height`
+- `reviewed_by`
+- `reviewed_at`
+- `created_at`
+
+`tag_type` pode ser `manual`, `ai_suggested` ou `ai_confirmed`. O site público
+deve consultar apenas tags confirmadas por admin.
+
+### face_detection_suggestions
+
+- `id`
+- `photo_id`
+- `suggested_player_id`
+- `confidence`
+- `bounding_box_x`
+- `bounding_box_y`
+- `bounding_box_width`
+- `bounding_box_height`
 - `status`
+- `created_at`
 - `reviewed_by`
 - `reviewed_at`
 
-`source` pode ser `manual` ou `ai_suggestion`. `status` pode ser `pending`,
-`approved` ou `rejected`.
+`status` pode ser `pending`, `confirmed`, `changed` ou `ignored`.
+
+### player_face_references
+
+- `id`
+- `player_id`
+- `storage_path`
+- `approved_for_recognition`
+- `consent_given`
+- `created_at`
+- `removed_at`
+
+Fotos de referência não devem ser públicas automaticamente. Elas servem apenas
+para reconhecimento facial, com consentimento específico.
 
 ### image_consents
 
@@ -248,11 +305,17 @@ Admin-only. Valores monetários sempre em centavos.
 
 A planilha Manochaco será importada em fases:
 
+- importador local atual gera arquivos em `src/data/generated`;
 - abas de estatísticas para `player_competition_stats` e
   `player_all_time_stats`;
 - aba de jogos para `matches`;
 - abas financeiras para `finance_competition_costs` e
   `finance_player_charges`, sempre admin-only.
+- filtros públicos devem usar somente `matches`, `players`,
+  `player_competition_stats`, `player_all_time_stats`, `competitions` e
+  `seasons`;
+- rankings públicos são calculados por gols, assistências, presença,
+  participação em gols e cartões quando disponíveis.
 
 Depois da importação inicial, o painel administrativo poderá criar novos
 registros. Novas importações devem comparar dados existentes e gerar conflitos

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { ButtonLink } from "@/components/ButtonLink";
 import { SectionTitle } from "@/components/SectionTitle";
+import { SmartImage } from "@/components/SmartImage";
 
 export const metadata: Metadata = {
   title: "Patrocínio",
@@ -20,9 +20,11 @@ export default function PatrocinioPage() {
   return (
     <div className="bg-[#f7f5ef]">
       <section className="relative overflow-hidden bg-black text-white">
-        <Image
-          src="/team/sponsor-hero.png"
-          alt="Placeholder visual de patrocínio do Manochaco"
+        <SmartImage
+          src="/team/comemoracao.jpg"
+          alt="Foto real do Manochaco em contexto de jogo para patrocínio"
+          fallbackLabel="Patrocínio Manochaco"
+          fallbackText="Foto de patrocínio em breve"
           fill
           priority
           sizes="100vw"

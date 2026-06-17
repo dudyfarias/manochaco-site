@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     title: "Clube Atlético Manochaco",
     description:
       "Preto e dourado desde 2014. História, estatísticas, fotos e bastidores do CA Manochaco.",
-    images: ["/team/hero-team.png"],
+    images: ["/team/hero-home.jpg"],
   },
 };
 
