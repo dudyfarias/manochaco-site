@@ -6,10 +6,11 @@ import { PhotoGrid } from "@/components/PhotoGrid";
 import { SectionTitle } from "@/components/SectionTitle";
 import { SmartImage } from "@/components/SmartImage";
 import { StatCard } from "@/components/StatCard";
-import { albums, matches } from "@/data";
 import {
   getAlbumBySlug,
+  getAlbums,
   getCompetitionById,
+  getMatches,
   getPhotosForAlbum,
 } from "@/lib/data";
 import { formatDate } from "@/lib/format";
@@ -19,7 +20,9 @@ type AlbumPageProps = {
   params: Promise<{ albumSlug: string }>;
 };
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const albums = await getAlbums();
+
   return albums.map((album) => ({
     albumSlug: album.slug,
   }));
@@ -29,7 +32,7 @@ export async function generateMetadata({
   params,
 }: AlbumPageProps): Promise<Metadata> {
   const { albumSlug } = await params;
-  const album = getAlbumBySlug(albumSlug);
+  const album = await getAlbumBySlug(albumSlug);
 
   if (!album) {
     return {
@@ -45,16 +48,17 @@ export async function generateMetadata({
 
 export default async function AlbumPage({ params }: AlbumPageProps) {
   const { albumSlug } = await params;
-  const album = getAlbumBySlug(albumSlug);
+  const album = await getAlbumBySlug(albumSlug);
 
   if (!album) {
     notFound();
   }
 
-  const albumPhotos = getPhotosForAlbum(album.id);
-  const competition = album.competitionSlug
-    ? getCompetitionById(album.competitionSlug)
-    : null;
+  const [albumPhotos, competition, matches] = await Promise.all([
+    getPhotosForAlbum(album.id),
+    album.competitionSlug ? getCompetitionById(album.competitionSlug) : null,
+    getMatches(),
+  ]);
   const relatedMatch = album.matchId
     ? matches.find((match) => match.id === album.matchId)
     : null;

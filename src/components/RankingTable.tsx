@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPlayerBySlug } from "@/lib/data";
+import { getLocalPlayerBySlug } from "@/lib/data";
 import type { RankingRow } from "@/types";
 import { EmptyState } from "./EmptyState";
 
@@ -52,7 +52,7 @@ export function RankingTable({
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {rows.map((row, index) => {
-                const player = getPlayerBySlug(row.playerSlug);
+                const player = getLocalPlayerBySlug(row.playerSlug);
                 const isTopThree = index < 3;
 
                 return (

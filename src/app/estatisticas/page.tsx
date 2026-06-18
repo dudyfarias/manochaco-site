@@ -5,7 +5,13 @@ import { EmptyState } from "@/components/EmptyState";
 import { RankingTable } from "@/components/RankingTable";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StatCard } from "@/components/StatCard";
-import { competitions, matches, players, playerStatLines, seasons } from "@/data";
+import {
+  getCompetitions,
+  getMatches,
+  getPlayerStatLines,
+  getPlayers,
+  getSeasons,
+} from "@/lib/data";
 import {
   getSingleParam,
   makeFilterHref,
@@ -105,6 +111,14 @@ export default async function EstatisticasPage({
   searchParams,
 }: EstatisticasPageProps) {
   const resolvedSearchParams = await searchParams;
+  const [competitions, matches, players, playerStatLines, seasons] =
+    await Promise.all([
+      getCompetitions(),
+      getMatches(),
+      getPlayers(),
+      getPlayerStatLines(),
+      getSeasons(),
+    ]);
   const competition = getSingleParam(resolvedSearchParams, "competition");
   const season = getSingleParam(resolvedSearchParams, "season");
   const requestedRanking = getSingleParam(

@@ -1,14 +1,15 @@
 # Importação da planilha Manochaco
 
-Este documento explica a ponte local entre a planilha do Manochaco e os dados
-TypeScript usados pelo site público.
+Este documento explica o uso correto da planilha do Manochaco no projeto.
 
 ## Objetivo
 
-Transformar dados esportivos públicos da planilha em arquivos estruturados em
-`src/data/generated/`, mantendo o site estático e sem Supabase nesta fase.
+A planilha é uma fonte inicial de migração para popular o Supabase com dados
+históricos do clube. Ela não é banco permanente e não deve ser necessária para
+atualizar o site depois que o painel administrativo estiver ativo.
 
-O importador gera:
+O importador atual transforma dados esportivos públicos em arquivos
+estruturados em `src/data/generated/` para revisão, preview e seed inicial:
 
 - jogadores;
 - jogos históricos;
@@ -17,11 +18,9 @@ O importador gera:
 - competições;
 - temporadas.
 
-Dados financeiros não são publicados no site.
-
-Ao gerar jogadores, o importador tenta encontrar a foto local correspondente em
-`public/players/{slug}.png`, `.jpg`, `.jpeg` ou `.webp`. Se nenhuma existir, o
-caminho padrão fica preparado e o site mostra o fallback visual.
+Depois da migração, administradores devem manter os dados pelo painel:
+jogadores, jogos, estatísticas, fotos, álbuns, campeonatos, temporadas,
+patrocínios e financeiro privado.
 
 ## Onde colocar a planilha
 
@@ -37,8 +36,8 @@ Nome recomendado:
 data/raw/planilha-manochaco.xlsx
 ```
 
-Arquivos reais em `data/raw/` são ignorados pelo Git. Isso evita subir dados
-financeiros ou informações privadas sem querer.
+Arquivos reais em `data/raw/` são ignorados pelo Git para evitar subir dados
+financeiros ou informações privadas.
 
 Também é possível rodar com caminho manual:
 
@@ -46,7 +45,7 @@ Também é possível rodar com caminho manual:
 npm run import:spreadsheet -- --input="/caminho/Planilha Manochaco.xlsx"
 ```
 
-## Como rodar
+## Como rodar a importação local
 
 ```bash
 npm install
@@ -59,7 +58,18 @@ npm run dev
 Se `data/raw/planilha-manochaco.xlsx` não existir, o script tenta encontrar a
 planilha mais recente na pasta `Downloads` com o padrão de nome do Manochaco.
 
-## Abas usadas no site público
+## Como popular o Supabase
+
+Depois de revisar os dados gerados e configurar `.env.local`, rode:
+
+```bash
+npm run seed:supabase
+```
+
+Esse comando usa `SUPABASE_SERVICE_ROLE_KEY`, então deve rodar somente em
+ambiente local ou server-side confiável. Ele não deve ir para Client Components.
+
+## Abas usadas para dados esportivos
 
 O script considera esportivas:
 
@@ -74,12 +84,12 @@ O script considera esportivas:
 - `ESTRELATO Estatística 2024`
 - `Estatística 2024`
 
-Nesta primeira importação, os perfis de jogador vêm da aba `Estatística
-Histórica`, e os jogos vêm da aba `Jogos Histórico`.
+Na importação atual, perfis de jogador vêm da aba `Estatística Histórica`, e
+jogos vêm da aba `Jogos Histórico`.
 
-## Abas ignoradas no site público
+## Abas privadas ou bloqueadas no site público
 
-Abas financeiras ou de pagamento são ignoradas:
+Abas financeiras ou de pagamento não devem alimentar páginas públicas:
 
 - `Financeiro 2023`
 - `Financeiro 2024`
@@ -91,7 +101,8 @@ Abas financeiras ou de pagamento são ignoradas:
 - `Amstel 2S 2025`
 
 Mesmo quando uma aba esportiva contém coluna de pagamento, esse campo não é
-exportado para `src/data/generated/`.
+exportado para o site público. No futuro, dados financeiros devem ir para
+tabelas privadas com RLS e papel `finance_admin` ou `super_admin`.
 
 ## Arquivos gerados
 
@@ -106,10 +117,8 @@ src/data/generated/
 └── seasons.generated.ts
 ```
 
-`src/data/index.ts` centraliza a origem dos dados usados pelo site. As páginas
-consomem essa camada em vez de importar cada arquivo diretamente.
-`player-stats.generated.ts` alimenta os rankings filtrados por campeonato e
-temporada.
+Esses arquivos alimentam fallback local, preview e seed inicial. A fonte oficial
+após a migração deve ser o Supabase.
 
 ## Validações do script
 
@@ -140,16 +149,28 @@ mapa manual para preservar URLs importantes:
 
 Se um slug duplicado aparecer, o script registra aviso e ignora o duplicado.
 
+## Reimportações futuras
+
+Reimportar planilhas depois do painel administrativo existir exige cuidado:
+
+- rodar primeiro em modo dry-run;
+- registrar usuário, data, arquivo e checksum;
+- gerar diff antes/depois;
+- não sobrescrever edição manual sem confirmação;
+- enviar conflitos para fila de revisão administrativa;
+- registrar tudo em `audit_logs`.
+
 ## Cuidados com dados financeiros
 
 - Nunca versionar a planilha real.
-- Nunca exportar valor pago, mensalidade, dívida ou custo para o site público.
-- Valores financeiros futuros devem ficar em tabelas admin-only.
-- Valores monetários devem ser salvos em centavos quando houver banco.
+- Nunca exportar mensalidade, dívida, pagamento individual ou custo interno para
+  o site público.
+- Valores financeiros futuros devem ficar em tabelas privadas.
+- Valores monetários devem ser salvos em centavos.
 - A planilha original não deve ser servida por rota pública.
 
 ## Limitações conhecidas
 
 A aba `Jogos Histórico` não possui coluna explícita de campeonato ou local.
 Por isso, partidas importadas usam fallback visual e marcam local/competição
-como dados preparados para revisão manual futura.
+como dados preparados para revisão manual futura no painel.

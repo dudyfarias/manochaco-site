@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPlayersForPhoto } from "@/lib/data";
+import { getLocalPlayersForPhoto } from "@/lib/data";
 
 type TaggedPlayersListProps = {
   photoId: string;
@@ -12,7 +12,7 @@ export function TaggedPlayersList({
   dark = false,
   compact = false,
 }: TaggedPlayersListProps) {
-  const taggedPlayers = getPlayersForPhoto(photoId);
+  const taggedPlayers = getLocalPlayersForPhoto(photoId);
 
   if (taggedPlayers.length === 0) {
     return (

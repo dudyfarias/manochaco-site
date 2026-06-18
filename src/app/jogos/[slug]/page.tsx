@@ -7,13 +7,13 @@ import { PhotoGrid } from "@/components/PhotoGrid";
 import { SectionTitle } from "@/components/SectionTitle";
 import { SmartImage } from "@/components/SmartImage";
 import { StatCard } from "@/components/StatCard";
-import { matches } from "@/data";
 import {
   getAlbumForMatch,
   getCompetitionById,
   getMatchBySlug,
+  getMatches,
   getPhotosForMatch,
-  getPlayerBySlug,
+  getPlayers,
 } from "@/lib/data";
 import { formatDate, formatDateTime } from "@/lib/format";
 import type { Player } from "@/types";
@@ -32,7 +32,9 @@ function isPlayer(player: Player | undefined): player is Player {
   return Boolean(player);
 }
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const matches = await getMatches();
+
   return matches.map((match) => ({
     slug: match.slug,
   }));
@@ -42,7 +44,7 @@ export async function generateMetadata({
   params,
 }: MatchPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const match = getMatchBySlug(slug);
+  const match = await getMatchBySlug(slug);
 
   if (!match) {
     return {
@@ -58,21 +60,25 @@ export async function generateMetadata({
 
 export default async function MatchPage({ params }: MatchPageProps) {
   const { slug } = await params;
-  const match = getMatchBySlug(slug);
+  const match = await getMatchBySlug(slug);
 
   if (!match) {
     notFound();
   }
 
-  const competition = getCompetitionById(match.competitionId);
+  const [competition, matchPhotos, matchAlbum, players] = await Promise.all([
+    getCompetitionById(match.competitionId),
+    getPhotosForMatch(match.id, match.photoIds),
+    getAlbumForMatch(match.id),
+    getPlayers(),
+  ]);
+  const playersBySlug = new Map(players.map((player) => [player.slug, player]));
   const hasScore =
     typeof match.home.score === "number" && typeof match.away.score === "number";
-  const matchPhotos = getPhotosForMatch(match.id, match.photoIds);
-  const matchAlbum = getAlbumForMatch(match.id);
   const resultLabel = match.result ? resultLabels[match.result] : null;
   const season = match.season ?? match.seasonSlug ?? new Date(match.date).getFullYear();
   const relatedPlayers = match.relatedPlayerSlugs
-    .map((playerSlug) => getPlayerBySlug(playerSlug))
+    .map((playerSlug) => playersBySlug.get(playerSlug))
     .filter(isPlayer);
 
   return (
@@ -194,7 +200,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
         {match.contributions.length > 0 ? (
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {match.contributions.map((contribution) => {
-              const player = getPlayerBySlug(contribution.playerSlug);
+              const player = playersBySlug.get(contribution.playerSlug);
 
               if (!player) {
                 return null;

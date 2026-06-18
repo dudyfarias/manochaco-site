@@ -8,6 +8,10 @@ A fase atual usa uma simulação local:
 - `src/data/playerFaceReferences.ts` simula fotos de referência.
 - A página do jogador consulta essa relação para mostrar fotos relacionadas.
 
+Essa simulação existe para validar a experiência pública. Depois da migração
+inicial, o painel administrativo e o Supabase devem ser a fonte oficial das
+fotos, álbuns e marcações.
+
 Relação pública esperada:
 
 ```ts
@@ -34,13 +38,15 @@ públicas.
 
 ## Marcação manual futura
 
-No painel administrativo, um admin poderá:
+No painel administrativo, um admin autorizado poderá:
 
 - Criar álbuns.
 - Fazer upload de fotos.
 - Abrir uma foto.
 - Selecionar jogadores visíveis.
 - Salvar marcações com status aprovado.
+- Remover ou corrigir marcações.
+- Controlar se a foto aparece no site público.
 
 Fluxo previsto:
 
@@ -51,6 +57,31 @@ Fluxo previsto:
 5. seleciona o atleta;
 6. salva;
 7. a foto passa a aparecer no perfil do jogador.
+
+## Supabase na Fase 7
+
+A persistência real será feita nas tabelas:
+
+- `photos`;
+- `albums`;
+- `photo_player_tags`;
+- `player_face_references`;
+- `face_detection_suggestions`.
+
+O site público consulta somente `photo_player_tags` confirmadas. Sugestões em
+`face_detection_suggestions` seguem internas até revisão humana.
+
+No Storage:
+
+- fotos públicas ficam em `photos`, `albums`, `players`, `team` ou `logos`;
+- fotos de referência facial ficam no bucket privado `face-references`;
+- uploads administrativos serão protegidos por Supabase Auth e RLS.
+
+As permissões previstas são:
+
+- `super_admin` e `sports_admin`: gestão completa do acervo esportivo;
+- `photo_editor`: upload, álbuns, marcações e revisão de fotos;
+- `reader`: visualização administrativa sem edição.
 
 ## IA futura com revisão humana
 

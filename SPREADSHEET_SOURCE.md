@@ -1,22 +1,23 @@
-# Fonte de dados - Planilha Manochaco
+# Fonte de dados inicial - Planilha Manochaco
 
 Arquivo base informado:
 
 `Planilha Manochaco - Treinos, Time e Financeiro-5.xlsx`
 
-A planilha será a fonte inicial para importar dados históricos do Clube Atlético
-Manochaco. Ela mistura estatísticas esportivas públicas e informações
-financeiras privadas; por isso, a importação futura deve separar os domínios
-antes de publicar qualquer dado.
+A planilha é fonte inicial de migração. Ela serve para popular o Supabase com o
+histórico esportivo do clube e, futuramente, ajudar a estruturar dados
+financeiros privados. Depois da primeira carga, o banco Supabase e o painel
+administrativo passam a ser a fonte oficial.
 
-Depois da primeira carga, novos dados também serão criados pelo portal
-administrativo. A planilha não deve ser o único caminho de manutenção.
+A planilha não deve ser tratada como banco permanente. Novos jogadores, jogos,
+estatísticas, fotos, campeonatos, temporadas, patrocínios e dados financeiros
+devem ser cadastrados, editados e removidos pelo painel administrativo.
 
 ## Classificação das abas
 
 ### Estatísticas públicas
 
-Estas abas podem alimentar páginas públicas após revisão e normalização:
+Estas abas podem alimentar a migração esportiva após revisão e normalização:
 
 - `Estatística Histórica`
 - `Estatística Geral 2025`
@@ -31,28 +32,28 @@ Estas abas podem alimentar páginas públicas após revisão e normalização:
 
 Campos identificados nas abas de estatísticas:
 
-- jogador
-- apelido entre parênteses
-- posição
-- número de camisa
-- tamanho de uniforme
-- presença em jogos
-- percentual de presença
-- data de ingresso
-- gols
-- gols por jogo
-- assistências
-- participação em gols por jogo
-- cartões amarelos
-- cartões vermelhos
-- suspensões
-- clean-sheet
-- ranking
-- média/overall
+- jogador;
+- apelido entre parênteses;
+- posição;
+- número de camisa;
+- tamanho de uniforme;
+- presença em jogos;
+- percentual de presença;
+- data de ingresso;
+- gols;
+- gols por jogo;
+- assistências;
+- participação em gols por jogo;
+- cartões amarelos;
+- cartões vermelhos;
+- suspensões;
+- clean-sheet;
+- ranking;
+- média/overall.
 
-Observação: algumas abas esportivas também possuem coluna `PAGAMENTO`. Esse
-campo deve ser extraído para o domínio financeiro admin-only ou ignorado na
-publicação pública; ele não deve aparecer nas APIs ou páginas abertas.
+Algumas abas esportivas também possuem coluna `PAGAMENTO`. Esse campo não deve
+aparecer no site público. Quando for migrado, deve ir para o domínio financeiro
+privado com RLS e permissões específicas.
 
 ### Jogos públicos
 
@@ -60,13 +61,13 @@ publicação pública; ele não deve aparecer nas APIs ou páginas abertas.
 
 Campos identificados:
 
-- data
-- time da casa
-- time fora
-- gols feitos
-- gols sofridos
-- resultado
-- classificação/fase
+- data;
+- time da casa;
+- time fora;
+- gols feitos;
+- gols sofridos;
+- resultado;
+- classificação/fase.
 
 ### Financeiro privado
 
@@ -80,67 +81,61 @@ Estas abas devem ficar somente em área administrativa com login:
 - `Amstel 1 2026`
 - `Chuteira 1 2026`
 
-Campos identificados nas abas financeiras:
+Campos financeiros:
 
-- nome
-- valor pago
-- quanto falta
-- cobranças mensais
-- totais anuais
-- custos por campeonato
-- cálculos de responsabilidade financeira
+- nome;
+- valor pago;
+- quanto falta;
+- cobranças mensais;
+- totais anuais;
+- custos por campeonato;
+- receitas, despesas e caixa;
+- cálculos de responsabilidade financeira.
 
 Valores monetários devem ser convertidos e armazenados em centavos.
 
-## Regras de importação futura
+## Regras de importação
 
-- A planilha original não deve ser servida publicamente.
-- Importações devem gerar um `import_batch` com data, usuário admin e checksum.
-- Estatísticas públicas devem passar por normalização de nome/apelido.
-- Campos financeiros nunca devem alimentar páginas públicas.
-- Colunas financeiras dentro de abas esportivas também devem ser bloqueadas no
-  site público.
-- Qualquer dado financeiro deve exigir autenticação e papel de admin.
-- Valores monetários devem usar inteiros em centavos.
-- Fórmulas da planilha devem ser convertidas em valores importados ou regras de
-  cálculo auditáveis no backend.
-- Dados criados ou corrigidos no portal não devem ser sobrescritos
-  silenciosamente por uma nova importação.
-- Conflitos entre planilha e portal devem ir para revisão administrativa.
+- A planilha original nunca deve ser servida publicamente.
+- A importação inicial deve gerar dados revisáveis antes de popular o Supabase.
+- O seed para Supabase deve ignorar dados financeiros no site público.
+- Dados criados ou corrigidos no painel não devem ser sobrescritos
+  silenciosamente.
+- Reimportações futuras devem ter dry-run, logs, checksum, resumo de diferenças
+  e confirmação explícita.
+- Conflitos entre planilha e painel devem ir para revisão administrativa.
+- Campos financeiros exigem autenticação e papel autorizado.
+- Fórmulas da planilha devem virar valores importados ou regras auditáveis no backend.
 
-## Modelo de publicação
+## Modelo de publicação pública
 
-O site público deve consumir apenas:
+O site público deve consumir somente dados permitidos:
 
-- jogadores
-- competições
-- temporadas
-- jogos
-- estatísticas por competição
-- estatísticas históricas agregadas
-- títulos
-- fotos e marcações aprovadas
+- jogadores;
+- competições;
+- temporadas;
+- jogos;
+- estatísticas esportivas;
+- títulos;
+- fotos;
+- álbuns;
+- marcações confirmadas.
 
-## Uso na versão estática atual
+Não publicar mensalidades, dívidas, pagamentos individuais, dados bancários,
+despesas internas, caixa do clube ou qualquer informação financeira sensível.
 
-Nesta versão, `src/data/players.ts` usa a aba `Estatística Histórica` como
-referência para os perfis públicos de jogadores. Foram considerados apenas os
-campos esportivos: jogador, apelido, posição, número de camisa, data de
-ingresso, presença, gols, assistências e status `Saiu do time`.
+## Papel do painel administrativo
 
-O campo `Saiu do time` foi convertido para `status`:
+O painel futuro será o caminho principal para:
 
-- `Não`: atleta ativo.
-- `Sim`: jogador histórico/ex-jogador.
+- cadastrar e editar jogadores;
+- lançar jogos, placares e estatísticas por partida;
+- atualizar campeonatos e temporadas;
+- enviar fotos e criar álbuns;
+- marcar jogadores em fotos;
+- revisar sugestões de IA;
+- gerenciar financeiro privado;
+- registrar auditoria.
 
-As informações financeiras da planilha continuam fora do site público.
-
-O painel admin poderá consumir:
-
-- importações da planilha
-- cadastros manuais feitos no portal
-- pagamentos
-- débitos
-- custos por campeonato
-- resumo financeiro
-- logs de importação e auditoria
+O script de importação continua útil para migração inicial e eventuais cargas
+controladas, mas não substitui o painel.

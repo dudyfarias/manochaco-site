@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.7.0 - 2026-06-18
+
+- Instalação de `@supabase/supabase-js` e `@supabase/ssr`.
+- Criação dos clientes Supabase para browser, server e service role.
+- Criação de `.env.example` com variáveis públicas e service role server-only.
+- Criação de `supabase/schema.sql`, `supabase/policies.sql`, `supabase/storage-policies.sql`, `supabase/seed.sql` e `supabase/README.md`.
+- Criação da camada híbrida `src/lib/data.ts`, com Supabase quando configurado e fallback local quando ausente ou indisponível.
+- Criação de adapters para converter dados Supabase em snake_case para os tipos camelCase do front-end.
+- Atualização das rotas públicas principais para consumir dados pela camada central.
+- Criação do script `npm run seed:supabase` para migrar dados esportivos públicos locais.
+- Criação da rota placeholder `/admin`, sem autenticação real e fora do menu público.
+- Criação da documentação `docs/AUTH_ADMIN.md` e `docs/SUPABASE_STORAGE.md`.
+- Atualização de documentação de banco, LGPD, marcação de fotos e reconhecimento facial para Supabase.
+- Manutenção da regra de não exibir dados financeiros no site público.
+- Correção de escopo da Fase 7: a planilha passa a ser tratada apenas como fonte inicial de migração.
+- Definição do Supabase e do futuro painel administrativo como fonte oficial dos dados após a migração inicial.
+- Preparação de roles granulares: `super_admin`, `sports_admin`, `finance_admin`, `photo_editor` e `reader`.
+- Inclusão de tabelas financeiras privadas no schema: categorias, transações, mensalidades, patrocinadores e contratos.
+- Atualização das policies para separar gestão esportiva, gestão de fotos, financeiro privado e leitura pública.
+- Documentação de reimportação segura com dry-run, logs, diff e revisão para evitar sobrescrever dados editados no painel.
+
 ## 0.6.2 - 2026-06-18
 
 - Substituição do arquivo público `manochaco-logo.png` pela versão HD do escudo oficial.

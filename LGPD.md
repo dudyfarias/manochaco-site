@@ -25,6 +25,7 @@ não devem ser publicados no site aberto.
 - Armazenar valores monetários em centavos.
 - Registrar auditoria de importações e alterações.
 - Evitar expor saldos individuais fora do contexto administrativo.
+- Permitir acesso financeiro apenas a `super_admin` e `finance_admin`.
 
 ## Biometria e reconhecimento facial
 
@@ -59,6 +60,30 @@ Uma futura tela `/admin/consentimentos` deve registrar:
 - Guardar logs de auditoria.
 - Separar permissões de leitura pública e upload.
 - Não expor chaves sensíveis no frontend.
+- Manter `face-references` como bucket privado.
+- Usar `player_face_references` apenas com consentimento específico.
+- Exibir publicamente apenas tags confirmadas em `photo_player_tags`.
+- Tratar `face_detection_suggestions` como dado interno de revisão.
+- Manter tabelas financeiras privadas por RLS, sem policies de leitura pública.
+
+## Autenticação administrativa
+
+O painel futuro deve usar Supabase Auth com checagem server-side de permissões.
+Roles administrativas ficam em `admin_profiles`; decisões de autorização não
+devem depender de `user_metadata`, pois esse campo pode ser editável pelo
+usuário. Chaves de service role são exclusivas de scripts e rotas confiáveis.
+
+Papéis previstos:
+
+- `super_admin`: acesso total;
+- `sports_admin`: gestão esportiva;
+- `finance_admin`: financeiro privado;
+- `photo_editor`: fotos e marcações;
+- `reader`: leitura administrativa.
+
+Depois da migração inicial, a planilha deixa de ser a fonte de atualização. O
+painel administrativo deve ser o caminho oficial para corrigir ou remover dados
+pessoais.
 
 ## Remoção e contestação
 

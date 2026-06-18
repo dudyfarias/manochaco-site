@@ -1,5 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 import Image, { type ImageProps } from "next/image";
-import { getInitials, hasPublicAsset } from "@/lib/assets";
+import { getInitials, hasPublicAsset, isRemoteAsset } from "@/lib/assets";
 
 type SmartImageProps = Omit<ImageProps, "src" | "alt"> & {
   src?: string | null;
@@ -15,6 +16,10 @@ export function SmartImage({
   fallbackText,
   className = "",
   fill,
+  width,
+  height,
+  style,
+  priority,
   ...props
 }: SmartImageProps) {
   if (hasPublicAsset(src)) {
@@ -23,8 +28,27 @@ export function SmartImage({
         src={src as string}
         alt={alt}
         fill={fill}
+        width={width}
+        height={height}
+        style={style}
+        priority={priority}
         className={className}
         {...props}
+      />
+    );
+  }
+
+  if (isRemoteAsset(src)) {
+    return (
+      <img
+        src={src as string}
+        alt={alt}
+        width={typeof width === "number" ? width : undefined}
+        height={typeof height === "number" ? height : undefined}
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
+        className={`${fill ? "absolute inset-0 h-full w-full" : ""} ${className}`}
+        style={style}
       />
     );
   }

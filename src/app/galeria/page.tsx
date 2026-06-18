@@ -4,7 +4,7 @@ import { AlbumCard } from "@/components/AlbumCard";
 import { EmptyState } from "@/components/EmptyState";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { SectionTitle } from "@/components/SectionTitle";
-import { albums, competitions, photos, seasons } from "@/data";
+import { getAlbums, getCompetitions, getPhotos, getSeasons } from "@/lib/data";
 import {
   getSingleParam,
   makeFilterHref,
@@ -58,6 +58,12 @@ function FilterLink({
 
 export default async function GaleriaPage({ searchParams }: GaleriaPageProps) {
   const resolvedSearchParams = await searchParams;
+  const [albums, competitions, photos, seasons] = await Promise.all([
+    getAlbums(),
+    getCompetitions(),
+    getPhotos(),
+    getSeasons(),
+  ]);
   const category = getSingleParam(resolvedSearchParams, "category");
   const competition = getSingleParam(resolvedSearchParams, "competition");
   const season = getSingleParam(resolvedSearchParams, "season");

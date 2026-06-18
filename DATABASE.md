@@ -1,322 +1,100 @@
-# Banco de dados futuro
+# Banco de dados
 
-Esta fase não implementa Supabase. O desenho abaixo orienta a futura migração.
+A Fase 7 cria a fundação Supabase do Manochaco. O Supabase deve se tornar a
+fonte oficial do sistema depois da migração inicial da planilha. A planilha não
+é banco permanente e não deve ser necessária para atualizar o site no futuro.
 
-## Tabelas principais
+Os arquivos executáveis ficam em `supabase/`:
 
-### import_batches
+- `schema.sql`: tabelas, constraints, índices e triggers.
+- `policies.sql`: RLS e policies de leitura pública/escrita administrativa.
+- `storage-policies.sql`: buckets e policies de Storage.
+- `seed.sql`: seed mínimo de competições e temporadas.
 
-Registro de cada importação da planilha Manochaco.
+O site continua funcionando sem Supabase configurado usando fallback local em
+`src/lib/data.ts`. Esse fallback existe para desenvolvimento, preview e
+segurança de build, não como fonte definitiva.
 
-- `id`
-- `source_filename`
-- `source_checksum`
-- `imported_by`
-- `imported_at`
-- `status`
-- `notes`
+## Fonte oficial
 
-### data_change_logs
+- Antes da migração: dados locais/generated permitem validar o site público.
+- Durante a migração: `npm run seed:supabase` envia dados esportivos públicos
+  revisáveis para o banco.
+- Depois da migração: administradores cadastrados no painel devem criar, editar,
+  atualizar e remover dados diretamente no sistema.
+- Reimportações futuras da planilha devem ter dry-run, logs, checagem de
+  conflitos e opção explícita para não sobrescrever dados editados no painel.
 
-Registro de origem e alterações feitas em dados esportivos e administrativos.
+## Tabelas esportivas públicas
 
-- `id`
-- `entity_type`
-- `entity_id`
-- `source`
-- `changed_by`
-- `change_reason`
-- `previous_data`
-- `new_data`
-- `created_at`
-
-### seasons
-
-- `id`
-- `year`
-- `slug`
-- `name`
-- `label`
-
-### competitions
-
-- `id`
-- `slug`
-- `name`
-- `short_name`
-- `description`
-- `type`
-- `is_public`
-
-### players
-
-- `id`
-- `slug`
-- `full_name`
-- `nickname`
-- `position`
-- `number`
-- `status`
-- `image_url`
-- `joined_year`
-- `bio`
-- `data_source`
-- `source_import_batch_id`
-- `created_at`
-- `updated_at`
-
-### matches
-
-- `id`
-- `slug`
-- `date`
-- `competition_id`
-- `season_id`
-- `competition_slug`
-- `season_slug`
-- `round`
-- `venue`
-- `status`
-- `result`
-- `opponent`
-- `home_team`
-- `away_team`
-- `home_score`
-- `away_score`
-- `summary`
-- `image_url`
-- `data_source`
-- `source_import_batch_id`
-
-### match_contributions
-
-- `id`
-- `match_id`
-- `player_id`
-- `goals`
-- `assists`
-- `yellow_cards`
-- `red_cards`
-
-### player_competition_stats
-
-- `id`
-- `player_id`
-- `season_id`
-- `competition_id`
+- `players`
+- `competitions`
+- `seasons`
 - `matches`
-- `presence_percentage`
-- `goals`
-- `goals_per_match`
-- `assists`
-- `goal_participations_per_match`
-- `yellow_cards`
-- `red_cards`
-- `yellow_card_suspensions`
-- `clean_sheets`
-- `ranking_score`
-- `overall`
-- `data_source`
-- `source_import_batch_id`
+- `player_match_stats`
+- `albums`
+- `photos`
+- `photo_player_tags`
 
-### player_all_time_stats
+O site público pode ler essas tabelas conforme as policies. Tags de foto só
+aparecem publicamente quando `confirmed_by_admin = true` e `tag_type` é
+`manual` ou `ai_confirmed`.
 
-- `id`
-- `player_id`
-- `matches`
-- `presence_percentage`
-- `goals`
-- `goals_per_match`
-- `assists`
-- `goal_participations_per_match`
-- `yellow_cards`
-- `red_cards`
-- `yellow_card_suspensions`
-- `clean_sheets`
-- `ranking_score`
-- `overall`
-- `data_source`
-- `source_import_batch_id`
+## Tabelas administrativas e biometria
 
-### player_uniforms
+- `admin_profiles`
+- `audit_logs`
+- `player_face_references`
+- `face_detection_suggestions`
 
-- `id`
-- `player_id`
-- `has_shirt`
-- `shirt_number`
-- `white_shirt_number`
-- `black_shirt_number`
-- `shirt_size`
-- `shorts_size`
+Essas tabelas não têm leitura pública. Fotos de referência facial são privadas e
+exigem consentimento específico. Sugestões de IA ficam internas até revisão
+humana.
 
-### finance_competition_costs
+## Tabelas financeiras privadas
 
-Admin-only. Valores monetários sempre em centavos.
+- `financial_categories`
+- `financial_transactions`
+- `player_monthly_fees`
+- `sponsors`
+- `sponsorship_contracts`
 
-- `id`
-- `season_id`
-- `competition_id`
-- `label`
-- `cost_cents`
-- `suggested_charge_cents`
-- `notes`
-- `data_source`
-- `source_import_batch_id`
+Essas tabelas estão preparadas para a Fase 9 e devem permanecer privadas. Não
+exibir no site público mensalidades, dívidas, pagamentos individuais, dados
+bancários, despesas internas, caixa do clube ou qualquer informação financeira
+sensível.
 
-### finance_player_charges
+Valores monetários devem ser salvos em centavos.
 
-Admin-only. Valores monetários sempre em centavos.
+## Papéis administrativos
 
-- `id`
-- `player_id`
-- `season_id`
-- `competition_id`
-- `period`
-- `amount_due_cents`
-- `amount_paid_cents`
-- `balance_cents`
-- `status`
-- `data_source`
-- `source_import_batch_id`
+- `super_admin`: acesso total e gestão de administradores.
+- `sports_admin`: jogadores, jogos, estatísticas, campeonatos, temporadas e fotos esportivas.
+- `finance_admin`: financeiro privado, patrocínios e relatórios financeiros.
+- `photo_editor`: upload, álbuns, marcação manual e revisão de fotos.
+- `reader`: visualização administrativa sem edição.
 
-### admin_audit_logs
+As permissões devem ser verificadas server-side e reforçadas por RLS. Nunca
+autorizar ações sensíveis apenas com dados vindos do client.
 
-- `id`
-- `admin_user_id`
-- `action`
-- `entity_type`
-- `entity_id`
-- `metadata`
-- `created_at`
+## Relação com o painel administrativo
 
-### titles
+O painel futuro será a interface principal para:
 
-- `id`
-- `name`
-- `competition_id`
-- `season_id`
-- `date`
-- `description`
-- `is_public`
+- gerenciar jogadores e comissão;
+- gerenciar jogos, resultados e estatísticas por partida;
+- gerenciar campeonatos e temporadas;
+- fazer upload de fotos e criar álbuns;
+- marcar jogadores em fotos;
+- revisar sugestões de reconhecimento facial;
+- gerenciar financeiro privado;
+- registrar auditoria de alterações.
 
-### albums
+## Scripts
 
-- `id`
-- `slug`
-- `title`
-- `description`
-- `cover_photo_id`
-- `category`
-- `match_id`
-- `competition_id`
-- `season_id`
-- `date`
+`npm run import:spreadsheet` lê a planilha e gera dados locais estruturados para
+revisão/migração inicial.
 
-### photos
-
-- `id`
-- `slug`
-- `album_id`
-- `match_id`
-- `competition_id`
-- `season_id`
-- `title`
-- `storage_path`
-- `alt`
-- `caption`
-- `category`
-- `face_recognition_status`
-- `taken_at`
-- `uploaded_by`
-- `created_at`
-
-### photo_players
-
-- `id`
-- `photo_id`
-- `player_id`
-- `tag_type`
-- `confidence`
-- `confirmed_by_admin`
-- `bounding_box_x`
-- `bounding_box_y`
-- `bounding_box_width`
-- `bounding_box_height`
-- `reviewed_by`
-- `reviewed_at`
-- `created_at`
-
-`tag_type` pode ser `manual`, `ai_suggested` ou `ai_confirmed`. O site público
-deve consultar apenas tags confirmadas por admin.
-
-### face_detection_suggestions
-
-- `id`
-- `photo_id`
-- `suggested_player_id`
-- `confidence`
-- `bounding_box_x`
-- `bounding_box_y`
-- `bounding_box_width`
-- `bounding_box_height`
-- `status`
-- `created_at`
-- `reviewed_by`
-- `reviewed_at`
-
-`status` pode ser `pending`, `confirmed`, `changed` ou `ignored`.
-
-### player_face_references
-
-- `id`
-- `player_id`
-- `storage_path`
-- `approved_for_recognition`
-- `consent_given`
-- `created_at`
-- `removed_at`
-
-Fotos de referência não devem ser públicas automaticamente. Elas servem apenas
-para reconhecimento facial, com consentimento específico.
-
-### image_consents
-
-- `id`
-- `player_id`
-- `consent_type`
-- `granted`
-- `granted_at`
-- `revoked_at`
-- `notes`
-
-## Segurança esperada
-
-- RLS habilitado em todas as tabelas públicas.
-- Administração apenas para usuários autenticados com papel de admin.
-- Tabelas financeiras acessíveis somente por admins autenticados.
-- Nenhuma rota pública deve retornar campos financeiros.
-- Storage com policies separadas para leitura pública e escrita restrita.
-- Nunca expor `service_role` no cliente.
-- Logs de auditoria para ações administrativas.
-- Dados criados pelo portal devem manter origem `admin_manual` ou
-  `admin_correction`.
-
-## Fonte planilha
-
-A planilha Manochaco será importada em fases:
-
-- importador local atual gera arquivos em `src/data/generated`;
-- abas de estatísticas para `player_competition_stats` e
-  `player_all_time_stats`;
-- aba de jogos para `matches`;
-- abas financeiras para `finance_competition_costs` e
-  `finance_player_charges`, sempre admin-only.
-- filtros públicos devem usar somente `matches`, `players`,
-  `player_competition_stats`, `player_all_time_stats`, `competitions` e
-  `seasons`;
-- rankings públicos são calculados por gols, assistências, presença,
-  participação em gols e cartões quando disponíveis.
-
-Depois da importação inicial, o painel administrativo poderá criar novos
-registros. Novas importações devem comparar dados existentes e gerar conflitos
-para revisão em vez de sobrescrever alterações manuais.
+`npm run seed:supabase` envia dados locais/generated para o Supabase usando
+`SUPABASE_SERVICE_ROLE_KEY`. Esse script deve rodar apenas em ambiente local ou
+server-side confiável e nunca no client.

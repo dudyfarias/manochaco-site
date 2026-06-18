@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { EmptyState } from "@/components/EmptyState";
 import { MatchCard } from "@/components/MatchCard";
 import { SectionTitle } from "@/components/SectionTitle";
-import { competitions, matches, seasons } from "@/data";
+import { getCompetitions, getMatches, getSeasons } from "@/lib/data";
 import {
   filterMatches,
   getSingleParam,
@@ -55,6 +55,11 @@ function FilterLink({
 
 export default async function JogosPage({ searchParams }: JogosPageProps) {
   const resolvedSearchParams = await searchParams;
+  const [competitions, matches, seasons] = await Promise.all([
+    getCompetitions(),
+    getMatches(),
+    getSeasons(),
+  ]);
   const competition = getSingleParam(resolvedSearchParams, "competition");
   const season = getSingleParam(resolvedSearchParams, "season");
   const result = getSingleParam(resolvedSearchParams, "result") as

@@ -3,6 +3,9 @@
 O painel administrativo será o local para manter os dados depois da importação
 inicial da planilha Manochaco.
 
+Depois da migração inicial, o Supabase e o painel passam a ser a fonte oficial.
+A planilha não deve ser necessária para atualizar o site no futuro.
+
 ## Papel da planilha
 
 A planilha será usada como seed e fonte de importação inicial para:
@@ -20,6 +23,7 @@ dados sem depender de edição direta na planilha.
 Admins autenticados poderão cadastrar:
 
 - novos jogadores;
+- comissão técnica;
 - novas competições;
 - novas temporadas;
 - partidas;
@@ -28,7 +32,9 @@ Admins autenticados poderão cadastrar:
 - títulos e campanhas;
 - fotos e álbuns;
 - marcações de jogadores em fotos;
-- custos e pagamentos, apenas na área financeira privada.
+- patrocinadores;
+- custos, mensalidades, receitas, despesas e pagamentos, apenas na área
+  financeira privada.
 
 ## Origem dos dados
 
@@ -55,14 +61,19 @@ Fluxo recomendado:
 4. Aplicar atualização somente após aprovação de admin.
 5. Registrar ação em log de auditoria.
 
+Reimportações futuras devem oferecer dry-run, logs, diff e confirmação
+explícita antes de qualquer alteração persistente.
+
 ## Permissões
 
 Papéis sugeridos:
 
-- `admin`: acesso total ao painel, inclusive financeiro;
-- `editor`: cria e edita conteúdo esportivo, sem financeiro;
-- `finance_admin`: acesso ao financeiro e relatórios privados;
-- `viewer`: leitura administrativa sem edição.
+- `super_admin`: acesso total ao sistema e gestão de administradores;
+- `sports_admin`: jogadores, jogos, estatísticas, campeonatos e temporadas;
+- `finance_admin`: mensalidades, receitas, despesas, patrocínios e relatórios;
+- `photo_editor`: upload, álbuns, marcação manual e revisão de fotos;
+- `reader`: leitura administrativa sem edição.
 
-Na primeira implementação autenticada, é aceitável começar apenas com `admin`,
-desde que as tabelas financeiras já nasçam protegidas por RLS.
+Na primeira implementação autenticada, é aceitável começar com um fluxo simples,
+desde que as tabelas financeiras já nasçam protegidas por RLS e a evolução para
+roles granulares não exija refazer o banco.

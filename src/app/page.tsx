@@ -7,18 +7,27 @@ import { RankingTable } from "@/components/RankingTable";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StatCard } from "@/components/StatCard";
 import {
-  appearancesRanking,
-  assistsRanking,
-  clubStats,
-  photos,
-  players,
-  scoringRanking,
-} from "@/data";
-import { getPlayedMatches, getScheduledMatches } from "@/lib/data";
+  getMatches,
+  getPhotos,
+  getPlayers,
+  getRankings,
+  getStats,
+} from "@/lib/data";
 
-export default function Home() {
-  const lastResult = getPlayedMatches()[0];
-  const nextMatch = getScheduledMatches()[0];
+export default async function Home() {
+  const [clubStats, photos, players, rankings, matches] = await Promise.all([
+    getStats(),
+    getPhotos(),
+    getPlayers(),
+    getRankings(10),
+    getMatches(),
+  ]);
+  const lastResult = matches
+    .filter((match) => match.status === "played")
+    .sort((first, second) => second.date.localeCompare(first.date))[0];
+  const nextMatch = matches
+    .filter((match) => match.status === "scheduled")
+    .sort((first, second) => first.date.localeCompare(second.date))[0];
   const featuredPlayers = players.slice(0, 4);
 
   return (
@@ -91,9 +100,9 @@ export default function Home() {
           </ButtonLink>
         </div>
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
-          <RankingTable title="Artilharia" rows={scoringRanking} />
-          <RankingTable title="Assistências" rows={assistsRanking} />
-          <RankingTable title="Presença" rows={appearancesRanking} />
+          <RankingTable title="Artilharia" rows={rankings.scoringRanking} />
+          <RankingTable title="Assistências" rows={rankings.assistsRanking} />
+          <RankingTable title="Presença" rows={rankings.appearancesRanking} />
         </div>
       </section>
 

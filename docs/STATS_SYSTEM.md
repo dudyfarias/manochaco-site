@@ -1,7 +1,11 @@
 # Sistema de estatísticas
 
-Esta fase mantém tudo local. O site usa dados gerados da planilha em
-`src/data/generated/` e fallback TypeScript quando necessário.
+O site tem uma camada híbrida em `src/lib/data.ts`: se Supabase estiver
+configurado, as páginas públicas tentam ler do banco; caso contrário, seguem
+usando dados locais/generated como fallback de desenvolvimento e preview.
+
+A planilha serve como carga inicial de migração. Depois da migração, o painel
+administrativo e o Supabase devem ser a fonte oficial das estatísticas.
 
 ## Origem dos dados
 
@@ -12,7 +16,8 @@ Esta fase mantém tudo local. O site usa dados gerados da planilha em
 - `competitions.generated.ts`: campeonatos usados nos filtros.
 - `seasons.generated.ts`: temporadas encontradas na planilha.
 
-Abas financeiras são ignoradas no site público.
+Abas financeiras são ignoradas no site público. Quando forem estruturadas,
+devem ir para tabelas privadas com RLS e permissões financeiras.
 
 ## Filtros
 
@@ -76,12 +81,11 @@ histórica consolidada de jogadores.
 
 ## Evolução futura
 
-Com Supabase, estes cálculos devem migrar para consultas e views públicas sobre:
+Com Supabase, estes cálculos devem evoluir para consultas e views públicas sobre:
 
 - `matches`;
 - `players`;
-- `player_competition_stats`;
-- `player_all_time_stats`;
+- `player_match_stats`;
 - `competitions`;
 - `seasons`.
 

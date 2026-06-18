@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { getCompetitionById } from "@/lib/data";
+import { getLocalCompetitionById } from "@/lib/data";
 import { formatDate, formatDateTime } from "@/lib/format";
-import type { Match } from "@/types";
+import type { Competition, Match } from "@/types";
 import { CompetitionBadge } from "./CompetitionBadge";
 import { SmartImage } from "./SmartImage";
 
 type MatchCardProps = {
   match: Match;
   compact?: boolean;
+  competition?: Competition | null;
 };
 
 const resultLabels = {
@@ -16,8 +17,13 @@ const resultLabels = {
   loss: "Derrota",
 } as const;
 
-export function MatchCard({ match, compact = false }: MatchCardProps) {
-  const competition = getCompetitionById(match.competitionId);
+export function MatchCard({
+  match,
+  compact = false,
+  competition,
+}: MatchCardProps) {
+  const resolvedCompetition =
+    competition ?? getLocalCompetitionById(match.competitionId);
   const hasScore =
     typeof match.home.score === "number" && typeof match.away.score === "number";
   const resultLabel = match.result ? resultLabels[match.result] : null;
@@ -46,9 +52,9 @@ export function MatchCard({ match, compact = false }: MatchCardProps) {
       ) : null}
       <div className="p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-2">
-          {competition ? (
-            <CompetitionBadge kind={competition.slug}>
-              {competition.shortName}
+          {resolvedCompetition ? (
+            <CompetitionBadge kind={resolvedCompetition.slug}>
+              {resolvedCompetition.shortName}
             </CompetitionBadge>
           ) : null}
           {resultLabel ? (

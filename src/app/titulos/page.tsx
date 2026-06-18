@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CompetitionBadge } from "@/components/CompetitionBadge";
 import { SectionTitle } from "@/components/SectionTitle";
-import { competitions } from "@/data";
+import { getCompetitions } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Títulos e campanhas",
@@ -36,7 +36,9 @@ const campaigns = [
   },
 ];
 
-export default function TitulosPage() {
+export default async function TitulosPage() {
+  const competitions = await getCompetitions();
+
   return (
     <div className="bg-[#f7f5ef]">
       <section className="bg-black py-20 text-white">

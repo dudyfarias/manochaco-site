@@ -1,7 +1,9 @@
 # Clube Atlético Manochaco - Site Oficial
 
-Portal oficial estático do Clube Atlético Manochaco, desenvolvido com Next.js,
-TypeScript, Tailwind CSS e App Router.
+Portal oficial do Clube Atlético Manochaco, desenvolvido com Next.js,
+TypeScript, Tailwind CSS e App Router. A primeira versão pública funciona com
+fallback local, mas a arquitetura da Fase 7 prepara o Supabase e o futuro painel
+administrativo como fonte oficial dos dados.
 
 ## Requisitos
 
@@ -25,10 +27,39 @@ npm run dev        # servidor local
 npm run build      # build de produção
 npm run start      # executa o build
 npm run import:spreadsheet # importa a planilha Manochaco
+npm run seed:supabase # envia dados esportivos locais para Supabase
 npm run audit:images # audita imagens locais e vínculos de fotos
 npm run typecheck  # valida TypeScript
 npm run lint       # valida ESLint
 ```
+
+## Supabase
+
+A Fase 7 prepara PostgreSQL, Auth e Storage sem exigir configuração para rodar
+localmente. Sem `.env.local`, o site usa os dados locais/generated como fallback
+de desenvolvimento para não quebrar build, rotas e preview.
+
+Depois da migração inicial, o Supabase passa a ser a fonte oficial. A planilha
+do Manochaco deve ser usada apenas para carga inicial ou reimportações
+controladas, com logs, dry-run e revisão para não sobrescrever edições feitas
+no painel administrativo.
+
+Crie `.env.local` com base em `.env.example` quando o projeto Supabase existir:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+Depois de rodar os SQLs em `supabase/`, use a carga inicial:
+
+```bash
+npm run seed:supabase
+```
+
+`SUPABASE_SERVICE_ROLE_KEY` é exclusiva de scripts/server-side e nunca deve ir
+para Client Components.
 
 ## Estrutura
 
@@ -37,9 +68,10 @@ src/app          rotas App Router
 src/components   componentes reutilizáveis
 src/data         dados locais e camada central de origem
 src/data/generated dados gerados pela planilha
-src/lib          helpers de formatação, filtros, fotos e cálculo estatístico
+src/lib          helpers, camada híbrida de dados, Supabase e adapters
 src/types        contratos TypeScript
 scripts          importadores e automações locais
+supabase         schema, policies, storage e seed SQL
 data/raw         planilhas brutas locais ignoradas pelo Git
 public/logos     logos e escudo oficial
 public/team      fotos reais dos jogadores, hero e bastidores
@@ -62,8 +94,12 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
 
 ## Escopo atual
 
-- Site estático.
-- Dados locais em TypeScript com importação da planilha para `src/data/generated`.
+- Site público com fallback local e camada preparada para Supabase.
+- Planilha usada como fonte inicial de migração, não como banco permanente.
+- Supabase preparado para virar a fonte oficial de jogadores, jogos,
+  estatísticas, fotos, álbuns, campeonatos, temporadas e tags.
+- Dados locais em TypeScript mantidos como fallback temporário de
+  desenvolvimento/preview.
 - Filtros públicos por campeonato, temporada, resultado, adversário e status do jogador.
 - Páginas de jogadores e jogos por slug.
 - Galeria com filtros por categoria, campeonato e temporada.
@@ -72,14 +108,19 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
 - Sugestões mockadas de reconhecimento facial restritas ao mock admin.
 - Assets reais organizados em `public/`.
 - Fallback visual para imagens ausentes.
-- Arquitetura preparada para Supabase, painel administrativo e upload futuro.
-- Planilha Manochaco integrada como fonte local de jogadores, jogos,
-  estatísticas e rankings públicos.
+- Cliente Supabase, schema SQL, RLS, Storage e seed inicial preparados.
+- Arquitetura preparada para painel administrativo protegido.
+- Roles administrativas previstas: super admin, admin esportivo, admin
+  financeiro, editor de fotos e leitor.
+- Área financeira privada prevista em banco e documentação, sem exposição no
+  site público.
+- Importador da planilha gera dados iniciais de jogadores, jogos, estatísticas
+  e rankings para migração/revisão.
 - Estatísticas recalculadas a partir dos jogos filtrados e rankings derivados
   dos jogadores históricos ou das abas por campeonato/temporada.
 
-Não há Supabase, autenticação, upload real ou reconhecimento facial em produção
-nesta fase.
+Ainda não há painel administrativo completo, login público, upload real via UI
+ou reconhecimento facial em produção nesta fase.
 
 ## Documentação do produto
 
@@ -90,6 +131,9 @@ nesta fase.
 - `docs/STATS_SYSTEM.md`
 - `docs/ADMIN_PHOTO_WORKFLOW.md`
 - `docs/FACE_RECOGNITION_ARCHITECTURE.md`
+- `docs/AUTH_ADMIN.md`
+- `docs/SUPABASE_STORAGE.md`
+- `supabase/README.md`
 - `DATABASE.md`
 - `SPREADSHEET_SOURCE.md`
 - `ADMIN_PORTAL.md`

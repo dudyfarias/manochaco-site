@@ -6,8 +6,13 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { SmartImage } from "@/components/SmartImage";
 import { StatCard } from "@/components/StatCard";
 import { TaggedPlayersList } from "@/components/TaggedPlayersList";
-import { matches, photos } from "@/data";
-import { getAlbumById, getCompetitionById, getPhotoBySlug } from "@/lib/data";
+import {
+  getAlbumById,
+  getCompetitionById,
+  getMatches,
+  getPhotoBySlug,
+  getPhotos,
+} from "@/lib/data";
 import { formatDate } from "@/lib/format";
 import { faceRecognitionStatusLabels, photoCategoryLabels } from "@/lib/photos";
 
@@ -15,7 +20,9 @@ type PhotoPageProps = {
   params: Promise<{ photoSlug: string }>;
 };
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const photos = await getPhotos();
+
   return photos.map((photo) => ({
     photoSlug: photo.slug,
   }));
@@ -25,7 +32,7 @@ export async function generateMetadata({
   params,
 }: PhotoPageProps): Promise<Metadata> {
   const { photoSlug } = await params;
-  const photo = getPhotoBySlug(photoSlug);
+  const photo = await getPhotoBySlug(photoSlug);
 
   if (!photo) {
     return {
@@ -41,18 +48,20 @@ export async function generateMetadata({
 
 export default async function PhotoPage({ params }: PhotoPageProps) {
   const { photoSlug } = await params;
-  const photo = getPhotoBySlug(photoSlug);
+  const photo = await getPhotoBySlug(photoSlug);
 
   if (!photo) {
     notFound();
   }
 
-  const album = photo.albumId ? getAlbumById(photo.albumId) : null;
+  const [album, matches, photos, competition] = await Promise.all([
+    photo.albumId ? getAlbumById(photo.albumId) : null,
+    getMatches(),
+    getPhotos(),
+    photo.competitionSlug ? getCompetitionById(photo.competitionSlug) : null,
+  ]);
   const relatedMatch = photo.matchId
     ? matches.find((match) => match.id === photo.matchId)
-    : null;
-  const competition = photo.competitionSlug
-    ? getCompetitionById(photo.competitionSlug)
     : null;
   const relatedPhotos = photos
     .filter((candidate) =>

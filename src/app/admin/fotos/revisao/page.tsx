@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { SectionTitle } from "@/components/SectionTitle";
 import { SmartImage } from "@/components/SmartImage";
 import { faceSuggestions, photos } from "@/data";
-import { getPlayerBySlug } from "@/lib/data";
+import { getLocalPlayerBySlug } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Revisão de IA mockada",
@@ -44,7 +44,7 @@ export default function AdminFotosRevisaoPage() {
             {pendingSuggestions.map((suggestion) => {
               const photo = photos.find((item) => item.id === suggestion.photoId);
               const player = suggestion.suggestedPlayerSlug
-                ? getPlayerBySlug(suggestion.suggestedPlayerSlug)
+                ? getLocalPlayerBySlug(suggestion.suggestedPlayerSlug)
                 : null;
 
               return (

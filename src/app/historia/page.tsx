@@ -3,7 +3,7 @@ import { ButtonLink } from "@/components/ButtonLink";
 import { SectionTitle } from "@/components/SectionTitle";
 import { SmartImage } from "@/components/SmartImage";
 import { StatCard } from "@/components/StatCard";
-import { clubStats } from "@/data";
+import { getStats } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "História",
@@ -34,7 +34,9 @@ const timeline = [
   },
 ];
 
-export default function HistoriaPage() {
+export default async function HistoriaPage() {
+  const clubStats = await getStats();
+
   return (
     <div className="bg-[#f7f5ef]">
       <section className="relative overflow-hidden bg-black text-white">

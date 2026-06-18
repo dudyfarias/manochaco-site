@@ -10,6 +10,19 @@ export function hasPublicAsset(src?: string | null) {
   return existsSync(join(process.cwd(), "public", normalized));
 }
 
+export function isRemoteAsset(src?: string | null) {
+  if (!src) {
+    return false;
+  }
+
+  try {
+    const url = new URL(src);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function getInitials(label: string) {
   const words = label
     .trim()

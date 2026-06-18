@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { PlayerCard } from "@/components/PlayerCard";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StatCard } from "@/components/StatCard";
-import { players } from "@/data";
+import { getPlayers } from "@/lib/data";
 import {
   filterPlayers,
   getSingleParam,
@@ -63,6 +63,7 @@ function FilterChip({
 
 export default async function JogadoresPage({ searchParams }: JogadoresPageProps) {
   const resolvedSearchParams = await searchParams;
+  const players = await getPlayers();
   const status = getSingleParam(resolvedSearchParams, "status") as
     | PlayerStatus
     | "all";

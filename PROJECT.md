@@ -16,8 +16,8 @@ experiência clean, moderna e premium.
 ## Objetivo
 
 Criar uma presença digital com aparência de clube profissional para um clube
-amador organizado. A primeira fase usa dados mockados, mas já separa contratos,
-componentes e dados para facilitar a migração futura.
+amador organizado. A primeira fase pública usa fallback local, mas a arquitetura
+agora prepara o Supabase e o painel administrativo como fonte oficial dos dados.
 
 ## Decisões técnicas
 
@@ -25,16 +25,18 @@ componentes e dados para facilitar a migração futura.
 - TypeScript em modo strict.
 - Tailwind CSS para interface responsiva.
 - Componentes pequenos e reutilizáveis.
-- Dados locais em `src/data`.
+- Dados locais em `src/data` como fallback temporário.
+- Camada híbrida em `src/lib/data.ts` para Supabase com fallback local.
+- Schema Supabase preparado em `supabase/`.
 - Relações por slug e IDs estáveis.
 - Imagens servidas a partir de `public`.
-- A planilha Manochaco será a fonte inicial para importação futura de dados.
+- A planilha Manochaco é fonte inicial de migração, não banco permanente.
 
 ## Fonte de dados futura
 
 A workbook `Planilha Manochaco - Treinos, Time e Financeiro-5.xlsx` será usada
-como base para estatísticas históricas, estatísticas por campeonato, jogos e
-financeiro.
+como base inicial para migrar estatísticas históricas, estatísticas por
+campeonato, jogos e financeiro privado.
 
 O site público só deve exibir dados esportivos revisados:
 
@@ -45,11 +47,12 @@ O site público só deve exibir dados esportivos revisados:
 - jogadores e uniformes quando fizer sentido publicamente
 
 A parte financeira deve existir apenas no painel administrativo, com login e
-permissão de admin.
+permissão específica.
 
 Depois da importação inicial, o portal administrativo será o caminho principal
-para cadastrar novos jogos, estatísticas, fotos, títulos e dados financeiros.
-Cada registro deverá preservar sua origem para auditoria.
+para cadastrar, editar, atualizar e remover jogadores, jogos, estatísticas,
+fotos, álbuns, títulos, campeonatos, temporadas, patrocínios e dados
+financeiros. Cada registro deverá preservar sua origem para auditoria.
 
 ## Rotas implementadas
 

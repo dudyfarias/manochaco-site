@@ -32,15 +32,21 @@
 
 ## Fase 2 - Banco de dados
 
-- Criar projeto Supabase.
-- Modelar tabelas de jogadores, jogos, estatísticas, fotos e álbuns.
-- Migrar dados gerados da planilha para seed.
-- Adaptar importador local para gerar seed.
-- Separar estatísticas públicas de finanças privadas durante a importação.
-- Criar camada de repositórios.
+- Status: base técnica preparada em 2026-06-18.
+- Schema Supabase criado em `supabase/schema.sql`.
+- Policies RLS criadas em `supabase/policies.sql`.
+- Buckets e policies de Storage documentados em `supabase/storage-policies.sql`.
+- Clientes Supabase para browser, server e service role criados.
+- Camada híbrida `src/lib/data.ts` criada com fallback local.
+- Adapters snake_case para camelCase criados em `src/lib/adapters`.
+- Script `npm run seed:supabase` criado para a migração inicial dos dados esportivos.
+- Planilha tratada como fonte inicial de importação, não como banco permanente.
+- Supabase definido como fonte oficial após a migração inicial.
+- Tabelas financeiras privadas previstas para a futura área admin, protegidas por RLS.
 
 ## Fase 3 - Painel administrativo
 
+- Status: planejamento incorporado às Fases 8, 9 e 10.
 - Autenticação para administradores.
 - CRUD de jogadores, partidas, competições e títulos.
 - Importação de planilhas de jogos e estatísticas.
@@ -53,6 +59,7 @@
 ## Fase 4 - Importação local da planilha
 
 - Status: concluída em 2026-06-17.
+- Escopo: carga inicial e geração de base para migração, não fonte permanente.
 - Script `npm run import:spreadsheet` criado.
 - Estrutura `data/raw/` criada para planilhas locais ignoradas pelo Git.
 - Estrutura `src/data/generated/` criada para arquivos TypeScript gerados.
@@ -61,6 +68,8 @@
 - Estatísticas gerais e rankings gerados a partir da planilha.
 - Abas financeiras listadas e ignoradas no site público.
 - Camada central `src/data/index.ts` criada para alimentar as páginas.
+- Reimportações futuras devem ter modo seguro, dry-run, logs e revisão para não
+  sobrescrever dados editados manualmente no painel.
 
 ## Fase 4.1 - Filtros e estatísticas avançadas locais
 
@@ -107,9 +116,62 @@
 - Script `npm run audit:images` criado para auditar caminhos locais, hotlinks remotos e vínculos de fotos.
 - Galeria e perfis continuam exibindo apenas tags confirmadas publicamente.
 
-## Fase 7 - Experiência pública
+## Fase 7 - Supabase, Auth e Storage
 
-- Busca e filtros.
+- Status: fundação técnica criada em 2026-06-18.
+- Banco PostgreSQL modelado para jogadores, competições, temporadas, jogos,
+  fotos, álbuns, tags, referências faciais, sugestões de IA, admins e auditoria.
+- Tabelas financeiras privadas modeladas para categorias, transações,
+  mensalidades, patrocinadores e contratos de patrocínio.
+- Roles administrativas previstas: super admin, admin esportivo, admin
+  financeiro, editor de fotos e leitor.
+- Planilha definida como fonte de migração inicial; depois, o painel
+  administrativo passa a ser o caminho principal para criar, editar e remover
+  dados.
+- Supabase Auth documentado para a futura área administrativa.
+- Storage documentado para imagens públicas e referências faciais privadas.
+- Site público continua funcionando sem Supabase configurado.
+- Painel completo, uploads reais e reconhecimento facial real ficam para fases
+  futuras.
+
+## Fase 8 - Painel Administrativo MVP
+
+- Autenticação com Supabase Auth.
+- Dashboard administrativo.
+- CRUD de jogadores, incluindo status ativo, ex-jogador ou comissão.
+- CRUD de jogos, placares, campeonatos, temporadas e resumos.
+- Lançamento de presença, gols, assistências, cartões e dados de goleiro por partida.
+- Recalculo automático de rankings a partir dos lançamentos.
+- Upload de fotos no Supabase Storage.
+- Criação e edição de álbuns.
+- Marcação manual de jogadores em fotos.
+- Revisão mockada de sugestões de IA.
+- Logs de auditoria para alterações sensíveis.
+
+## Fase 9 - Financeiro
+
+- Área financeira privada, sem qualquer item no menu público.
+- Mensalidades, pagamentos, pendências, receitas e despesas.
+- Patrocínios e contratos de patrocínio.
+- Resumo financeiro e controle de caixa do clube.
+- Filtros por mês, ano, jogador e categoria.
+- Exportação de relatórios.
+- Permissões específicas para `super_admin` e `finance_admin`.
+- Todos os valores monetários em centavos.
+
+## Fase 10 - Reconhecimento facial real
+
+- Upload de fotos de referência com consentimento.
+- Processamento real de fotos enviadas.
+- Geração de sugestões automáticas por rosto.
+- Fila de revisão humana.
+- Aprovação, troca ou descarte de sugestões.
+- Publicação apenas de tags confirmadas por administrador.
+- Remoção/revogação de consentimento e auditoria.
+
+## Fase 11 - Experiência pública avançada
+
+- Busca e filtros adicionais.
 - Páginas de temporada.
-- Patrocinadores com relatórios de visibilidade.
+- Patrocinadores com relatórios de visibilidade pública permitida.
 - SEO avançado e imagens OG por rota.

@@ -7,11 +7,11 @@ import { PhotoGrid } from "@/components/PhotoGrid";
 import { SectionTitle } from "@/components/SectionTitle";
 import { SmartImage } from "@/components/SmartImage";
 import { StatCard } from "@/components/StatCard";
-import { players } from "@/data";
 import {
   getMatchesForPlayer,
   getPhotosForPlayer,
   getPlayerBySlug,
+  getPlayers,
 } from "@/lib/data";
 import { generateRankingFromPlayers, type RankingMetric } from "@/lib/stats";
 import type { RankingRow } from "@/types";
@@ -20,7 +20,9 @@ type PlayerPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const players = await getPlayers();
+
   return players.map((player) => ({
     slug: player.slug,
   }));
@@ -30,7 +32,7 @@ export async function generateMetadata({
   params,
 }: PlayerPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const player = getPlayerBySlug(slug);
+  const player = await getPlayerBySlug(slug);
 
   if (!player) {
     return {
@@ -49,7 +51,11 @@ function findRankingPosition(playerSlug: string, ranking: RankingRow[]) {
   return index >= 0 ? index + 1 : null;
 }
 
-function getRankingPosition(playerSlug: string, metric: RankingMetric) {
+function getRankingPosition(
+  playerSlug: string,
+  metric: RankingMetric,
+  players: Awaited<ReturnType<typeof getPlayers>>,
+) {
   return findRankingPosition(
     playerSlug,
     generateRankingFromPlayers(players, metric, players.length),
@@ -62,18 +68,24 @@ function formatAverage(value: number) {
 
 export default async function PlayerPage({ params }: PlayerPageProps) {
   const { slug } = await params;
-  const player = getPlayerBySlug(slug);
+  const [player, players] = await Promise.all([getPlayerBySlug(slug), getPlayers()]);
 
   if (!player) {
     notFound();
   }
 
-  const relatedPhotos = getPhotosForPlayer(player.slug);
-  const relatedMatches = getMatchesForPlayer(player.slug);
-  const scoringPosition = getRankingPosition(player.slug, "goals");
-  const assistsPosition = getRankingPosition(player.slug, "assists");
-  const appearancesPosition = getRankingPosition(player.slug, "matches");
-  const participationPosition = getRankingPosition(player.slug, "goalParticipation");
+  const [relatedPhotos, relatedMatches] = await Promise.all([
+    getPhotosForPlayer(player.slug),
+    getMatchesForPlayer(player.slug),
+  ]);
+  const scoringPosition = getRankingPosition(player.slug, "goals", players);
+  const assistsPosition = getRankingPosition(player.slug, "assists", players);
+  const appearancesPosition = getRankingPosition(player.slug, "matches", players);
+  const participationPosition = getRankingPosition(
+    player.slug,
+    "goalParticipation",
+    players,
+  );
   const goalParticipation =
     player.stats.goalParticipation ?? player.stats.goals + player.stats.assists;
   const goalsPerMatch = player.stats.matches

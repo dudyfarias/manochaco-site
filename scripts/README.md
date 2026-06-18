@@ -1,5 +1,9 @@
 # Importador da planilha Manochaco
 
+Este importador existe para carga inicial, revisão e migração para Supabase. A
+planilha não é fonte permanente: depois da migração, o painel administrativo
+deve ser usado para criar, editar, atualizar e remover dados.
+
 Script principal:
 
 ```bash
@@ -40,6 +44,9 @@ Arquivos:
 - `competitions.generated.ts`
 - `seasons.generated.ts`
 
+Esses arquivos são usados como fallback local e base para `npm run
+seed:supabase`.
+
 ## Abas públicas
 
 O script usa apenas abas esportivas, como:
@@ -56,7 +63,8 @@ O script usa apenas abas esportivas, como:
 ## Abas privadas
 
 Abas financeiras são listadas e ignoradas. Elas não devem aparecer no site
-público.
+público. No futuro, dados financeiros devem ser importados apenas para tabelas
+privadas e com revisão administrativa.
 
 Exemplos:
 
@@ -105,3 +113,9 @@ npm run audit:images
 
 Esse comando ajuda a encontrar fotos ausentes, hotlinks remotos e vínculos
 quebrados entre fotos, álbuns, jogos e jogadores.
+
+## Reimportação futura
+
+Quando o painel administrativo estiver em uso, qualquer nova importação deve ter
+dry-run, diff, logs e confirmação explícita. O importador não deve sobrescrever
+silenciosamente dados editados manualmente no painel.

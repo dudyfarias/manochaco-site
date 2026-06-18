@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ButtonLink } from "@/components/ButtonLink";
 import { CompetitionBadge } from "@/components/CompetitionBadge";
 import { SectionTitle } from "@/components/SectionTitle";
-import { competitions } from "@/data";
+import { getCompetitions } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Campeonatos",
@@ -19,7 +19,9 @@ const competitionDescriptions: Record<string, string> = {
   chuteira: "Campeonato disputado atualmente pelo Manochaco.",
 };
 
-export default function CampeonatosPage() {
+export default async function CampeonatosPage() {
+  const competitions = await getCompetitions();
+
   return (
     <div className="bg-[#f7f5ef]">
       <section className="bg-black py-20 text-white">

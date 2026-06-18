@@ -4,6 +4,13 @@ Esta fase não implementa autenticação, upload real ou persistência. As rotas
 `/admin/fotos` e `/admin/fotos/revisao` são mockadas e servem para guiar a fase
 futura do painel.
 
+A Fase 7 prepara as tabelas e buckets Supabase para esse fluxo, mas os botões
+seguem visuais e sem ação real até a implementação do painel protegido.
+
+Depois que o painel existir, ele será a fonte oficial para fotos, álbuns e
+marcações. O acervo local em `public/` fica como fallback e apoio de
+desenvolvimento.
+
 ## Fluxo manual
 
 1. Administrador acessa o painel de fotos.
@@ -46,3 +53,4 @@ futura do painel.
 - Permitir remoção de marcação.
 - Registrar auditoria no painel futuro.
 - Separar leitura pública de escrita administrativa por RLS.
+- Restringir escrita a `super_admin`, `sports_admin` e `photo_editor`.
