@@ -19,10 +19,12 @@ export function Header() {
           <SmartImage
             src="/logos/manochaco-logo.png"
             alt="Escudo do Clube Atlético Manochaco"
-            width={58}
-            height={46}
+            width={72}
+            height={57}
+            sizes="64px"
             fallbackLabel="M"
             priority
+            className="h-auto w-14 shrink-0 object-contain sm:w-16"
           />
           <div>
             <p className="text-sm font-black uppercase text-[#d1a137]">

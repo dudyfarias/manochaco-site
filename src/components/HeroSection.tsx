@@ -22,11 +22,12 @@ export function HeroSection() {
           <SmartImage
             src="/logos/manochaco-logo.png"
             alt="Escudo do Manochaco"
-            width={210}
-            height={166}
+            width={320}
+            height={254}
+            sizes="(max-width: 640px) 176px, (max-width: 1024px) 224px, 256px"
             fallbackLabel="Manochaco"
             priority
-            className="mb-10"
+            className="mb-10 h-auto w-44 object-contain sm:w-56 lg:w-64"
           />
           <p className="mb-4 text-xs font-black uppercase text-[#f0c35d]">
             Clube Atlético Manochaco

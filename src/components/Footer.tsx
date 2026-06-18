@@ -13,13 +13,15 @@ export function Footer() {
   return (
     <footer className="border-t border-white/10 bg-black text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr] lg:px-8">
-        <div className="flex gap-4">
+        <div className="flex items-start gap-4">
           <SmartImage
             src="/logos/manochaco-logo.png"
             alt="Escudo do Manochaco"
-            width={82}
-            height={65}
+            width={110}
+            height={87}
+            sizes="(max-width: 640px) 80px, 96px"
             fallbackLabel="M"
+            className="h-auto w-20 shrink-0 object-contain sm:w-24"
           />
           <div>
             <p className="text-lg font-black uppercase">

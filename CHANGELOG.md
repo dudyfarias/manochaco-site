@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.2 - 2026-06-18
+
+- Substituição do arquivo público `manochaco-logo.png` pela versão HD do escudo oficial.
+- Correção da renderização do escudo no Header, Hero e Footer para preservar proporção e evitar imagem esticada.
+- Ajuste de tamanhos responsivos do logo para melhorar nitidez no link público da Vercel.
+
 ## 0.6.1 - 2026-06-18
 
 - Troca da nomenclatura pública de "Elenco" para "Jogadores" no menu, Home, páginas, metadados e documentação.
