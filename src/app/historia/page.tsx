@@ -25,7 +25,7 @@ const timeline = [
   {
     year: "Série B",
     title: "Crescimento competitivo",
-    text: "A evolução do elenco leva o clube até a Série B da Liga7 da Playball, consolidando uma história de acesso e permanência.",
+    text: "A evolução dos jogadores leva o clube até a Série B da Liga7 da Playball, consolidando uma história de acesso e permanência.",
   },
   {
     year: "2x",

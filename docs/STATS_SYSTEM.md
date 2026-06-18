@@ -21,7 +21,7 @@ Os filtros públicos usam query string:
 ```text
 /estatisticas?competition=liga7-playball&season=2025&ranking=goals
 /jogos?competition=chuteira&season=2025&result=win&q=Panelinha
-/elenco?status=active&sort=matches
+/jogadores?status=active&sort=matches
 ```
 
 `src/lib/filters.ts` centraliza:
@@ -31,7 +31,7 @@ Os filtros públicos usam query string:
 - filtro de jogos por resultado;
 - busca simples por adversário;
 - filtro de jogadores por status;
-- ordenação de elenco por nome, jogos, gols ou assistências.
+- ordenação de jogadores por nome, jogos, gols ou assistências.
 
 ## Cálculos
 

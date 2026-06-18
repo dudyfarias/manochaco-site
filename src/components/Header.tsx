@@ -4,7 +4,7 @@ import { SmartImage } from "./SmartImage";
 const navItems = [
   { href: "/", label: "Início" },
   { href: "/historia", label: "História" },
-  { href: "/elenco", label: "Elenco" },
+  { href: "/jogadores", label: "Jogadores" },
   { href: "/jogos", label: "Jogos" },
   { href: "/estatisticas", label: "Estatísticas" },
   { href: "/galeria", label: "Galeria" },

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s | CA Manochaco",
   },
   description:
-    "Portal oficial do Clube Atlético Manochaco: história, elenco, estatísticas, jogos, fotos, títulos e patrocínio.",
+    "Portal oficial do Clube Atlético Manochaco: história, jogadores, estatísticas, jogos, fotos, títulos e patrocínio.",
   openGraph: {
     title: "Clube Atlético Manochaco",
     description:

@@ -2,7 +2,7 @@ import type { FaceRecognitionStatus, PhotoCategory } from "@/types";
 
 export const photoCategoryLabels: Record<PhotoCategory, string> = {
   match: "Jogos",
-  team: "Elenco",
+  team: "Jogadores",
   training: "Treinos",
   backstage: "Bastidores",
   title: "Títulos",

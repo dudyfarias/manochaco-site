@@ -25,6 +25,7 @@ npm run dev        # servidor local
 npm run build      # build de produção
 npm run start      # executa o build
 npm run import:spreadsheet # importa a planilha Manochaco
+npm run audit:images # audita imagens locais e vínculos de fotos
 npm run typecheck  # valida TypeScript
 npm run lint       # valida ESLint
 ```
@@ -41,7 +42,7 @@ src/types        contratos TypeScript
 scripts          importadores e automações locais
 data/raw         planilhas brutas locais ignoradas pelo Git
 public/logos     logos e escudo oficial
-public/team      fotos reais do elenco, hero e bastidores
+public/team      fotos reais dos jogadores, hero e bastidores
 public/players   fotos individuais dos jogadores ou fallback
 public/photos    galeria por geral, jogos, bastidores, titulos e treino
 public/sponsors  marcas e ativações futuras
@@ -54,6 +55,10 @@ pastas, formatos e substituição está em `docs/ASSETS.md`.
 
 Quando uma foto individual ou imagem configurada ainda não existe, o componente
 `SmartImage` renderiza um fallback preto e dourado sem quebrar o layout.
+
+As fotos vindas do Google Drive devem ser baixadas e salvas em `public/`; o site
+público não depende de hotlink do Drive. Rode `npm run audit:images` para
+identificar caminhos ausentes, imagens remotas e vínculos quebrados.
 
 ## Escopo atual
 

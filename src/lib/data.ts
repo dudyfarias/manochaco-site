@@ -81,22 +81,34 @@ export function getConfirmedTagsForPhoto(photoId: string) {
 }
 
 export function getPhotosForPlayer(playerSlug: string) {
+  const player = getPlayerBySlug(playerSlug);
   const relatedPhotoIds = photoPlayers
     .filter(
       (relation) =>
-        relation.playerSlug === playerSlug && isPublicPhotoTag(relation),
+        isPublicPhotoTag(relation) &&
+        (relation.playerSlug === playerSlug || relation.playerId === player?.id),
     )
     .map((relation) => relation.photoId);
 
-  return photos.filter((photo) => relatedPhotoIds.includes(photo.id));
+  const uniquePhotoIds = new Set(relatedPhotoIds);
+
+  return photos.filter((photo) => uniquePhotoIds.has(photo.id));
 }
 
 export function getPlayersForPhoto(photoId: string) {
-  const relatedPlayerSlugs = getConfirmedTagsForPhoto(photoId).map(
-    (relation) => relation.playerSlug,
-  );
+  const relatedPlayers = getConfirmedTagsForPhoto(photoId)
+    .map((relation) =>
+      players.find(
+        (player) =>
+          player.slug === relation.playerSlug || player.id === relation.playerId,
+      ),
+    )
+    .filter((player): player is (typeof players)[number] => Boolean(player));
 
-  return players.filter((player) => relatedPlayerSlugs.includes(player.slug));
+  return relatedPlayers.filter(
+    (player, index, allPlayers) =>
+      allPlayers.findIndex((item) => item.id === player.id) === index,
+  );
 }
 
 export function getPendingFaceSuggestions() {

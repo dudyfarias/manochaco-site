@@ -1,6 +1,6 @@
 // Arquivo gerado automaticamente por scripts/import-manochaco-spreadsheet.ts.
 // Fonte: planilha-manochaco.xlsx
-// Gerado em: 2026-06-17T20:03:56.385Z
+// Gerado em: 2026-06-18T13:57:25.946Z
 // Nao edite manualmente; rode npm run import:spreadsheet.
 
 import type { Player } from "@/types";
@@ -16,8 +16,8 @@ export const players: Player[] = [
     number: 13,
     shirtNumber: 13,
     status: "active",
-    image: "/players/torres.jpg",
-    profileImage: "/players/torres.jpg",
+    image: "/players/torres.png",
+    profileImage: "/players/torres.png",
     joinedYear: 2023,
     bio: "Artilheiro histórico do Manochaco, referência ofensiva e líder em gols na base estatística oficial.",
     stats: {
@@ -39,8 +39,8 @@ export const players: Player[] = [
     number: 10,
     shirtNumber: 10,
     status: "active",
-    image: "/players/dudu.jpg",
-    profileImage: "/players/dudu.jpg",
+    image: "/players/dudu.png",
+    profileImage: "/players/dudu.png",
     joinedYear: 2023,
     bio: "Um dos nomes mais presentes da história do Manochaco, com alta participação e peso ofensivo desde a primeira base registrada.",
     stats: {
@@ -62,8 +62,8 @@ export const players: Player[] = [
     number: 8,
     shirtNumber: 8,
     status: "active",
-    image: "/players/bruninho.jpg",
-    profileImage: "/players/bruninho.jpg",
+    image: "/players/bruninho.png",
+    profileImage: "/players/bruninho.png",
     joinedYear: 2023,
     bio: "Meio campista de criação e chegada ao ataque, entre os líderes históricos em gols e assistências.",
     stats: {
@@ -108,8 +108,8 @@ export const players: Player[] = [
     number: 17,
     shirtNumber: 17,
     status: "active",
-    image: "/players/ed-gou.jpg",
-    profileImage: "/players/ed-gou.jpg",
+    image: "/players/ed-gou.png",
+    profileImage: "/players/ed-gou.png",
     joinedYear: 2023,
     bio: "Zagueiro histórico do Manochaco, constante em jogos registrados e parte importante da base defensiva.",
     stats: {
@@ -131,8 +131,8 @@ export const players: Player[] = [
     number: 2,
     shirtNumber: 2,
     status: "active",
-    image: "/players/pedrinho.jpg",
-    profileImage: "/players/pedrinho.jpg",
+    image: "/players/pedrinho.png",
+    profileImage: "/players/pedrinho.png",
     joinedYear: 2023,
     bio: "Ala técnico e vertical, com participação relevante em gols e presença constante nas campanhas do clube.",
     stats: {
@@ -154,8 +154,8 @@ export const players: Player[] = [
     number: 16,
     shirtNumber: 16,
     status: "active",
-    image: "/players/madeus.jpg",
-    profileImage: "/players/madeus.jpg",
+    image: "/players/madeus.png",
+    profileImage: "/players/madeus.png",
     joinedYear: 2023,
     bio: "Meio campista líder histórico em assistências, importante na organização e no último passe do Manochaco.",
     stats: {
@@ -177,8 +177,8 @@ export const players: Player[] = [
     number: 14,
     shirtNumber: 14,
     status: "active",
-    image: "/players/jorge.jpg",
-    profileImage: "/players/jorge.jpg",
+    image: "/players/jorge.png",
+    profileImage: "/players/jorge.png",
     joinedYear: 2023,
     bio: "Atleta registrado na base histórica do Manochaco, com 23 jogos, 8 gols e 4 assistências.",
     stats: {
@@ -200,8 +200,8 @@ export const players: Player[] = [
     number: 4,
     shirtNumber: 4,
     status: "active",
-    image: "/players/nikollas.jpg",
-    profileImage: "/players/nikollas.jpg",
+    image: "/players/nikollas.png",
+    profileImage: "/players/nikollas.png",
     joinedYear: 2023,
     bio: "Zagueiro de presença histórica, referência defensiva e um dos atletas que mais vestiram a camisa do clube.",
     stats: {
@@ -292,8 +292,8 @@ export const players: Player[] = [
     number: 5,
     shirtNumber: 5,
     status: "active",
-    image: "/players/victor-erik.jpg",
-    profileImage: "/players/victor-erik.jpg",
+    image: "/players/victor-erik.png",
+    profileImage: "/players/victor-erik.png",
     joinedYear: 2023,
     bio: "Zagueiro de presença alta no histórico do clube, com regularidade nas campanhas registradas.",
     stats: {
@@ -568,8 +568,8 @@ export const players: Player[] = [
     number: 22,
     shirtNumber: 22,
     status: "active",
-    image: "/players/raphael-casanova.jpg",
-    profileImage: "/players/raphael-casanova.jpg",
+    image: "/players/raphael-casanova.png",
+    profileImage: "/players/raphael-casanova.png",
     joinedYear: 2024,
     bio: "Jogador registrado no histórico do Manochaco e técnico atual do clube.",
     stats: {
@@ -840,8 +840,8 @@ export const players: Player[] = [
     number: 14,
     shirtNumber: 14,
     status: "former",
-    image: "/players/andre-gouveia.jpg",
-    profileImage: "/players/andre-gouveia.jpg",
+    image: "/players/andre-gouveia.png",
+    profileImage: "/players/andre-gouveia.png",
     joinedYear: 2023,
     bio: "Ex-jogador registrado no histórico e antigo técnico do Manochaco.",
     stats: {

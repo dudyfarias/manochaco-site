@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const opportunities = [
   "Marca em área de destaque no portal oficial.",
   "Exposição em fotos, cards de jogos e publicações futuras.",
-  "Associação com elenco, estatísticas, campanhas e títulos.",
+  "Associação com jogadores, estatísticas, campanhas e títulos.",
   "Base preparada para mídia kit e relatórios de visibilidade.",
 ];
 

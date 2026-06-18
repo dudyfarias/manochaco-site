@@ -152,8 +152,8 @@ export default async function EstatisticasPage({
               <ButtonLink href="/campeonatos" variant="ghost">
                 Ver campeonatos
               </ButtonLink>
-              <ButtonLink href="/elenco" variant="ghost">
-                Ver elenco
+              <ButtonLink href="/jogadores" variant="ghost">
+                Ver jogadores
               </ButtonLink>
             </div>
           </div>

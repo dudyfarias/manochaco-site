@@ -26,7 +26,7 @@ export function Footer() {
               Clube Atlético Manochaco
             </p>
             <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
-              Portal oficial para história, elenco, estatísticas, jogos, fotos
+              Portal oficial para história, jogadores, estatísticas, jogos, fotos
               e bastidores. Dados estáticos hoje, estrutura pronta para o painel
               administrativo amanhã.
             </p>

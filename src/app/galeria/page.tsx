@@ -27,7 +27,7 @@ type GaleriaPageProps = {
 const categoryFilters: { label: string; value: PhotoCategory | "all" }[] = [
   { label: "Todos", value: "all" },
   { label: "Jogos", value: "match" },
-  { label: "Elenco", value: "team" },
+  { label: "Jogadores", value: "team" },
   { label: "Treinos", value: "training" },
   { label: "Bastidores", value: "backstage" },
   { label: "Títulos", value: "title" },
@@ -201,7 +201,7 @@ export default async function GaleriaPage({ searchParams }: GaleriaPageProps) {
         <SectionTitle
           eyebrow="Álbuns"
           title="Coleções do Manochaco"
-          description="Álbuns por elenco, jogos, bastidores, títulos, campeonato e temporada."
+          description="Álbuns por jogadores, jogos, bastidores, títulos, campeonato e temporada."
         />
         <div className="mt-10">
           {filteredAlbums.length > 0 ? (

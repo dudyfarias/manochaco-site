@@ -18,14 +18,14 @@ public/
 │   ├── bastidores.jpg
 │   └── hero-home.jpg
 ├── players/
-│   ├── dudu.jpg
-│   ├── torres.jpg
-│   ├── bruninho.jpg
-│   ├── pedrinho.jpg
-│   ├── madeus.jpg
-│   ├── nikollas.jpg
-│   ├── ed-gou.jpg
-│   └── victor-erik.jpg
+│   ├── dudu.png
+│   ├── torres.png
+│   ├── bruninho.png
+│   ├── pedrinho.png
+│   ├── madeus.png
+│   ├── nikollas.png
+│   ├── ed-gou.png
+│   └── victor-erik.png
 ├── photos/
 │   ├── geral/
 │   ├── jogos/
@@ -38,9 +38,9 @@ public/
 ## Onde Colocar Cada Imagem
 
 - `public/logos/`: escudo, logo horizontal, variações e arte do mascote.
-- `public/team/`: fotos amplas do elenco, comemoração, bastidores e hero.
+- `public/team/`: fotos amplas dos jogadores, comemoração, bastidores e hero.
 - `public/players/`: fotos individuais dos jogadores, nomeadas pelo slug.
-- `public/photos/geral/`: fotos gerais do clube e do elenco.
+- `public/photos/geral/`: fotos gerais do clube e dos jogadores.
 - `public/photos/jogos/`: fotos de partidas, nomeadas por jogo e ano.
 - `public/photos/bastidores/`: aquecimento, vestiário, chegada e resenhas.
 - `public/photos/titulos/`: taças, finais, campanhas e comemorações.
@@ -57,6 +57,8 @@ Exemplos:
 dudu.jpg
 torres.jpg
 bruninho.jpg
+dudu.png
+torres.png
 hero-home.jpg
 elenco-principal.jpg
 manochaco-vs-dopinham-forest-2024-01.jpg
@@ -75,6 +77,9 @@ manochaco-vs-expulsos-2024-03.jpg
 
 - Fotos: `.jpg`, qualidade entre 75 e 85.
 - Logos com transparência: `.png` ou `.svg`.
+- Fotos individuais de jogadores: `.png`, `.jpg`, `.jpeg` ou `.webp`. O
+  importador escolhe automaticamente o arquivo local existente em
+  `public/players`.
 - Imagens web modernas: `.webp` pode ser usado futuramente, mas mantenha `.jpg`
   enquanto a base estiver simples.
 
@@ -100,12 +105,25 @@ Os caminhos públicos são referenciados em `src/data`:
 Exemplo:
 
 ```ts
-image: "/players/dudu.jpg"
+image: "/players/dudu.png"
 ```
 
-Se `public/players/dudu.jpg` existir, o site renderiza a foto real. Se não
+Se `public/players/dudu.png` existir, o site renderiza a foto real. Se não
 existir, o componente `SmartImage` renderiza um fallback preto e dourado com as
 iniciais do jogador.
+
+## Auditoria De Imagens
+
+Rode:
+
+```bash
+npm run audit:images
+```
+
+O comando lista imagens locais ausentes, hotlinks remotos, caminhos inválidos,
+tags apontando para jogador ou foto inexistente, álbuns com `photoIds` quebrados
+e jogos com fotos inexistentes. Avisos não quebram o build; eles ajudam a revisar
+o acervo antes de publicar.
 
 ## Fallback De Imagem
 
@@ -136,6 +154,10 @@ Isso evita imagens quebradas no navegador.
 
 As primeiras imagens reais foram organizadas a partir da pasta pública do Google
 Drive do Manochaco, com subpastas `LOGO`, `2023` e `2024`.
+
+O site não deve usar hotlink direto do Google Drive. Baixe a imagem, renomeie em
+minúsculas e sem acentos, coloque na pasta correta dentro de `public/` e atualize
+o caminho nos dados locais quando necessário.
 
 Algumas imagens ainda são capas provisórias enquanto não houver foto específica
 para cada competição. Para substituir, basta trocar o arquivo no caminho final

@@ -185,7 +185,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
         <div>
           <SectionTitle
             eyebrow="Resumo"
-            title="Desempenho no elenco"
+            title="Desempenho histórico"
             description="Ranking e participação histórica do atleta com base na planilha oficial do Manochaco."
           />
         </div>

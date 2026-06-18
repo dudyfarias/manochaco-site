@@ -15,7 +15,7 @@
 - Status: concluída em 2026-06-17.
 - Home com hero mais impactante, cards históricos, rankings resumidos, galeria recente e chamada de patrocínio.
 - Página de jogador com aparência mais profissional, foto em destaque, estatísticas, ranking, fotos relacionadas e jogos.
-- Elenco com grid visual, atalhos por posição e estrutura preparada para filtros.
+- Jogadores com grid visual, atalhos por posição e estrutura preparada para filtros.
 - Estatísticas com cards gerais, rankings limpos e estrutura preparada para filtros por campeonato e temporada.
 - Componentes visuais revisados para manter identidade preta e dourada com menos ruído visual.
 
@@ -23,7 +23,7 @@
 
 - Status: concluída em 2026-06-17.
 - Estrutura de imagens reais criada em `public/`.
-- Logos, fotos de elenco, fotos de jogos, bastidores, títulos e sponsors organizados por pasta.
+- Logos, fotos dos jogadores, fotos de jogos, bastidores, títulos e sponsors organizados por pasta.
 - Primeiras imagens reais baixadas da pasta pública do Google Drive do Manochaco.
 - Home, História, Galeria, Jogos e Patrocínio preparadas para usar imagens reais.
 - Componente de fallback visual criado para evitar imagens quebradas.
@@ -69,7 +69,7 @@
 - Utilitários de cálculo e rankings criados em `src/lib/stats.ts`.
 - Página `/estatisticas` com filtros por campeonato, temporada e tipo de ranking via query string.
 - Página `/jogos` com filtros por campeonato, temporada, resultado e busca por adversário.
-- Página `/elenco` usando por padrão todos os jogadores da aba `Estatística Histórica`.
+- Página `/jogadores` usando por padrão todos os jogadores da aba `Estatística Histórica`.
 - Perfil de jogador com participação em gols, médias e posições históricas.
 - Detalhe de partida com contexto de campeonato, temporada, fase, local, jogadores relacionados e fotos.
 - Página `/campeonatos` criada para explicar Liga7 Playball, Copa FutFudas, Copa Amstel e Chuteira.
@@ -96,6 +96,16 @@
 - LGPD reforçada para dado biométrico e consentimento específico.
 - Documento técnico criado em `docs/FACE_RECOGNITION_ARCHITECTURE.md`.
 - Integração real com IA ainda não implementada.
+
+## Fase 6.1 - Correção de imagens e nomenclatura
+
+- Status: concluída em 2026-06-18.
+- Nomenclatura pública ajustada de "Elenco" para "Jogadores".
+- Rota principal de jogadores consolidada em `/jogadores`.
+- Redirect permanente de `/elenco` para `/jogadores`.
+- Importador da planilha passa a preferir imagens locais existentes em `.png`, `.jpg`, `.jpeg` ou `.webp`.
+- Script `npm run audit:images` criado para auditar caminhos locais, hotlinks remotos e vínculos de fotos.
+- Galeria e perfis continuam exibindo apenas tags confirmadas publicamente.
 
 ## Fase 7 - Experiência pública
 

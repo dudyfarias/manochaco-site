@@ -9,14 +9,14 @@ export const staffMembers: StaffMember[] = [
     role: "Técnico",
     period: "Comissão atual",
     status: "current",
-    image: "/players/raphael-casanova.jpg",
+    image: "/players/raphael-casanova.png",
     summary:
-      "Técnico atual do Manochaco e também ex-jogador do clube, responsável por organizar o time, orientar o elenco e conduzir a equipe nos jogos.",
+      "Técnico atual do Manochaco e também ex-jogador do clube, responsável por organizar o time, orientar os jogadores e conduzir a equipe nos jogos.",
     highlights: [
       "Comissão atual",
       "Ex-jogador",
       "Plano de jogo",
-      "Gestão do elenco",
+      "Gestão dos jogadores",
     ],
   },
   {
@@ -27,7 +27,7 @@ export const staffMembers: StaffMember[] = [
     role: "Ex-técnico",
     period: "Passagem anterior",
     status: "former",
-    image: "/players/andre-gouveia.jpg",
+    image: "/players/andre-gouveia.png",
     summary:
       "Antigo técnico e também ex-jogador do Manochaco, parte do histórico de organização e evolução competitiva do clube.",
     highlights: ["Histórico técnico", "Ex-jogador", "Organização", "Ciclo anterior"],

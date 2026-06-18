@@ -78,7 +78,7 @@ export const matches: Match[] = [
     highlights: [
       "Placar elástico e defesa consistente.",
       "Dudu e Bruninho comandaram a criação pelos lados.",
-      "Elenco manteve concentração até o fim.",
+      "Jogadores mantiveram concentração até o fim.",
     ],
     contributions: [
       { playerSlug: "dudu", goals: 2, assists: 1 },

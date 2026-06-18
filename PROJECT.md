@@ -1,6 +1,6 @@
 # Projeto
 
-O site oficial do Clube Atlético Manochaco reúne história, elenco,
+O site oficial do Clube Atlético Manochaco reúne história, jogadores,
 estatísticas, jogos, resultados, fotos, títulos, patrocínio e contato em uma
 experiência clean, moderna e premium.
 
@@ -42,7 +42,7 @@ O site público só deve exibir dados esportivos revisados:
 - estatísticas por competição e temporada
 - jogos e resultados
 - rankings
-- elenco e uniformes quando fizer sentido publicamente
+- jogadores e uniformes quando fizer sentido publicamente
 
 A parte financeira deve existir apenas no painel administrativo, com login e
 permissão de admin.
@@ -55,7 +55,7 @@ Cada registro deverá preservar sua origem para auditoria.
 
 - `/`
 - `/historia`
-- `/elenco`
+- `/jogadores`
 - `/jogadores/[slug]`
 - `/estatisticas`
 - `/jogos`

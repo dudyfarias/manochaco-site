@@ -43,7 +43,7 @@ export const competitions: Competition[] = [
     name: "Amistoso",
     shortName: "Amistoso",
     description:
-      "Jogos de preparação, integração do elenco e testes para novas formações.",
+      "Jogos de preparação, integração dos jogadores e testes para novas formações.",
     type: "friendly",
   },
 ];

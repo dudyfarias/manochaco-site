@@ -81,3 +81,27 @@ O script registra avisos no console para:
 
 Avisos não quebram a importação quando o dado ainda pode ser revisado
 manualmente.
+
+## Imagens dos jogadores
+
+Ao gerar `players.generated.ts`, o importador procura imagens locais por slug em:
+
+```text
+public/players/{slug}.png
+public/players/{slug}.jpg
+public/players/{slug}.jpeg
+public/players/{slug}.webp
+```
+
+O primeiro arquivo existente é usado em `image` e `profileImage`. Se nenhum
+arquivo existir, o caminho fica preparado para futura foto e o site usa o
+fallback visual.
+
+Depois da importação, rode:
+
+```bash
+npm run audit:images
+```
+
+Esse comando ajuda a encontrar fotos ausentes, hotlinks remotos e vínculos
+quebrados entre fotos, álbuns, jogos e jogadores.

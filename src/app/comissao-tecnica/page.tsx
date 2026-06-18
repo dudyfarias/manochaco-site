@@ -27,7 +27,7 @@ export default function ComissaoTecnicaPage() {
               tone="dark"
             />
             <div className="mt-8 flex flex-wrap gap-3">
-              <ButtonLink href="/elenco">Ver elenco</ButtonLink>
+              <ButtonLink href="/jogadores">Ver jogadores</ButtonLink>
               <ButtonLink href="/jogos" variant="ghost">
                 Ver jogos
               </ButtonLink>

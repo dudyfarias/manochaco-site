@@ -19,6 +19,10 @@ O importador gera:
 
 Dados financeiros não são publicados no site.
 
+Ao gerar jogadores, o importador tenta encontrar a foto local correspondente em
+`public/players/{slug}.png`, `.jpg`, `.jpeg` ou `.webp`. Se nenhuma existir, o
+caminho padrão fica preparado e o site mostra o fallback visual.
+
 ## Onde colocar a planilha
 
 Use a pasta:
@@ -47,6 +51,7 @@ npm run import:spreadsheet -- --input="/caminho/Planilha Manochaco.xlsx"
 ```bash
 npm install
 npm run import:spreadsheet
+npm run audit:images
 npm run typecheck
 npm run dev
 ```

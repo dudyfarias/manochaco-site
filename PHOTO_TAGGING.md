@@ -8,6 +8,22 @@ A fase atual usa uma simulação local:
 - `src/data/playerFaceReferences.ts` simula fotos de referência.
 - A página do jogador consulta essa relação para mostrar fotos relacionadas.
 
+Relação pública esperada:
+
+```ts
+{
+  photoId: "photo-elenco-2025",
+  playerId: "player-dudu",
+  playerSlug: "dudu",
+  tagType: "manual",
+  confirmedByAdmin: true
+}
+```
+
+`playerId` deve bater com `players[].id` e `playerSlug` deve bater com
+`players[].slug`. Rode `npm run audit:images` para encontrar tags com foto ou
+jogador inexistente.
+
 O site público só exibe tags com:
 
 - `confirmedByAdmin: true`;

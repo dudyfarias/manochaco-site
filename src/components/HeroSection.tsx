@@ -6,7 +6,7 @@ export function HeroSection() {
     <section className="relative min-h-[720px] overflow-hidden bg-black text-white">
       <SmartImage
         src="/team/hero-home.jpg"
-        alt="Foto real do elenco do Clube Atlético Manochaco"
+        alt="Foto real dos jogadores do Clube Atlético Manochaco"
         fallbackLabel="Manochaco"
         fallbackText="Foto do time em breve"
         fill
@@ -39,7 +39,7 @@ export function HeroSection() {
             Manochaco.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <ButtonLink href="/elenco">Ver elenco</ButtonLink>
+            <ButtonLink href="/jogadores">Ver jogadores</ButtonLink>
             <ButtonLink href="/estatisticas" variant="ghost">
               Ver estatísticas
             </ButtonLink>

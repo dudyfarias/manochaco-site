@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.1 - 2026-06-18
+
+- Troca da nomenclatura pública de "Elenco" para "Jogadores" no menu, Home, páginas, metadados e documentação.
+- Criação da rota canônica `/jogadores` para a listagem pública de atletas.
+- Manutenção de `/elenco` como redirect permanente para `/jogadores`.
+- Ajuste do importador da planilha para usar a imagem local existente do jogador, preferindo `.png`, `.jpg`, `.jpeg` ou `.webp`.
+- Correção dos caminhos de imagens de jogadores e comissão técnica quando já existem arquivos locais em `public/players`.
+- Criação de `scripts/audit-images.ts` e do comando `npm run audit:images`.
+- Auditoria de vínculos entre fotos, álbuns, jogos e jogadores, sem expor sugestões pendentes de IA no público.
+- Documentação reforçada para baixar imagens do Google Drive para `public/` em vez de usar hotlink.
+
 ## 0.6.0 - 2026-06-17
 
 - Criação de `src/types/photos.ts` com tipos de fotos, álbuns, tags, sugestões faciais e referências faciais.
@@ -22,7 +33,7 @@
 - Geração de `player-stats.generated.ts` com estatísticas por aba esportiva da planilha.
 - Evolução de `/estatisticas` com filtros por campeonato, temporada e ranking via query string.
 - Evolução de `/jogos` com filtros por campeonato, temporada, resultado e busca por adversário.
-- Ajuste de `/elenco` para mostrar por padrão todos os jogadores da aba `Estatística Histórica`.
+- Ajuste da listagem de jogadores para mostrar por padrão todos os atletas da aba `Estatística Histórica`.
 - Melhoria dos rankings com top 3 destacado, camisa e links para perfil do jogador.
 - Melhoria do perfil individual com participação em gols, médias por jogo e posição histórica.
 - Melhoria do detalhe da partida com contexto, jogadores relacionados, fotos e estados vazios.
@@ -37,7 +48,7 @@
 - Criação de `data/raw/` para planilhas locais ignoradas pelo Git.
 - Criação de `src/data/generated/` com jogadores, jogos, estatísticas, rankings, competições e temporadas gerados pela planilha.
 - Criação de `src/data/index.ts` como camada central de origem dos dados.
-- Integração inicial dos dados gerados nas páginas Home, Elenco, Jogador, Estatísticas, Jogos, Detalhe de partida e Títulos.
+- Integração inicial dos dados gerados nas páginas Home, Jogadores, Jogador, Estatísticas, Jogos, Detalhe de partida e Títulos.
 - Geração de 42 jogadores a partir da aba `Estatística Histórica`.
 - Geração de 36 jogos a partir da aba `Jogos Histórico`.
 - Geração de rankings reais de artilharia, assistências, presença, cartões e participação em gols.
@@ -50,7 +61,7 @@
 - Ampliação de `players.ts` para 42 perfis históricos, com 31 atletas ativos e 11 ex-jogadores.
 - Atualização de nomes, apelidos, posições, camisas, jogos, gols e assistências conforme a planilha.
 - Inclusão do status do jogador como ativo ou histórico.
-- Ajuste da página `/elenco` para separar elenco ativo por posição e ex-jogadores em seção própria.
+- Ajuste da página de jogadores para separar atletas ativos por posição e ex-jogadores em seção própria.
 - Ajuste do perfil individual para remover o card de títulos por jogador, dado que essa informação não existe individualizada na planilha.
 
 ## 0.3.0 - 2026-06-17
@@ -60,7 +71,7 @@
 - Substituição do hero da Home, História, Patrocínio, partidas e galeria por imagens reais quando disponíveis.
 - Criação do componente `SmartImage` com fallback preto e dourado para imagens ausentes.
 - Atualização dos dados mockados de jogadores para apontar para fotos reais esperadas em `public/players`.
-- Reorganização de `photos.ts` e `albums.ts` com categorias, capas e álbuns iniciais por elenco, bastidores, jogos, títulos e competições.
+- Reorganização de `photos.ts` e `albums.ts` com categorias, capas e álbuns iniciais por jogadores, bastidores, jogos, títulos e competições.
 - Melhoria da página `/galeria` com filtros visuais preparados, cards de álbum e grid de fotos reais.
 - Preparação da galeria por jogador mantendo a relação `photoPlayers`.
 - Criação da documentação `docs/ASSETS.md`.
@@ -69,7 +80,7 @@
 
 - Refinamento visual inicial da Home com hero mais forte, cards históricos minimalistas, rankings resumidos, galeria recente e chamada de patrocínio.
 - Evolução da página individual de jogador com topo de atleta, foto em destaque, cards de estatísticas, resumo de ranking, fotos relacionadas e jogos ligados ao atleta.
-- Melhoria da página de elenco com grid mais limpo, atalhos por posição e estrutura preparada para filtros futuros.
+- Melhoria da página de jogadores com grid mais limpo, atalhos por posição e estrutura preparada para filtros futuros.
 - Melhoria da página de estatísticas com cards gerais, recortes visuais por competição e rankings separados.
 - Criação da página de comissão técnica em `/comissao-tecnica`.
 - Cadastro de Raphael Casanova como técnico atual e André Gouveia como ex-técnico.

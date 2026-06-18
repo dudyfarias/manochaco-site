@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
@@ -38,6 +39,7 @@ type RawGeneratedStats = {
 const PROJECT_ROOT = process.cwd();
 const DEFAULT_INPUT = path.join(PROJECT_ROOT, "data/raw/planilha-manochaco.xlsx");
 const GENERATED_DIR = path.join(PROJECT_ROOT, "src/data/generated");
+const PUBLIC_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp"] as const;
 
 const HISTORICAL_STATS_SHEET = "Estatística Histórica";
 const MATCH_HISTORY_SHEET = "Jogos Histórico";
@@ -261,6 +263,23 @@ function toPlayerSlug(fullName: string, nickname: string) {
   return PLAYER_SLUG_OVERRIDES[nickname] ?? slugify(nickname || fullName);
 }
 
+function resolvePublicImagePath(assetPathWithoutExtension: string) {
+  for (const extension of PUBLIC_IMAGE_EXTENSIONS) {
+    const publicPath = `${assetPathWithoutExtension}${extension}`;
+    const diskPath = path.join(
+      PROJECT_ROOT,
+      "public",
+      publicPath.replace(/^\/+/, ""),
+    );
+
+    if (existsSync(diskPath)) {
+      return publicPath;
+    }
+  }
+
+  return `${assetPathWithoutExtension}.jpg`;
+}
+
 function toPosition(value: string): PlayerPosition {
   const normalized = stripAccents(value).toLowerCase();
 
@@ -383,6 +402,8 @@ function parseHistoricalPlayers(sheet: Sheet) {
       assists,
     };
 
+    const imagePath = resolvePublicImagePath(`/players/${slug}`);
+
     players.push({
       id: `player-${slug}`,
       slug,
@@ -393,8 +414,8 @@ function parseHistoricalPlayers(sheet: Sheet) {
       ...(number ? { number } : {}),
       ...(number ? { shirtNumber: number } : {}),
       status,
-      image: `/players/${slug}.jpg`,
-      profileImage: `/players/${slug}.jpg`,
+      image: imagePath,
+      profileImage: imagePath,
       joinedYear,
       bio: makePlayerBio(playerBase),
       stats: {

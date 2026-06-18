@@ -65,11 +65,11 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <SectionTitle
-              eyebrow="Elenco"
+              eyebrow="Jogadores"
               title="Atletas em destaque"
               description="Perfis individuais com números, fotos relacionadas e jogos ligados a cada jogador."
             />
-            <ButtonLink href="/elenco">Ver elenco completo</ButtonLink>
+            <ButtonLink href="/jogadores">Ver jogadores</ButtonLink>
           </div>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {featuredPlayers.map((player) => (
@@ -121,7 +121,7 @@ export default function Home() {
           <SectionTitle
             eyebrow="Patrocínio"
             title="Clube amador, presença profissional"
-            description="Espaço para marcas aparecerem junto de jogos, fotos, elenco, estatísticas e campanhas do Manochaco."
+            description="Espaço para marcas aparecerem junto de jogos, fotos, jogadores, estatísticas e campanhas do Manochaco."
             tone="dark"
           />
           <div className="flex flex-wrap gap-3 lg:justify-end">

@@ -26,7 +26,7 @@ const campaigns = [
     title: "Copa Amstel de sábado",
     result: "Em disputa",
     competitionId: "copa-amstel",
-    text: "Calendário ativo para manter ritmo, visibilidade e competitividade do elenco.",
+    text: "Calendário ativo para manter ritmo, visibilidade e competitividade dos jogadores.",
   },
   {
     title: "Chuteira",

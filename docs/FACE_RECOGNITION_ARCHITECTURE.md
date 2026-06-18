@@ -31,6 +31,10 @@ revisão humana.
 3. Registro é criado em `photos`.
 4. Foto recebe status `not_processed` ou `processing`.
 
+Na fase local, fotos vindas do Google Drive devem ser importadas manualmente
+para `public/`. O site público não deve depender de hotlink do Drive, porque a
+entrega pode ser bloqueada e o `next/image` precisa de origem estável.
+
 ## Fluxo de detecção
 
 1. Um job em background processa a imagem.

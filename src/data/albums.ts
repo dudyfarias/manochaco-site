@@ -4,7 +4,7 @@ export const albums: Album[] = [
   {
     id: "album-elenco-2025",
     slug: "elenco-2025",
-    title: "Elenco 2025",
+    title: "Jogadores 2025",
     description: "Fotos oficiais e registros coletivos do grupo.",
     category: "team",
     coverImage: "/team/elenco-principal.jpg",
@@ -79,7 +79,7 @@ export const albums: Album[] = [
     id: "album-chuteira",
     slug: "chuteira",
     title: "Chuteira",
-    description: "Estrutura preparada para jogos, bastidores e elenco no Chuteira.",
+    description: "Estrutura preparada para jogos, bastidores e jogadores no Chuteira.",
     category: "match",
     coverImage: "/team/match-upcoming.png",
     competitionSlug: "chuteira",
