@@ -298,7 +298,7 @@ export async function getAlbums(): Promise<Album[]> {
           loadCompetitionRows(),
           loadSeasonRows(),
           supabase.from("albums").select("*").order("date", { ascending: false }),
-          supabase.from("photos").select("id, album_id"),
+          supabase.from("photos").select("id, album_id").eq("is_public", true),
         ]);
 
       assertNoError(error);
@@ -360,7 +360,11 @@ export async function getPhotos(): Promise<Photo[]> {
       const [competitionRows, seasonRows, { data, error }] = await Promise.all([
         loadCompetitionRows(),
         loadSeasonRows(),
-        supabase.from("photos").select("*").order("date", { ascending: false }),
+        supabase
+          .from("photos")
+          .select("*")
+          .eq("is_public", true)
+          .order("date", { ascending: false }),
       ]);
 
       assertNoError(error);

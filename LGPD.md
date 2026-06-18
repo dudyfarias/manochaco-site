@@ -68,7 +68,7 @@ Uma futura tela `/admin/consentimentos` deve registrar:
 
 ## Autenticação administrativa
 
-O painel futuro deve usar Supabase Auth com checagem server-side de permissões.
+O painel administrativo usa Supabase Auth com checagem server-side de permissões.
 Roles administrativas ficam em `admin_profiles`; decisões de autorização não
 devem depender de `user_metadata`, pois esse campo pode ser editável pelo
 usuário. Chaves de service role são exclusivas de scripts e rotas confiáveis.
@@ -79,7 +79,7 @@ Papéis previstos:
 - `sports_admin`: gestão esportiva;
 - `finance_admin`: financeiro privado;
 - `photo_editor`: fotos e marcações;
-- `reader`: leitura administrativa.
+- `viewer`: leitura administrativa.
 
 Depois da migração inicial, a planilha deixa de ser a fonte de atualização. O
 painel administrativo deve ser o caminho oficial para corrigir ou remover dados

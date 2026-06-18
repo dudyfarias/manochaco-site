@@ -124,7 +124,7 @@
 - Tabelas financeiras privadas modeladas para categorias, transações,
   mensalidades, patrocinadores e contratos de patrocínio.
 - Roles administrativas previstas: super admin, admin esportivo, admin
-  financeiro, editor de fotos e leitor.
+  financeiro, editor de fotos e viewer.
 - Planilha definida como fonte de migração inicial; depois, o painel
   administrativo passa a ser o caminho principal para criar, editar e remover
   dados.
@@ -136,17 +136,21 @@
 
 ## Fase 8 - Painel Administrativo MVP
 
-- Autenticação com Supabase Auth.
-- Dashboard administrativo.
-- CRUD de jogadores, incluindo status ativo, ex-jogador ou comissão.
-- CRUD de jogos, placares, campeonatos, temporadas e resumos.
-- Lançamento de presença, gols, assistências, cartões e dados de goleiro por partida.
-- Recalculo automático de rankings a partir dos lançamentos.
-- Upload de fotos no Supabase Storage.
+- Status: MVP implementado em 2026-06-18.
+- Autenticação administrativa com Supabase Auth.
+- Proteção de `/admin/*` por `src/proxy.ts` e checagens server-side.
+- Dashboard administrativo com atalhos e resumos.
+- CRUD MVP de jogadores, incluindo status ativo, ex-jogador ou comissão.
+- CRUD MVP de jogos, placares, campeonatos, temporadas e resumos.
+- Lançamento MVP de presença, gols, assistências, cartões e dados de goleiro por partida.
+- Rankings públicos preparados para serem alimentados por `player_match_stats`.
+- Upload de fotos no Supabase Storage pelo bucket `photos`.
 - Criação e edição de álbuns.
 - Marcação manual de jogadores em fotos.
 - Revisão mockada de sugestões de IA.
-- Logs de auditoria para alterações sensíveis.
+- Financeiro criado como rota privada placeholder.
+- Logs de auditoria preparados e usados em ações críticas do admin.
+- Documentação criada para admin MVP, deploy e checklist de segurança.
 
 ## Fase 9 - Financeiro
 

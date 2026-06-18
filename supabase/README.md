@@ -59,7 +59,7 @@ para reconhecimento facial futuro, com consentimento explícito e revisão human
 - `sports_admin`: jogadores, jogos, estatísticas, campeonatos e temporadas.
 - `finance_admin`: financeiro privado, patrocinadores e relatórios.
 - `photo_editor`: fotos, álbuns, marcações e fila de revisão.
-- `reader`: leitura administrativa sem edição.
+- `viewer`: leitura administrativa sem edição.
 
 ## Relação com a planilha
 

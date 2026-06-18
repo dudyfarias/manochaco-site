@@ -35,9 +35,8 @@ Na fase local, fotos vindas do Google Drive devem ser importadas manualmente
 para `public/`. O site público não deve depender de hotlink do Drive, porque a
 entrega pode ser bloqueada e o `next/image` precisa de origem estável.
 
-Depois que o painel administrativo existir, novos uploads devem ser feitos pelo
-painel e persistidos no Supabase. Arquivos locais ficam apenas como fallback e
-apoio de desenvolvimento.
+Novos uploads podem ser feitos pelo painel e persistidos no Supabase. Arquivos
+locais ficam apenas como fallback e apoio de desenvolvimento.
 
 ## Fluxo de detecção
 
@@ -80,9 +79,9 @@ Reconhecimento facial envolve dado biométrico. O sistema futuro deve:
 - evitar exposição de dados sensíveis;
 - registrar auditoria de revisão.
 
-## Banco futuro
+## Banco Supabase
 
-Tabelas Supabase preparadas na Fase 7:
+Tabelas Supabase preparadas:
 
 - `photos`;
 - `albums`;
@@ -122,7 +121,6 @@ Nenhum serviço final foi escolhido. A arquitetura deve permitir:
 
 - Dados são mockados.
 - Não há embeddings faciais.
-- Não há upload real.
-- Supabase está preparado, mas ainda sem painel real de upload/revisão.
-- Não há autenticação.
+- Upload administrativo para fotos públicas existe, mas ainda não dispara processamento de IA.
+- Supabase Auth protege o admin MVP.
 - Bounding boxes são armazenadas nos mocks, mas ainda não são desenhadas sobre a imagem.

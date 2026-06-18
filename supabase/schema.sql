@@ -125,6 +125,7 @@ create table if not exists public.photos (
   date date,
   uploaded_at timestamptz default now(),
   face_recognition_status text not null default 'not_processed',
+  is_public boolean not null default true,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   constraint photos_category_check check (
@@ -190,12 +191,14 @@ create table if not exists public.face_detection_suggestions (
 create table if not exists public.admin_profiles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid unique not null references auth.users(id) on delete cascade,
+  email text,
+  name text,
   full_name text,
-  role text not null default 'reader',
+  role text not null default 'viewer',
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   constraint admin_profiles_role_check check (
-    role in ('super_admin', 'sports_admin', 'finance_admin', 'photo_editor', 'reader')
+    role in ('super_admin', 'sports_admin', 'finance_admin', 'photo_editor', 'viewer')
   )
 );
 
@@ -301,6 +304,15 @@ create table if not exists public.financial_transactions (
   constraint financial_transactions_status_check check (status in ('pending', 'paid', 'canceled'))
 );
 
+alter table public.photos
+add column if not exists is_public boolean not null default true;
+
+alter table public.admin_profiles
+add column if not exists email text;
+
+alter table public.admin_profiles
+add column if not exists name text;
+
 create index if not exists players_status_idx on public.players(status);
 create index if not exists matches_date_idx on public.matches(date desc);
 create index if not exists matches_competition_id_idx on public.matches(competition_id);
@@ -309,6 +321,7 @@ create index if not exists player_match_stats_player_id_idx on public.player_mat
 create index if not exists player_match_stats_match_id_idx on public.player_match_stats(match_id);
 create index if not exists photos_album_id_idx on public.photos(album_id);
 create index if not exists photos_match_id_idx on public.photos(match_id);
+create index if not exists photos_is_public_idx on public.photos(is_public);
 create index if not exists photo_player_tags_photo_id_idx on public.photo_player_tags(photo_id);
 create index if not exists photo_player_tags_player_id_idx on public.photo_player_tags(player_id);
 create index if not exists face_detection_suggestions_status_idx on public.face_detection_suggestions(status);
@@ -384,3 +397,17 @@ drop trigger if exists set_financial_transactions_updated_at on public.financial
 create trigger set_financial_transactions_updated_at
 before update on public.financial_transactions
 for each row execute function public.set_updated_at();
+
+update public.admin_profiles
+set role = 'viewer'
+where role = 'reader';
+
+alter table public.admin_profiles
+alter column role set default 'viewer';
+
+alter table public.admin_profiles
+drop constraint if exists admin_profiles_role_check;
+
+alter table public.admin_profiles
+add constraint admin_profiles_role_check
+check (role in ('super_admin', 'sports_admin', 'finance_admin', 'photo_editor', 'viewer'));

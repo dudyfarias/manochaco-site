@@ -15,6 +15,7 @@ type IdSlugRow = {
 };
 
 let supabase: ReturnType<typeof createSupabaseServiceClient>;
+const isDryRun = process.argv.includes("--dry-run");
 
 function toDate(value?: string) {
   return value ? value.slice(0, 10) : null;
@@ -27,6 +28,11 @@ async function upsertRows(
 ) {
   if (rows.length === 0) {
     console.log(`- ${table}: nenhum registro para upsert`);
+    return;
+  }
+
+  if (isDryRun) {
+    console.log(`- ${table}: dry-run, ${rows.length} registros seriam enviados`);
     return;
   }
 
@@ -54,6 +60,13 @@ async function main() {
 
   console.log("Seed Supabase - Clube Atlético Manochaco");
   console.log("Usando apenas dados esportivos públicos locais.");
+  console.log(
+    "Atenção: este seed é carga inicial. Depois do admin em produção, rode com cuidado para não sobrescrever revisões manuais.",
+  );
+
+  if (isDryRun) {
+    console.log("Modo dry-run ativo: nenhum dado será gravado.");
+  }
 
   await upsertRows(
     "competitions",
@@ -177,6 +190,7 @@ async function main() {
       date: toDate(photo.date),
       uploaded_at: photo.uploadedAt ?? null,
       face_recognition_status: photo.faceRecognitionStatus,
+      is_public: true,
     })),
     "slug",
   );

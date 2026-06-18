@@ -1,10 +1,9 @@
 # Supabase Storage
 
-O Storage será usado para servir imagens reais do Manochaco e organizar uploads
-administrativos no futuro.
+O Storage serve imagens reais do Manochaco e organiza uploads administrativos.
 
 Depois da migração inicial, novas imagens devem ser enviadas pelo painel
-administrativo. Arquivos locais em `public/` continuam úteis para fallback,
+administrativo em `/admin/galeria/fotos`. Arquivos locais em `public/` continuam úteis para fallback,
 desenvolvimento e assets versionados de marca, mas não devem ser o fluxo
 principal de atualização do acervo.
 
@@ -39,6 +38,15 @@ face-references/dudu/reference-001.jpg
   consentimento.
 - Uploads financeiros ou documentos internos, caso existam no futuro, não
   devem usar buckets públicos.
+
+## Upload no admin MVP
+
+- A tela `/admin/galeria/fotos` aceita arquivo de imagem.
+- O upload usa o bucket `photos`.
+- O nome do arquivo é normalizado para minúsculas, sem espaços e caracteres especiais.
+- A URL pública retornada pelo Storage é salva na tabela `photos`.
+- `photos.is_public` controla se a imagem aparece no site público.
+- O bucket `face-references` permanece privado e não é usado pelo upload público.
 
 ## Relação com o site
 

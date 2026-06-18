@@ -1,19 +1,21 @@
 # Autenticação administrativa
 
-A área pública do site não exige login. A área administrativa futura usará
-Supabase Auth para proteger edição de jogadores, jogos, estatísticas, fotos,
-álbuns, marcações, financeiro e auditoria.
+A área pública do site não exige login. A área administrativa usa Supabase Auth
+para proteger edição de jogadores, jogos, estatísticas, fotos, álbuns,
+marcações, financeiro e auditoria.
 
-## Escopo desta fase
+## Escopo da Fase 8
 
 - Cliente Supabase server/browser criado.
-- Tabela `admin_profiles` preparada.
-- Tabela `audit_logs` preparada.
-- Rota `/admin` criada apenas como placeholder visual.
-- Nenhum login real foi implementado ainda.
+- Login por e-mail e senha em `/admin/login`.
+- Logout via Server Action.
+- `src/proxy.ts` redireciona visitantes sem sessão para `/admin/login`.
+- `src/lib/auth.ts` faz a checagem server-side de usuário e role.
+- Tabela `admin_profiles` usada para permissões administrativas.
+- Tabela `audit_logs` preparada e usada em ações críticas.
 - RLS preparada para separar edição esportiva, edição de fotos e financeiro.
 
-## Regras futuras
+## Regras
 
 - Verificar permissões server-side em Server Components, Server Actions ou Route
   Handlers.
@@ -31,25 +33,36 @@ Supabase Auth para proteger edição de jogadores, jogos, estatísticas, fotos,
 - `sports_admin`: jogadores, jogos, estatísticas, campeonatos, temporadas e fotos esportivas.
 - `finance_admin`: mensalidades, receitas, despesas, patrocinadores e relatórios financeiros.
 - `photo_editor`: upload, álbuns, marcações manuais e revisão de fotos.
-- `reader`: visualização administrativa sem edição.
+- `viewer`: visualização administrativa sem edição.
 
-## Rotas futuras
+## Rotas implementadas ou preparadas
 
 - `/admin/login`
 - `/admin`
 - `/admin/jogadores`
+- `/admin/jogadores/novo`
+- `/admin/jogadores/[id]`
 - `/admin/jogos`
-- `/admin/fotos`
-- `/admin/fotos/revisao`
-- `/admin/consentimentos`
+- `/admin/jogos/novo`
+- `/admin/jogos/[id]`
 - `/admin/campeonatos`
 - `/admin/temporadas`
+- `/admin/galeria`
+- `/admin/galeria/albuns`
+- `/admin/galeria/fotos`
+- `/admin/galeria/fotos/[id]`
+- `/admin/fotos/revisao`
 - `/admin/financeiro`
-- `/admin/financeiro/mensalidades`
-- `/admin/financeiro/transacoes`
-- `/admin/financeiro/patrocinios`
+- `/admin/configuracoes`
 
 Essas rotas não devem aparecer no menu público.
+
+## Limitações atuais
+
+- Gestão de usuários admin ainda deve ser feita pelo Supabase Dashboard ou SQL.
+- Autorização fina por campo ainda é limitada ao conjunto de roles nas ações.
+- Financeiro é placeholder privado e será detalhado na Fase 9.
+- Reconhecimento facial real ainda não existe; a revisão opera sobre sugestões já registradas.
 
 ## Fonte oficial dos dados
 

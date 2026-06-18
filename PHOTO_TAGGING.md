@@ -36,9 +36,9 @@ O site público só exibe tags com:
 Tags `ai_suggested` ou sugestões pendentes nunca aparecem como marcações
 públicas.
 
-## Marcação manual futura
+## Marcação manual no admin MVP
 
-No painel administrativo, um admin autorizado poderá:
+No painel administrativo, um admin autorizado pode:
 
 - Criar álbuns.
 - Fazer upload de fotos.
@@ -50,7 +50,7 @@ No painel administrativo, um admin autorizado poderá:
 
 Fluxo previsto:
 
-1. administrador acessa `/admin/fotos`;
+1. administrador acessa `/admin/galeria/fotos`;
 2. seleciona ou envia uma foto;
 3. escolhe o álbum, jogo, campeonato e temporada;
 4. clica em "Marcar jogador";
@@ -58,7 +58,7 @@ Fluxo previsto:
 6. salva;
 7. a foto passa a aparecer no perfil do jogador.
 
-## Supabase na Fase 7
+## Supabase e Fase 8
 
 A persistência real será feita nas tabelas:
 
@@ -81,7 +81,7 @@ As permissões previstas são:
 
 - `super_admin` e `sports_admin`: gestão completa do acervo esportivo;
 - `photo_editor`: upload, álbuns, marcações e revisão de fotos;
-- `reader`: visualização administrativa sem edição.
+- `viewer`: visualização administrativa sem edição.
 
 ## IA futura com revisão humana
 
@@ -93,7 +93,8 @@ Reconhecimento facial só deve sugerir marcações. O fluxo correto:
 4. Um humano aprova ou rejeita cada sugestão.
 5. Apenas marcações aprovadas aparecem no site público.
 
-O mock de revisão fica em `/admin/fotos/revisao`.
+O MVP de revisão fica em `/admin/fotos/revisao`. Ele ainda não processa rostos
+de verdade, mas pode confirmar, trocar ou ignorar sugestões existentes.
 
 ## Cuidados
 

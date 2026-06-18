@@ -1,14 +1,12 @@
 # Workflow administrativo de fotos
 
-Esta fase não implementa autenticação, upload real ou persistência. As rotas
-`/admin/fotos` e `/admin/fotos/revisao` são mockadas e servem para guiar a fase
-futura do painel.
+O admin MVP implementa autenticação, upload de fotos públicas no Supabase
+Storage e persistência de álbuns, fotos e tags manuais. A rota
+`/admin/fotos/revisao` segue como revisão mockada de IA, sem processamento real
+de reconhecimento facial.
 
-A Fase 7 prepara as tabelas e buckets Supabase para esse fluxo, mas os botões
-seguem visuais e sem ação real até a implementação do painel protegido.
-
-Depois que o painel existir, ele será a fonte oficial para fotos, álbuns e
-marcações. O acervo local em `public/` fica como fallback e apoio de
+O painel é a fonte oficial para fotos, álbuns e marcações depois da migração
+inicial. O acervo local em `public/` fica como fallback e apoio de
 desenvolvimento.
 
 ## Fluxo manual
@@ -51,6 +49,6 @@ desenvolvimento.
 - Não publicar sugestão pendente.
 - Não usar foto de referência sem consentimento.
 - Permitir remoção de marcação.
-- Registrar auditoria no painel futuro.
+- Registrar auditoria para ações sensíveis.
 - Separar leitura pública de escrita administrativa por RLS.
 - Restringir escrita a `super_admin`, `sports_admin` e `photo_editor`.

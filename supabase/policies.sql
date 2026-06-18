@@ -75,7 +75,7 @@ as $$
     'sports_admin',
     'finance_admin',
     'photo_editor',
-    'reader'
+    'viewer'
   ]);
 $$;
 
@@ -169,7 +169,7 @@ drop policy if exists "Public can read photos" on public.photos;
 create policy "Public can read photos"
 on public.photos
 for select
-using (true);
+using (is_public = true);
 
 drop policy if exists "Public can read confirmed photo tags" on public.photo_player_tags;
 create policy "Public can read confirmed photo tags"

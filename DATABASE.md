@@ -1,8 +1,9 @@
 # Banco de dados
 
-A Fase 7 cria a fundação Supabase do Manochaco. O Supabase deve se tornar a
-fonte oficial do sistema depois da migração inicial da planilha. A planilha não
-é banco permanente e não deve ser necessária para atualizar o site no futuro.
+A Fase 7 criou a fundação Supabase do Manochaco e a Fase 8 adicionou o painel
+administrativo MVP. O Supabase deve ser a fonte oficial do sistema depois da
+migração inicial da planilha. A planilha não é banco permanente e não deve ser
+necessária para atualizar o site no futuro.
 
 Os arquivos executáveis ficam em `supabase/`:
 
@@ -38,7 +39,7 @@ segurança de build, não como fonte definitiva.
 
 O site público pode ler essas tabelas conforme as policies. Tags de foto só
 aparecem publicamente quando `confirmed_by_admin = true` e `tag_type` é
-`manual` ou `ai_confirmed`.
+`manual` ou `ai_confirmed`. Fotos públicas devem ter `photos.is_public = true`.
 
 ## Tabelas administrativas e biometria
 
@@ -72,14 +73,14 @@ Valores monetários devem ser salvos em centavos.
 - `sports_admin`: jogadores, jogos, estatísticas, campeonatos, temporadas e fotos esportivas.
 - `finance_admin`: financeiro privado, patrocínios e relatórios financeiros.
 - `photo_editor`: upload, álbuns, marcação manual e revisão de fotos.
-- `reader`: visualização administrativa sem edição.
+- `viewer`: visualização administrativa sem edição.
 
 As permissões devem ser verificadas server-side e reforçadas por RLS. Nunca
 autorizar ações sensíveis apenas com dados vindos do client.
 
-## Relação com o painel administrativo
+## Relação com o painel administrativo MVP
 
-O painel futuro será a interface principal para:
+O painel administrativo é a interface principal para:
 
 - gerenciar jogadores e comissão;
 - gerenciar jogos, resultados e estatísticas por partida;
@@ -87,8 +88,10 @@ O painel futuro será a interface principal para:
 - fazer upload de fotos e criar álbuns;
 - marcar jogadores em fotos;
 - revisar sugestões de reconhecimento facial;
-- gerenciar financeiro privado;
 - registrar auditoria de alterações.
+
+Nesta fase, o financeiro existe como rota privada placeholder e como tabelas
+protegidas para a Fase 9.
 
 ## Scripts
 
@@ -98,3 +101,6 @@ revisão/migração inicial.
 `npm run seed:supabase` envia dados locais/generated para o Supabase usando
 `SUPABASE_SERVICE_ROLE_KEY`. Esse script deve rodar apenas em ambiente local ou
 server-side confiável e nunca no client.
+
+`npm run validate:prod` valida variáveis de ambiente, tabelas principais,
+buckets esperados e isolamento básico de tabelas privadas.

@@ -22,6 +22,7 @@ export type SupabasePhotoRow = {
   date?: string | null;
   uploaded_at?: string | null;
   face_recognition_status?: string | null;
+  is_public?: boolean | null;
   created_at?: string | null;
 };
 

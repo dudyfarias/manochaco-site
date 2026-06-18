@@ -9,6 +9,7 @@
     "import:spreadsheet": "tsx scripts/import-manochaco-spreadsheet.ts",
     "seed:supabase": "tsx scripts/seed-supabase.ts",
     "audit:images": "tsx scripts/audit-images.ts",
+    "validate:prod": "tsx scripts/validate-production.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint"
   },

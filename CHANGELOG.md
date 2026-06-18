@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.8.0 - 2026-06-18
+
+- Implementação do login administrativo em `/admin/login` com Supabase Auth.
+- Criação de `src/proxy.ts` para proteger rotas `/admin/*`, exceto login.
+- Criação de `src/lib/auth.ts` com leitura de `admin_profiles` e checagem server-side de roles.
+- Criação do layout administrativo com sidebar, topo, logout e navegação interna.
+- Criação do dashboard `/admin` com métricas, últimos jogos, últimas fotos e atalhos.
+- Implementação do CRUD MVP de jogadores em `/admin/jogadores`.
+- Implementação do CRUD MVP de jogos em `/admin/jogos`, com cálculo automático de resultado.
+- Implementação do lançamento MVP de estatísticas por jogador em `player_match_stats`.
+- Implementação do CRUD MVP de campeonatos e temporadas.
+- Implementação do CRUD MVP de álbuns e fotos em `/admin/galeria`.
+- Preparação de upload para Supabase Storage no bucket `photos`.
+- Implementação de marcação manual confirmada em `photo_player_tags`.
+- Implementação da revisão mockada de IA em `/admin/fotos/revisao`.
+- Criação da rota protegida `/admin/financeiro` como placeholder privado.
+- Inclusão de `photos.is_public` para controlar publicação no site público.
+- Atualização da camada pública para exibir somente fotos públicas e tags confirmadas.
+- Criação do script `npm run validate:prod` para validar env, tabelas, buckets e leitura pública.
+- Criação de `docs/ADMIN_MVP.md`, `docs/DEPLOYMENT.md` e `docs/SECURITY_CHECKLIST.md`.
+- Atualização da documentação para deixar Supabase como fonte principal e a planilha como migração inicial.
+
 ## 0.7.0 - 2026-06-18
 
 - Instalação de `@supabase/supabase-js` e `@supabase/ssr`.
@@ -10,13 +32,13 @@
 - Criação de adapters para converter dados Supabase em snake_case para os tipos camelCase do front-end.
 - Atualização das rotas públicas principais para consumir dados pela camada central.
 - Criação do script `npm run seed:supabase` para migrar dados esportivos públicos locais.
-- Criação da rota placeholder `/admin`, sem autenticação real e fora do menu público.
+- Criação da rota placeholder `/admin`, posteriormente substituída pelo admin MVP.
 - Criação da documentação `docs/AUTH_ADMIN.md` e `docs/SUPABASE_STORAGE.md`.
 - Atualização de documentação de banco, LGPD, marcação de fotos e reconhecimento facial para Supabase.
 - Manutenção da regra de não exibir dados financeiros no site público.
 - Correção de escopo da Fase 7: a planilha passa a ser tratada apenas como fonte inicial de migração.
 - Definição do Supabase e do futuro painel administrativo como fonte oficial dos dados após a migração inicial.
-- Preparação de roles granulares: `super_admin`, `sports_admin`, `finance_admin`, `photo_editor` e `reader`.
+- Preparação de roles granulares: `super_admin`, `sports_admin`, `finance_admin`, `photo_editor` e `viewer`.
 - Inclusão de tabelas financeiras privadas no schema: categorias, transações, mensalidades, patrocinadores e contratos.
 - Atualização das policies para separar gestão esportiva, gestão de fotos, financeiro privado e leitura pública.
 - Documentação de reimportação segura com dry-run, logs, diff e revisão para evitar sobrescrever dados editados no painel.
