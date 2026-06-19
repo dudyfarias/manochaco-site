@@ -124,8 +124,11 @@ export type AdminFaceSuggestionRow = {
     width: number;
     height: number;
   };
-  status: "pending" | "confirmed" | "changed" | "ignored";
+  provider: string | null;
+  provider_face_id: string | null;
+  status: "pending" | "confirmed" | "changed" | "ignored" | "error";
   photos?: {
+    id?: string | null;
     title?: string | null;
     url?: string | null;
     alt?: string | null;
@@ -134,6 +137,23 @@ export type AdminFaceSuggestionRow = {
     nickname?: string | null;
     name?: string | null;
   } | null;
+};
+
+export type AdminFaceReferenceRow = {
+  id: string;
+  player_id: string;
+  image_url: string;
+  storage_path: string | null;
+  provider: string | null;
+  provider_face_id: string | null;
+  provider_collection_id: string | null;
+  approved_for_recognition: boolean;
+  consent_given: boolean;
+  indexing_status: "not_indexed" | "indexing" | "indexed" | "error";
+  indexing_error: string | null;
+  indexed_at: string | null;
+  created_at: string | null;
+  signed_url?: string | null;
 };
 
 export async function getAdminSupabase() {
@@ -273,11 +293,47 @@ export async function listPhotoTags(photoId: string) {
   return (assertAdminData(data, error, "photo_player_tags") ?? []) as AdminPhotoTagRow[];
 }
 
+export async function listPlayerFaceReferences(playerId: string) {
+  const supabase = await getAdminSupabase();
+  const { data, error } = await supabase
+    .from("player_face_references")
+    .select("*")
+    .eq("player_id", playerId)
+    .order("created_at", { ascending: false });
+  const references = (assertAdminData(data, error, "player_face_references") ??
+    []) as AdminFaceReferenceRow[];
+
+  return Promise.all(
+    references.map(async (reference) => {
+      if (!reference.storage_path) {
+        return reference;
+      }
+
+      const { data: signedData } = await supabase.storage
+        .from("face-references")
+        .createSignedUrl(reference.storage_path, 15 * 60);
+
+      return { ...reference, signed_url: signedData?.signedUrl ?? null };
+    }),
+  );
+}
+
+export async function listPendingRecognitionPhotos() {
+  const supabase = await getAdminSupabase();
+  const { data, error } = await supabase
+    .from("photos")
+    .select("id, title, face_recognition_status")
+    .in("face_recognition_status", ["not_processed", "queued", "error"])
+    .order("uploaded_at", { ascending: true });
+
+  return assertAdminData(data, error, "pending_recognition_photos") ?? [];
+}
+
 export async function listPendingFaceSuggestions() {
   const supabase = await getAdminSupabase();
   const { data, error } = await supabase
     .from("face_detection_suggestions")
-    .select("*, photos(title, url, alt), players(nickname, name)")
+    .select("*, photos(id, title, url, alt), players(nickname, name)")
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 

@@ -61,8 +61,8 @@ Essas rotas não devem aparecer no menu público.
 
 - Gestão de usuários admin ainda deve ser feita pelo Supabase Dashboard ou SQL.
 - Autorização fina por campo ainda é limitada ao conjunto de roles nas ações.
-- Financeiro é placeholder privado e será detalhado na Fase 9.
-- Reconhecimento facial real ainda não existe; a revisão opera sobre sugestões já registradas.
+- Financeiro é placeholder privado e será detalhado em fase posterior.
+- Reconhecimento facial usa rotas server-side autorizadas; credenciais AWS nunca chegam ao navegador.
 
 ## Fonte oficial dos dados
 

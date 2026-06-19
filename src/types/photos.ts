@@ -10,11 +10,25 @@ export type PhotoTagType = "manual" | "ai_suggested" | "ai_confirmed";
 
 export type FaceRecognitionStatus =
   | "not_processed"
+  | "queued"
   | "processing"
   | "processed"
   | "needs_review"
-  | "approved"
-  | "rejected";
+  | "error"
+  | "approved";
+
+export type FaceSuggestionStatus =
+  | "pending"
+  | "confirmed"
+  | "changed"
+  | "ignored"
+  | "error";
+
+export type FaceReferenceIndexingStatus =
+  | "not_indexed"
+  | "indexing"
+  | "indexed"
+  | "error";
 
 export type BoundingBox = {
   x: number;
@@ -74,7 +88,9 @@ export interface FaceDetectionSuggestion {
   suggestedPlayerSlug?: string;
   confidence: number;
   boundingBox: BoundingBox;
-  status: "pending" | "confirmed" | "changed" | "ignored";
+  provider?: string;
+  providerFaceId?: string;
+  status: FaceSuggestionStatus;
 }
 
 export interface PlayerFaceReference {
@@ -82,7 +98,14 @@ export interface PlayerFaceReference {
   playerId: string;
   playerSlug: string;
   imageUrl: string;
+  storagePath?: string;
+  provider?: string;
+  providerFaceId?: string;
+  providerCollectionId?: string;
   approvedForRecognition: boolean;
   consentGiven: boolean;
+  indexingStatus?: FaceReferenceIndexingStatus;
+  indexingError?: string;
+  indexedAt?: string;
   createdAt?: string;
 }

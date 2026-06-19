@@ -18,6 +18,9 @@
 - `SUPABASE_SERVICE_ROLE_KEY` apenas em scripts/server-side.
 - `.env.local` ignorado pelo Git.
 - `.env.example` sem valores reais.
+- `AWS_SECRET_ACCESS_KEY` e `AWS_ACCESS_KEY_ID` somente server-side.
+- Módulos do provider protegidos por `server-only`.
+- `FACE_RECOGNITION_AUTO_APPROVE=false` em todos os ambientes.
 
 ## Admin
 
@@ -27,6 +30,8 @@
 - Financeiro liberado apenas para `super_admin` e `finance_admin`.
 - Gestão esportiva restrita a roles administrativas.
 - Ações críticas devem registrar `audit_logs`.
+- Rotas `/api/admin/face-recognition/*` validam sessão e role server-side.
+- Route Handlers mutáveis validam `Origin` e UUID em runtime.
 
 ## Uploads
 
@@ -34,8 +39,10 @@
 - Normalizar nomes de arquivos.
 - Evitar espaços, acentos e caracteres especiais.
 - Separar fotos públicas de referências faciais privadas.
-- Definir tamanho máximo antes de produção final.
-- Validar tipo MIME e extensão.
+- Fotos de referência limitadas a JPEG/PNG e 5 MB.
+- Assinatura binária JPEG/PNG validada antes do upload privado.
+- Fotos processadas só podem vir do site ou do host Supabase configurado.
+- Redirects de download são bloqueados para reduzir risco de SSRF.
 
 ## LGPD
 
@@ -44,6 +51,9 @@
 - Manter fotos de referência privadas.
 - Permitir remoção de foto ou marcação.
 - Publicar apenas tags confirmadas por humano.
+- Revogar consentimento remove o Face ID indexado antes de limpar o registro.
+- Definir responsável, prazo de retenção e processo de atendimento ao titular.
+- Respostas brutas e IDs do provider permanecem privados.
 - Não publicar mensalidades, dívidas, pagamentos ou caixa do clube.
 
 ## Produção
@@ -55,3 +65,5 @@
 - Rodar `npm run validate:prod` com Supabase configurado.
 - Validar login e logout admin.
 - Validar que o menu público não mostra admin.
+- Configurar AWS Budgets/alertas e acompanhar custo por volume de rostos.
+- Testar indexação e remoção com uma referência consentida antes de liberar o lote.

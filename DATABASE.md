@@ -52,6 +52,17 @@ Essas tabelas não têm leitura pública. Fotos de referência facial são priva
 exigem consentimento específico. Sugestões de IA ficam internas até revisão
 humana.
 
+`player_face_references` registra `storage_path`, provider, Face ID, collection,
+estado/erro de indexação e data. Consentimento e aprovação são obrigatórios
+antes da indexação.
+
+`face_detection_suggestions` registra provider, Face ID correspondente,
+confiança normalizada, bounding box, status e `raw_response` privada. Os status
+permitidos incluem `pending`, `confirmed`, `changed`, `ignored` e `error`.
+
+`photos.face_recognition_status` usa `not_processed`, `queued`, `processing`,
+`processed`, `needs_review`, `error` ou `approved`.
+
 ## Tabelas financeiras privadas
 
 - `financial_categories`
@@ -60,7 +71,7 @@ humana.
 - `sponsors`
 - `sponsorship_contracts`
 
-Essas tabelas estão preparadas para a Fase 9 e devem permanecer privadas. Não
+Essas tabelas estão preparadas para uma fase financeira futura e devem permanecer privadas. Não
 exibir no site público mensalidades, dívidas, pagamentos individuais, dados
 bancários, despesas internas, caixa do clube ou qualquer informação financeira
 sensível.
@@ -91,7 +102,7 @@ O painel administrativo é a interface principal para:
 - registrar auditoria de alterações.
 
 Nesta fase, o financeiro existe como rota privada placeholder e como tabelas
-protegidas para a Fase 9.
+protegidas para uma fase posterior.
 
 ## Scripts
 

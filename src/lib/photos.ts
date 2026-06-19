@@ -11,9 +11,10 @@ export const photoCategoryLabels: Record<PhotoCategory, string> = {
 
 export const faceRecognitionStatusLabels: Record<FaceRecognitionStatus, string> = {
   not_processed: "Não processada",
+  queued: "Na fila",
   processing: "Em processamento",
   processed: "Processada",
   needs_review: "Revisão pendente",
+  error: "Erro no processamento",
   approved: "Aprovada",
-  rejected: "Rejeitada",
 };

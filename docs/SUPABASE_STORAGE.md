@@ -46,7 +46,18 @@ face-references/dudu/reference-001.jpg
 - O nome do arquivo é normalizado para minúsculas, sem espaços e caracteres especiais.
 - A URL pública retornada pelo Storage é salva na tabela `photos`.
 - `photos.is_public` controla se a imagem aparece no site público.
-- O bucket `face-references` permanece privado e não é usado pelo upload público.
+- O perfil admin do jogador envia JPEG/PNG de até 5 MB para `face-references`.
+- A interface recebe apenas signed URL temporária para pré-visualização administrativa.
+- `storage_path` é usado pelo servidor para download autenticado durante a indexação.
+- Revogar/remover referência exclui o objeto privado e o índice do provider.
+
+## Reconhecimento facial
+
+- Referências nunca usam `getPublicUrl`.
+- O download do bucket privado usa a sessão Supabase do admin e as policies de `storage.objects`.
+- Fotos públicas do bucket `photos` são baixadas pelo SDK quando a URL permite recuperar o path.
+- Arquivos locais do próprio site podem ser processados; hosts externos arbitrários são bloqueados.
+- AWS recebe somente os bytes necessários para a operação e não recebe credenciais Supabase.
 
 ## Relação com o site
 

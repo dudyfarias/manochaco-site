@@ -11,6 +11,8 @@ const requiredTables = [
   "albums",
   "photos",
   "photo_player_tags",
+  "player_face_references",
+  "face_detection_suggestions",
   "admin_profiles",
   "audit_logs",
   "financial_categories",
@@ -127,6 +129,66 @@ async function validateBuckets() {
   });
 }
 
+function validateFaceRecognitionEnv() {
+  const provider = process.env.FACE_RECOGNITION_PROVIDER;
+  const confidence = Number(process.env.FACE_RECOGNITION_MIN_CONFIDENCE ?? "80");
+
+  if (provider !== "aws") {
+    fail("FACE_RECOGNITION_PROVIDER deve ser aws em produção.");
+  } else {
+    pass("Provider de reconhecimento facial configurado como AWS");
+  }
+
+  for (const key of [
+    "AWS_REGION",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_REKOGNITION_COLLECTION_ID",
+  ]) {
+    if (process.env[key]) {
+      pass(`${key} configurada`);
+    } else {
+      fail(`${key} não configurada.`);
+    }
+  }
+
+  if (!Number.isFinite(confidence) || confidence < 0 || confidence > 100) {
+    fail("FACE_RECOGNITION_MIN_CONFIDENCE deve estar entre 0 e 100.");
+  } else {
+    pass(`Confiança mínima configurada em ${confidence}%`);
+  }
+
+  if (process.env.FACE_RECOGNITION_AUTO_APPROVE?.toLowerCase() === "true") {
+    fail("FACE_RECOGNITION_AUTO_APPROVE deve permanecer false.");
+  } else {
+    pass("Aprovação automática desativada");
+  }
+}
+
+async function validateFaceRecognitionSchema() {
+  const supabase = createSupabaseServiceClient();
+  const { error: referenceError } = await supabase
+    .from("player_face_references")
+    .select("id, storage_path, provider_face_id, indexing_status, indexed_at")
+    .limit(1);
+  const { error: suggestionError } = await supabase
+    .from("face_detection_suggestions")
+    .select("id, provider, provider_face_id, raw_response, status")
+    .limit(1);
+
+  if (referenceError) {
+    fail(`Schema de referências faciais: ${referenceError.message}`);
+  } else {
+    pass("Schema de referências faciais atualizado");
+  }
+
+  if (suggestionError) {
+    fail(`Schema de sugestões faciais: ${suggestionError.message}`);
+  } else {
+    pass("Schema de sugestões faciais atualizado");
+  }
+}
+
 async function main() {
   console.log("Validação de produção - Manochaco");
 
@@ -149,6 +211,8 @@ async function main() {
     process.exit(1);
   }
 
+  validateFaceRecognitionEnv();
+
   for (const table of requiredTables) {
     await validateTable(table);
   }
@@ -156,6 +220,7 @@ async function main() {
   await validatePublicCount("players", "Jogadores públicos");
   await validatePublicCount("competitions", "Campeonatos públicos");
   await validateBuckets();
+  await validateFaceRecognitionSchema();
 
   for (const table of privateTables) {
     await validatePrivateTable(table);

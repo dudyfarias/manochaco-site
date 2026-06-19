@@ -152,7 +152,21 @@
 - Logs de auditoria preparados e usados em ações críticas do admin.
 - Documentação criada para admin MVP, deploy e checklist de segurança.
 
-## Fase 9 - Financeiro
+## Fase 9 - Reconhecimento facial assistido real
+
+- Status: implementada em 2026-06-19; ativação operacional depende das credenciais AWS e do projeto Supabase de produção.
+- Provider modular com Amazon Rekognition e mock explícito para desenvolvimento.
+- Upload privado de referências faciais com consentimento e aprovação.
+- Indexação de rostos em collection dedicada e vínculo por jogador.
+- Processamento individual ou sequencial de fotos da galeria.
+- Sugestões persistidas com confiança e bounding box.
+- Revisão humana obrigatória para confirmar, trocar ou ignorar.
+- Publicação limitada a `photo_player_tags` confirmadas.
+- Revogação de consentimento remove o índice facial do provider.
+- Auditoria de eventos principais e documentação de setup operacional.
+- Próxima evolução: mover lotes grandes para fila/background job e definir política formal de retenção biométrica.
+
+## Fase 10 - Financeiro
 
 - Área financeira privada, sem qualquer item no menu público.
 - Mensalidades, pagamentos, pendências, receitas e despesas.
@@ -162,16 +176,6 @@
 - Exportação de relatórios.
 - Permissões específicas para `super_admin` e `finance_admin`.
 - Todos os valores monetários em centavos.
-
-## Fase 10 - Reconhecimento facial real
-
-- Upload de fotos de referência com consentimento.
-- Processamento real de fotos enviadas.
-- Geração de sugestões automáticas por rosto.
-- Fila de revisão humana.
-- Aprovação, troca ou descarte de sugestões.
-- Publicação apenas de tags confirmadas por administrador.
-- Remoção/revogação de consentimento e auditoria.
 
 ## Fase 11 - Experiência pública avançada
 

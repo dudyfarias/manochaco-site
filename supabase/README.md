@@ -14,6 +14,8 @@ painel administrativo deve ser o caminho principal para manutenção.
   Storage.
 - `seed.sql`: seed mínimo de competições e temporadas. O seed completo a partir
   dos dados locais roda com `npm run seed:supabase`.
+- `migrations/20260619130011_add_face_recognition_pipeline.sql`: atualização de
+  projetos da Fase 8 para o fluxo real de reconhecimento facial.
 
 ## Ordem sugerida
 
@@ -23,6 +25,10 @@ painel administrativo deve ser o caminho principal para manutenção.
 4. Rodar `policies.sql`.
 5. Rodar `storage-policies.sql`.
 6. Rodar `seed.sql` ou `npm run seed:supabase` para a carga inicial.
+
+Projetos já criados com a Fase 8 podem aplicar apenas a migration de
+reconhecimento facial e depois reaplicar `policies.sql` e
+`storage-policies.sql` para confirmar as proteções.
 
 `npm run seed:supabase` deve ser tratado como migração inicial. Reimportações
 futuras precisam de dry-run, diff, logs e confirmação para não sobrescrever
@@ -38,7 +44,10 @@ dados editados no painel.
 - `face-references`: privado, fotos de referência facial.
 
 `face-references` não deve ter leitura pública. Essas imagens servem somente
-para reconhecimento facial futuro, com consentimento explícito e revisão humana.
+para reconhecimento facial, com consentimento explícito e revisão humana.
+
+O servidor baixa referências privadas com a sessão autenticada do admin. A
+service role não participa das rotas de indexação ou processamento.
 
 ## Segurança
 

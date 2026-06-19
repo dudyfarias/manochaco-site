@@ -1,6 +1,6 @@
 # Marcação de fotos
 
-A fase atual usa uma simulação local:
+O site mantém uma simulação local como fallback de desenvolvimento:
 
 - `src/data/photos.ts` contém as fotos.
 - `src/data/photoPlayers.ts` liga `photoId` a `playerSlug`.
@@ -8,9 +8,9 @@ A fase atual usa uma simulação local:
 - `src/data/playerFaceReferences.ts` simula fotos de referência.
 - A página do jogador consulta essa relação para mostrar fotos relacionadas.
 
-Essa simulação existe para validar a experiência pública. Depois da migração
-inicial, o painel administrativo e o Supabase devem ser a fonte oficial das
-fotos, álbuns e marcações.
+Depois da migração inicial, o painel administrativo e o Supabase são a fonte
+oficial das fotos, álbuns, marcações e sugestões. Os mocks não participam do
+fluxo biométrico de produção.
 
 Relação pública esperada:
 
@@ -83,18 +83,20 @@ As permissões previstas são:
 - `photo_editor`: upload, álbuns, marcações e revisão de fotos;
 - `viewer`: visualização administrativa sem edição.
 
-## IA futura com revisão humana
+## Reconhecimento facial com revisão humana
 
 Reconhecimento facial só deve sugerir marcações. O fluxo correto:
 
-1. Foto é enviada para Storage.
-2. Um serviço detecta rostos e sugere possíveis jogadores.
-3. As sugestões entram como `pending`.
-4. Um humano aprova ou rejeita cada sugestão.
-5. Apenas marcações aprovadas aparecem no site público.
+1. Referências consentidas são indexadas no provider.
+2. Uma foto da galeria é enviada para processamento server-side.
+3. O provider detecta rostos e busca possíveis jogadores.
+4. As sugestões entram como `pending`.
+5. Um humano confirma, troca ou ignora cada sugestão.
+6. Apenas marcações aprovadas aparecem no site público.
 
-O MVP de revisão fica em `/admin/fotos/revisao`. Ele ainda não processa rostos
-de verdade, mas pode confirmar, trocar ou ignorar sugestões existentes.
+O fluxo real usa Amazon Rekognition por meio de provider modular. A revisão fica
+em `/admin/fotos/revisao`, com confiança e bounding box. A interface também pode
+processar fotos pendentes uma por vez.
 
 ## Cuidados
 

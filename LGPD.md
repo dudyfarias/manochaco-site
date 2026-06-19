@@ -42,6 +42,25 @@ uso real:
 - Tratar sugestões de IA como internas até aprovação.
 - Registrar finalidade: organização do acervo esportivo do clube.
 - Permitir remoção de foto, marcação e referência facial.
+- Registrar qual provider processou a imagem e quando ocorreu a indexação.
+- Definir prazo de retenção para referências, sugestões e respostas técnicas.
+- Revisar o contrato, região de processamento e responsabilidades do fornecedor externo.
+- Limitar o acesso às roles `super_admin`, `sports_admin` e `photo_editor`.
+
+## Fluxo implementado
+
+- A referência fica no bucket privado `face-references`.
+- Consentimento e aprovação são validados antes da indexação.
+- O Amazon Rekognition armazena vetor/metadata facial em collection dedicada; a foto de referência permanece no Supabase privado.
+- Fotos coletivas geram sugestões pendentes, nunca tags públicas automáticas.
+- Confirmar ou trocar uma sugestão é uma decisão humana auditada.
+- Revogar consentimento de uma referência indexada solicita a exclusão do Face ID no provider antes de limpar os metadados locais.
+- `raw_response`, Face IDs e referências não são expostos nas APIs públicas.
+
+Antes da ativação em produção, o clube deve registrar base legal aplicável,
+responsável pelo tratamento, política de retenção e canal de atendimento ao
+titular. Consentimento na interface não substitui o documento/autorização
+formal mantido pelo clube.
 
 ## Consentimento futuro
 

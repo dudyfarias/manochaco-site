@@ -41,13 +41,24 @@ inicial e reimportações controladas.
 - Álbuns: listar, criar e editar.
 - Fotos: listar, filtrar, criar, editar, enviar arquivo para Storage e controlar publicação.
 - Tags: adicionar ou remover marcação manual confirmada em uma foto.
+- Referências faciais: upload privado, consentimento, aprovação, indexação e remoção no perfil do jogador.
+- Reconhecimento facial: processamento individual ou sequencial, sugestões reais, bounding box e revisão humana.
 
 ## Placeholders
 
 - Financeiro mostra apenas a área privada da próxima fase.
-- Revisão de IA usa dados existentes em `face_detection_suggestions`; não há reconhecimento real.
 - Gestão de administradores ainda deve ser feita pelo Supabase Dashboard ou SQL.
 - Logs de auditoria estão preparados e usados em ações críticas, mas ainda não têm tela própria.
+- O processamento de fotos ainda é síncrono; lotes grandes precisam de fila/background job.
+
+## Reconhecimento facial
+
+- `/admin/jogadores/[id]` gerencia referências privadas e consentimento.
+- `/admin/galeria/fotos/[id]` dispara o processamento de uma foto.
+- `/admin/fotos/revisao` exibe sugestões, bounding boxes e processamento pendente.
+- APIs em `/api/admin/face-recognition/*` exigem sessão e role autorizada.
+- Confirmar ou trocar cria tag `ai_confirmed`; ignorar não publica nada.
+- O provider padrão é AWS, configurado somente no servidor.
 
 ## Relação com o site público
 

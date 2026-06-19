@@ -2,9 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { AdminContext, AdminRole } from "@/lib/auth";
+import type { AdminRole } from "@/lib/auth";
 import { requireAdmin } from "@/lib/auth";
+import { getFaceRecognitionProvider } from "@/lib/face-recognition";
+import { refreshPhotoRecognitionReviewStatus } from "@/lib/face-recognition/process-photo";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { logAudit } from "./audit";
 import { getAdminSupabase } from "./data";
 import {
   adminMessageHref,
@@ -20,23 +23,6 @@ import {
 
 const sportsRoles: AdminRole[] = ["super_admin", "sports_admin"];
 const photoRoles: AdminRole[] = ["super_admin", "sports_admin", "photo_editor"];
-
-async function logAudit(
-  context: AdminContext,
-  action: string,
-  entityType: string,
-  entityId?: string | null,
-  metadata?: Record<string, unknown>,
-) {
-  const supabase = await getAdminSupabase();
-  await supabase.from("audit_logs").insert({
-    actor_user_id: context.user.id,
-    action,
-    entity_type: entityType,
-    entity_id: entityId ?? null,
-    metadata: metadata ?? {},
-  });
-}
 
 function ensureStatus(value: string) {
   return ["active", "former", "staff"].includes(value) ? value : "active";
@@ -86,6 +72,32 @@ async function uploadPhotoIfPresent(formData: FormData) {
 
   const { data } = supabase.storage.from("photos").getPublicUrl(path);
   return data.publicUrl;
+}
+
+async function validateFaceReferenceFile(file: File) {
+  if (!new Set(["image/jpeg", "image/png"]).has(file.type)) {
+    throw new Error("A referência facial precisa ser uma imagem JPEG ou PNG.");
+  }
+
+  if (file.size === 0 || file.size > 5 * 1024 * 1024) {
+    throw new Error("A referência facial deve ter no máximo 5MB.");
+  }
+
+  const signature = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+  const isJpeg = signature[0] === 0xff && signature[1] === 0xd8 && signature[2] === 0xff;
+  const isPng =
+    signature[0] === 0x89 &&
+    signature[1] === 0x50 &&
+    signature[2] === 0x4e &&
+    signature[3] === 0x47 &&
+    signature[4] === 0x0d &&
+    signature[5] === 0x0a &&
+    signature[6] === 0x1a &&
+    signature[7] === 0x0a;
+
+  if (!isJpeg && !isPng) {
+    throw new Error("O conteúdo do arquivo não corresponde a uma imagem JPEG ou PNG válida.");
+  }
 }
 
 export async function loginAdmin(formData: FormData) {
@@ -201,6 +213,181 @@ export async function deactivatePlayer(formData: FormData) {
   await logAudit(context, "deactivate", "players", id);
   revalidatePath("/jogadores");
   redirect(adminMessageHref(`/admin/jogadores/${id}`, "saved", "deactivated"));
+}
+
+export async function addPlayerFaceReference(formData: FormData) {
+  const context = await requireAdmin(photoRoles);
+  const supabase = await getAdminSupabase();
+  const playerId = requiredString(formData, "player_id", "Jogador");
+  const playerSlug = requiredString(formData, "player_slug", "Slug do jogador");
+  const file = formData.get("file");
+
+  if (!(file instanceof File)) {
+    redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", "Selecione uma imagem."));
+  }
+
+  try {
+    await validateFaceReferenceFile(file);
+  } catch (validationError) {
+    const message =
+      validationError instanceof Error ? validationError.message : "Imagem inválida.";
+    redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", message));
+  }
+  const storagePath = `${slugify(playerSlug)}/${Date.now()}-${safeFileName(file.name)}`;
+  const { error: uploadError } = await supabase.storage
+    .from("face-references")
+    .upload(storagePath, file, { contentType: file.type, upsert: false });
+
+  if (uploadError) {
+    redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", uploadError.message));
+  }
+
+  const { data, error } = await supabase
+    .from("player_face_references")
+    .insert({
+      player_id: playerId,
+      image_url: `storage://face-references/${storagePath}`,
+      storage_path: storagePath,
+      provider: process.env.FACE_RECOGNITION_PROVIDER ?? "aws",
+      approved_for_recognition: formData.get("approved_for_recognition") === "on",
+      consent_given: formData.get("consent_given") === "on",
+      indexing_status: "not_indexed",
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    await supabase.storage.from("face-references").remove([storagePath]);
+    redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", error.message));
+  }
+
+  await logAudit(context, "add_face_reference", "player_face_references", data.id, {
+    playerId,
+    consentGiven: formData.get("consent_given") === "on",
+    approvedForRecognition: formData.get("approved_for_recognition") === "on",
+  });
+  redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "saved", "face-reference"));
+}
+
+export async function updatePlayerFaceReferenceConsent(formData: FormData) {
+  const context = await requireAdmin(photoRoles);
+  const supabase = await getAdminSupabase();
+  const id = requiredString(formData, "id", "Referência");
+  const playerId = requiredString(formData, "player_id", "Jogador");
+  const consentGiven = formData.get("consent_given") === "on";
+  const approvedForRecognition =
+    formData.get("approved_for_recognition") === "on";
+  const { data, error } = await supabase
+    .from("player_face_references")
+    .select("provider_face_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) {
+    redirect(
+      adminMessageHref(
+        `/admin/jogadores/${playerId}`,
+        "error",
+        error?.message ?? "Referência não encontrada.",
+      ),
+    );
+  }
+
+  const revokingIndexedReference =
+    Boolean(data.provider_face_id) && (!consentGiven || !approvedForRecognition);
+
+  if (revokingIndexedReference && data.provider_face_id) {
+    try {
+      await getFaceRecognitionProvider().deleteIndexedFace(data.provider_face_id);
+    } catch (deleteError) {
+      const message = deleteError instanceof Error ? deleteError.message : "Falha no provedor.";
+      redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", message));
+    }
+  }
+
+  const { error: updateError } = await supabase
+    .from("player_face_references")
+    .update({
+      consent_given: consentGiven,
+      approved_for_recognition: approvedForRecognition,
+      ...(revokingIndexedReference
+        ? {
+            provider_face_id: null,
+            provider_collection_id: null,
+            indexed_at: null,
+            indexing_status: "not_indexed",
+            indexing_error: null,
+          }
+        : {}),
+    })
+    .eq("id", id);
+
+  if (updateError) {
+    redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", updateError.message));
+  }
+
+  await logAudit(context, "update_face_reference_consent", "player_face_references", id, {
+    playerId,
+    consentGiven,
+    approvedForRecognition,
+    removedProviderFace: revokingIndexedReference,
+  });
+  redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "saved", "face-consent"));
+}
+
+export async function removePlayerFaceReference(formData: FormData) {
+  const context = await requireAdmin(photoRoles);
+  const supabase = await getAdminSupabase();
+  const id = requiredString(formData, "id", "Referência");
+  const playerId = requiredString(formData, "player_id", "Jogador");
+  const { data, error } = await supabase
+    .from("player_face_references")
+    .select("storage_path, provider_face_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) {
+    redirect(
+      adminMessageHref(
+        `/admin/jogadores/${playerId}`,
+        "error",
+        error?.message ?? "Referência não encontrada.",
+      ),
+    );
+  }
+
+  if (data.provider_face_id) {
+    try {
+      await getFaceRecognitionProvider().deleteIndexedFace(data.provider_face_id);
+    } catch (deleteError) {
+      const message = deleteError instanceof Error ? deleteError.message : "Falha no provedor.";
+      redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", message));
+    }
+  }
+
+  if (data.storage_path) {
+    const { error: storageError } = await supabase.storage
+      .from("face-references")
+      .remove([data.storage_path]);
+
+    if (storageError) {
+      redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", storageError.message));
+    }
+  }
+
+  const { error: deleteError } = await supabase
+    .from("player_face_references")
+    .delete()
+    .eq("id", id);
+
+  if (deleteError) {
+    redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", deleteError.message));
+  }
+
+  await logAudit(context, "remove_face_reference", "player_face_references", id, {
+    playerId,
+  });
+  redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "saved", "face-reference-removed"));
 }
 
 export async function saveCompetition(formData: FormData) {
@@ -580,11 +767,19 @@ export async function confirmFaceSuggestion(formData: FormData) {
     redirect(adminMessageHref("/admin/fotos/revisao", "error", tagError.message));
   }
 
-  await supabase
+  const { error: updateSuggestionError } = await supabase
     .from("face_detection_suggestions")
     .update({ status: "confirmed" })
     .eq("id", id);
-  await logAudit(context, "confirm_ai_suggestion", "face_detection_suggestions", id);
+
+  if (updateSuggestionError) {
+    redirect(adminMessageHref("/admin/fotos/revisao", "error", updateSuggestionError.message));
+  }
+  await refreshPhotoRecognitionReviewStatus(supabase, suggestion.photo_id);
+  await logAudit(context, "confirm_ai_suggestion", "face_detection_suggestions", id, {
+    photoId: suggestion.photo_id,
+    playerId: suggestion.suggested_player_id,
+  });
   revalidatePath("/galeria");
   redirect(adminMessageHref("/admin/fotos/revisao", "saved", "confirmed"));
 }
@@ -621,11 +816,17 @@ export async function changeFaceSuggestion(formData: FormData) {
     redirect(adminMessageHref("/admin/fotos/revisao", "error", tagError.message));
   }
 
-  await supabase
+  const { error: updateSuggestionError } = await supabase
     .from("face_detection_suggestions")
     .update({ status: "changed", suggested_player_id: playerId })
     .eq("id", id);
+
+  if (updateSuggestionError) {
+    redirect(adminMessageHref("/admin/fotos/revisao", "error", updateSuggestionError.message));
+  }
+  await refreshPhotoRecognitionReviewStatus(supabase, suggestion.photo_id);
   await logAudit(context, "change_ai_suggestion", "face_detection_suggestions", id, {
+    photoId: suggestion.photo_id,
     playerId,
   });
   revalidatePath("/galeria");
@@ -637,6 +838,16 @@ export async function ignoreFaceSuggestion(formData: FormData) {
   const supabase = await getAdminSupabase();
   const id = requiredString(formData, "id", "Sugestão");
 
+  const { data: suggestion, error: suggestionError } = await supabase
+    .from("face_detection_suggestions")
+    .select("photo_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (suggestionError || !suggestion) {
+    redirect(adminMessageHref("/admin/fotos/revisao", "error", "Sugestão inválida."));
+  }
+
   const { error } = await supabase
     .from("face_detection_suggestions")
     .update({ status: "ignored" })
@@ -646,6 +857,9 @@ export async function ignoreFaceSuggestion(formData: FormData) {
     redirect(adminMessageHref("/admin/fotos/revisao", "error", error.message));
   }
 
-  await logAudit(context, "ignore_ai_suggestion", "face_detection_suggestions", id);
+  await refreshPhotoRecognitionReviewStatus(supabase, suggestion.photo_id);
+  await logAudit(context, "ignore_ai_suggestion", "face_detection_suggestions", id, {
+    photoId: suggestion.photo_id,
+  });
   redirect(adminMessageHref("/admin/fotos/revisao", "saved", "ignored"));
 }

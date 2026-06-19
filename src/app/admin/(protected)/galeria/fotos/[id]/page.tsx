@@ -10,6 +10,7 @@ import {
   SubmitButton,
   TextAreaField,
 } from "@/components/admin/AdminUI";
+import { FaceRecognitionActionButton } from "@/components/admin/FaceRecognitionActionButton";
 import { SmartImage } from "@/components/SmartImage";
 import {
   addPhotoPlayerTag,
@@ -25,6 +26,8 @@ import {
   listAdminSeasons,
   listPhotoTags,
 } from "@/lib/admin/data";
+import { faceRecognitionStatusLabels } from "@/lib/photos";
+import type { FaceRecognitionStatus } from "@/types";
 
 type PhotoDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -200,6 +203,31 @@ export default async function PhotoDetailPage({
           </div>
         </AdminCard>
       </div>
+
+      <AdminCard className="mt-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase text-[#9a6a12]">
+              Reconhecimento facial
+            </p>
+            <h2 className="mt-2 text-xl font-black text-zinc-950">
+              {faceRecognitionStatusLabels[
+                photo.face_recognition_status as FaceRecognitionStatus
+              ] ?? "Status desconhecido"}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+              O processamento gera sugestões internas. Nenhuma marcação será publicada sem confirmação humana na fila de revisão.
+            </p>
+          </div>
+          <FaceRecognitionActionButton
+            endpoint="/api/admin/face-recognition/process-photo"
+            payload={{ photoId: photo.id }}
+            label={photo.face_recognition_status === "error" ? "Tentar novamente" : "Processar reconhecimento facial"}
+            pendingLabel="Processando foto..."
+            disabled={photo.face_recognition_status === "processing"}
+          />
+        </div>
+      </AdminCard>
     </div>
   );
 }

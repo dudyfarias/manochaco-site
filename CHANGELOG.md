@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.0 - 2026-06-19
+
+- Criação da camada modular `src/lib/face-recognition` com contrato de provider, implementação Amazon Rekognition e provider mock de desenvolvimento.
+- Instalação do SDK oficial `@aws-sdk/client-rekognition` e isolamento das credenciais em módulos server-only.
+- Criação da migration `20260619130011_add_face_recognition_pipeline.sql` com metadados do provider, estados de indexação, resposta bruta privada e novos estados de processamento.
+- Implementação do upload privado de fotos de referência em `/admin/jogadores/[id]`, com consentimento, aprovação, indexação, revogação e remoção.
+- Implementação das rotas autenticadas de indexação de referência e processamento de fotos da galeria.
+- Processamento de todos os rostos detectados em fotos coletivas com indexação temporária, busca na collection e limpeza dos vetores temporários.
+- Persistência de sugestões em `face_detection_suggestions`, sempre pendentes e sem aprovação automática.
+- Evolução de `/admin/fotos/revisao` com bounding boxes, confiança, troca de jogador, confirmação, descarte e processamento sequencial de pendências.
+- Atualização automática do status da foto após a revisão de todas as sugestões.
+- Ampliação dos logs de auditoria para referência facial, processamento e decisões humanas.
+- Criação de `docs/FACE_RECOGNITION_SETUP.md` e atualização da documentação de arquitetura, LGPD, Storage, segurança e deploy.
+
 ## 0.8.0 - 2026-06-18
 
 - Implementação do login administrativo em `/admin/login` com Supabase Auth.

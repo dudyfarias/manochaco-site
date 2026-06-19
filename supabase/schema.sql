@@ -134,11 +134,12 @@ create table if not exists public.photos (
   constraint photos_face_recognition_status_check check (
     face_recognition_status in (
       'not_processed',
+      'queued',
       'processing',
       'processed',
       'needs_review',
-      'approved',
-      'rejected'
+      'error',
+      'approved'
     )
   )
 );
@@ -165,26 +166,39 @@ create table if not exists public.player_face_references (
   id uuid primary key default gen_random_uuid(),
   player_id uuid references public.players(id) on delete cascade,
   image_url text not null,
+  storage_path text,
+  provider text,
+  provider_face_id text,
+  provider_collection_id text,
   approved_for_recognition boolean not null default false,
   consent_given boolean not null default false,
+  indexing_status text not null default 'not_indexed',
+  indexing_error text,
+  indexed_at timestamptz,
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  constraint player_face_references_indexing_status_check check (
+    indexing_status in ('not_indexed', 'indexing', 'indexed', 'error')
+  )
 );
 
 create table if not exists public.face_detection_suggestions (
   id uuid primary key default gen_random_uuid(),
   photo_id uuid references public.photos(id) on delete cascade,
   suggested_player_id uuid references public.players(id),
+  provider text,
+  provider_face_id text,
   confidence numeric not null,
   bounding_box jsonb not null,
   status text not null default 'pending',
+  raw_response jsonb,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   constraint face_detection_suggestions_confidence_check check (
     confidence >= 0 and confidence <= 1
   ),
   constraint face_detection_suggestions_status_check check (
-    status in ('pending', 'confirmed', 'changed', 'ignored')
+    status in ('pending', 'confirmed', 'changed', 'ignored', 'error')
   )
 );
 
@@ -411,3 +425,53 @@ drop constraint if exists admin_profiles_role_check;
 alter table public.admin_profiles
 add constraint admin_profiles_role_check
 check (role in ('super_admin', 'sports_admin', 'finance_admin', 'photo_editor', 'viewer'));
+
+-- Migration-safe additions for projects created with the Phase 8 schema.
+alter table public.player_face_references add column if not exists storage_path text;
+alter table public.player_face_references add column if not exists provider text;
+alter table public.player_face_references add column if not exists provider_face_id text;
+alter table public.player_face_references add column if not exists provider_collection_id text;
+alter table public.player_face_references add column if not exists indexing_status text not null default 'not_indexed';
+alter table public.player_face_references add column if not exists indexing_error text;
+alter table public.player_face_references add column if not exists indexed_at timestamptz;
+
+alter table public.player_face_references
+drop constraint if exists player_face_references_indexing_status_check;
+alter table public.player_face_references
+add constraint player_face_references_indexing_status_check
+check (indexing_status in ('not_indexed', 'indexing', 'indexed', 'error'));
+
+alter table public.face_detection_suggestions add column if not exists provider text;
+alter table public.face_detection_suggestions add column if not exists provider_face_id text;
+alter table public.face_detection_suggestions add column if not exists raw_response jsonb;
+
+alter table public.face_detection_suggestions
+drop constraint if exists face_detection_suggestions_status_check;
+alter table public.face_detection_suggestions
+add constraint face_detection_suggestions_status_check
+check (status in ('pending', 'confirmed', 'changed', 'ignored', 'error'));
+
+alter table public.photos
+drop constraint if exists photos_face_recognition_status_check;
+
+update public.photos
+set face_recognition_status = 'error'
+where face_recognition_status = 'rejected';
+
+alter table public.photos
+add constraint photos_face_recognition_status_check
+check (face_recognition_status in (
+  'not_processed',
+  'queued',
+  'processing',
+  'processed',
+  'needs_review',
+  'error',
+  'approved'
+));
+
+create index if not exists player_face_references_player_id_idx
+on public.player_face_references(player_id);
+
+create index if not exists player_face_references_provider_face_id_idx
+on public.player_face_references(provider_face_id);

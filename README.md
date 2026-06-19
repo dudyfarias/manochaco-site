@@ -51,6 +51,13 @@ Crie `.env.local` com base em `.env.example` quando o projeto Supabase existir:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+FACE_RECOGNITION_PROVIDER=aws
+AWS_REGION=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REKOGNITION_COLLECTION_ID=manochaco-players
+FACE_RECOGNITION_MIN_CONFIDENCE=80
+FACE_RECOGNITION_AUTO_APPROVE=false
 ```
 
 Depois de rodar os SQLs em `supabase/`, use a carga inicial:
@@ -108,14 +115,15 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
 - CRUD MVP de jogadores, jogos, campeonatos, temporadas, álbuns e fotos.
 - Upload de fotos preparado via bucket `photos` do Supabase Storage.
 - Marcação manual de jogadores em fotos com tags confirmadas.
-- Revisão mockada de sugestões de IA com confirmação, troca ou descarte.
+- Revisão de sugestões de IA com confirmação, troca ou descarte.
+- Reconhecimento facial real e modular com Amazon Rekognition, referências privadas, consentimento e revisão humana obrigatória.
 - Financeiro disponível apenas como rota protegida placeholder.
 - Filtros públicos por campeonato, temporada, resultado, adversário e status do jogador.
 - Páginas de jogadores e jogos por slug.
 - Galeria com filtros por categoria, campeonato e temporada.
 - Álbuns e páginas individuais de foto por slug.
 - Marcação de jogadores em fotos com tags confirmadas.
-- Sugestões mockadas de reconhecimento facial restritas ao admin.
+- Sugestões de reconhecimento facial e respostas técnicas restritas ao admin.
 - Assets reais organizados em `public/`.
 - Fallback visual para imagens ausentes.
 - Cliente Supabase, schema SQL, RLS, Storage e seed inicial preparados.
@@ -128,8 +136,7 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
 - Estatísticas recalculadas a partir dos jogos filtrados e rankings derivados
   dos jogadores históricos ou das abas por campeonato/temporada.
 
-Ainda não há financeiro completo, reconhecimento facial real, gestão completa de
-usuários admin ou relatórios avançados nesta fase.
+Ainda não há financeiro completo, processamento assíncrono em background, gestão completa de usuários admin ou relatórios avançados nesta fase. O reconhecimento facial só funciona quando Supabase e AWS estão configurados; sem essas credenciais, o restante do site continua operando normalmente.
 
 ## Documentação do produto
 
@@ -140,6 +147,7 @@ usuários admin ou relatórios avançados nesta fase.
 - `docs/STATS_SYSTEM.md`
 - `docs/ADMIN_PHOTO_WORKFLOW.md`
 - `docs/FACE_RECOGNITION_ARCHITECTURE.md`
+- `docs/FACE_RECOGNITION_SETUP.md`
 - `docs/AUTH_ADMIN.md`
 - `docs/SUPABASE_STORAGE.md`
 - `docs/ADMIN_MVP.md`

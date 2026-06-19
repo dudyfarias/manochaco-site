@@ -45,6 +45,8 @@ export type SupabaseFaceSuggestionRow = {
   confidence: number;
   bounding_box: FaceDetectionSuggestion["boundingBox"];
   status: FaceDetectionSuggestion["status"];
+  provider?: string | null;
+  provider_face_id?: string | null;
   players?: { slug?: string | null } | null;
 };
 
@@ -93,11 +95,12 @@ export function adaptPhoto(
     date: row.date ? `${row.date}T12:00:00-03:00` : undefined,
     uploadedAt: row.uploaded_at ?? undefined,
     faceRecognitionStatus:
+      row.face_recognition_status === "queued" ||
       row.face_recognition_status === "processing" ||
       row.face_recognition_status === "processed" ||
       row.face_recognition_status === "needs_review" ||
-      row.face_recognition_status === "approved" ||
-      row.face_recognition_status === "rejected"
+      row.face_recognition_status === "error" ||
+      row.face_recognition_status === "approved"
         ? row.face_recognition_status
         : "not_processed",
     createdAt: row.created_at ?? undefined,
@@ -128,6 +131,8 @@ export function adaptFaceSuggestion(
     suggestedPlayerSlug: row.players?.slug ?? undefined,
     confidence: row.confidence,
     boundingBox: row.bounding_box,
+    provider: row.provider ?? undefined,
+    providerFaceId: row.provider_face_id ?? undefined,
     status: row.status,
   };
 }

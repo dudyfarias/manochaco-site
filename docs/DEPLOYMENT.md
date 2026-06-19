@@ -32,6 +32,13 @@ Crie `.env.local`:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+FACE_RECOGNITION_PROVIDER=aws
+AWS_REGION=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REKOGNITION_COLLECTION_ID=manochaco-players
+FACE_RECOGNITION_MIN_CONFIDENCE=80
+FACE_RECOGNITION_AUTO_APPROVE=false
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` é exclusiva de scripts server-side. Nunca use essa
@@ -74,6 +81,13 @@ pública básica e isolamento de tabelas privadas.
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `FACE_RECOGNITION_PROVIDER`
+   - `AWS_REGION`
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+   - `AWS_REKOGNITION_COLLECTION_ID`
+   - `FACE_RECOGNITION_MIN_CONFIDENCE`
+   - `FACE_RECOGNITION_AUTO_APPROVE`
 4. Faça o primeiro preview.
 5. Valide rotas públicas e admin.
 6. Promova para produção em `https://manochaco-site.vercel.app`.
@@ -88,3 +102,10 @@ pública básica e isolamento de tabelas privadas.
 - Upload de fotos usa bucket `photos`.
 - Financeiro não aparece no site público.
 - Sugestões de IA pendentes não aparecem publicamente.
+- Bucket `face-references` continua privado.
+- Indexação exige consentimento e aprovação.
+- `FACE_RECOGNITION_AUTO_APPROVE` está `false`.
+- Confirmação na revisão cria tag pública somente após ação humana.
+
+O setup de IAM, collection, custos e teste manual está em
+`docs/FACE_RECOGNITION_SETUP.md`.

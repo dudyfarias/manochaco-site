@@ -1,126 +1,90 @@
-# Arquitetura futura de reconhecimento facial
+# Arquitetura de reconhecimento facial
 
 ## Objetivo
 
-Ajudar a organizar o acervo esportivo do Manochaco sugerindo jogadores em fotos.
-A IA nunca deve publicar marcações automaticamente. Toda sugestão passa por
-revisão humana.
+O reconhecimento facial ajuda a organizar o acervo esportivo sugerindo quais
+jogadores aparecem em cada foto. O resultado do provedor nunca é publicado
+automaticamente: toda sugestão precisa ser confirmada, corrigida ou ignorada por
+um administrador.
 
-## Dados necessários
+## Componentes
 
-- Fotos do acervo.
-- Álbuns.
-- Jogadores.
-- Fotos de referência autorizadas.
-- Consentimento específico para reconhecimento facial.
-- Sugestões de detecção.
-- Tags confirmadas.
+- `src/lib/face-recognition/types.ts`: contrato normalizado do domínio.
+- `src/lib/face-recognition/provider.ts`: configuração, erros e regras comuns.
+- `src/lib/face-recognition/aws-rekognition.ts`: provider Amazon Rekognition.
+- `src/lib/face-recognition/mock-provider.ts`: provider sem chamadas externas.
+- `src/lib/face-recognition/index-player-face.ts`: indexação consentida.
+- `src/lib/face-recognition/process-photo.ts`: geração de sugestões.
+- `src/lib/face-recognition/image-source.ts`: leitura segura de imagens.
 
-## Tipos principais
+As telas e rotas administrativas dependem apenas do contrato
+`FaceRecognitionProvider`. Outro serviço pode substituir a AWS sem alterar o
+fluxo público ou as tabelas de revisão.
 
-- `Photo`
-- `Album`
-- `PhotoPlayerTag`
-- `FaceDetectionSuggestion`
-- `PlayerFaceReference`
+## Fluxo de referência
 
-## Fluxo de upload
+1. O admin envia JPEG/PNG de até 5 MB em `/admin/jogadores/[id]`.
+2. O arquivo entra no bucket privado `face-references`.
+3. `player_face_references` registra caminho, consentimento e aprovação.
+4. A rota autenticada valida role, consentimento e aprovação.
+5. O provider indexa no collection e usa o UUID do jogador como
+   `ExternalImageId`.
+6. `provider_face_id`, collection e data de indexação ficam no banco privado.
 
-1. Admin envia foto.
-2. Arquivo é salvo em Supabase Storage.
-3. Registro é criado em `photos`.
-4. Foto recebe status `not_processed` ou `processing`.
+Revogar consentimento ou aprovação de uma referência indexada remove primeiro o
+vetor no provider e depois limpa os metadados locais.
 
-Na fase local, fotos vindas do Google Drive devem ser importadas manualmente
-para `public/`. O site público não deve depender de hotlink do Drive, porque a
-entrega pode ser bloqueada e o `next/image` precisa de origem estável.
+## Fluxo de foto coletiva
 
-Novos uploads podem ser feitos pelo painel e persistidos no Supabase. Arquivos
-locais ficam apenas como fallback e apoio de desenvolvimento.
+1. O admin solicita processamento em `/admin/galeria/fotos/[id]`.
+2. A foto passa por `queued`/`processing` e é lida do site ou Supabase Storage.
+3. O provider indexa temporariamente até 100 rostos da imagem.
+4. Cada rosto temporário é comparado à collection com `SearchFaces`.
+5. Os rostos temporários são removidos da collection em `finally`.
+6. Cada detecção gera uma sugestão pendente, inclusive rostos sem match.
+7. A foto fica `needs_review`, `processed` ou `error`.
 
-## Fluxo de detecção
+As buscas dentro de uma foto são sequenciais para não gerar uma rajada acima da
+quota de transações por segundo do Rekognition.
 
-1. Um job em background processa a imagem.
-2. Rostos são detectados.
-3. Cada rosto gera uma bounding box.
-4. O sistema compara o rosto com referências autorizadas.
+Bounding boxes e confiança são normalizados entre 0 e 1. `raw_response` guarda
+apenas a detecção e o match selecionado do provider, fica restrita ao
+banco/admin e nunca é enviada ao site público.
 
-## Fluxo de sugestão
+## Revisão e publicação
 
-1. Para cada rosto, o sistema cria uma sugestão.
-2. Sugestão recebe jogador provável e confiança.
-3. Confiança baixa deve marcar a foto como `needs_review`.
-4. Sugestões ficam internas.
+Em `/admin/fotos/revisao`, o admin vê a região detectada e pode:
 
-## Fluxo de revisão humana
+- confirmar o jogador sugerido;
+- trocar por outro jogador;
+- ignorar o rosto.
 
-1. Admin acessa a fila.
-2. Confirma, troca jogador ou ignora.
-3. Confirmações criam tags `ai_confirmed`.
-4. Ignoradas não aparecem no público.
+Confirmar ou trocar cria `photo_player_tags` com `tag_type = ai_confirmed` e
+`confirmed_by_admin = true`. Quando não há mais sugestões pendentes, a foto
+passa a `approved` se houve confirmação, ou `processed` se todas foram
+ignoradas.
 
-## Fluxo de publicação
+O site público consulta apenas tags manuais ou de IA confirmadas. Não consulta
+referências, sugestões, respostas brutas nem identificadores do provider.
 
-O site público consulta apenas:
+## Segurança
 
-- tags `manual` confirmadas;
-- tags `ai_confirmed` confirmadas.
+- Módulos AWS usam `server-only`.
+- Credenciais AWS não possuem prefixo `NEXT_PUBLIC_`.
+- Rotas chamam `getAdminContext` e validam role de fotos.
+- Bucket de referências é privado e protegido por RLS.
+- Downloads privados usam a sessão Supabase do admin.
+- Fotos remotas só podem vir do host do site ou do Supabase configurado.
+- `FACE_RECOGNITION_AUTO_APPROVE=true` é bloqueado em runtime.
+- Erros técnicos completos ficam no servidor/auditoria; o client recebe mensagem segura.
 
-Tags `ai_suggested` e sugestões pendentes não são exibidas.
+## Limitações
 
-## LGPD
+- O processamento atual acontece em uma Route Handler síncrona.
+- O lote do admin chama uma foto por vez e para no primeiro erro.
+- Imagens enviadas como bytes à AWS têm limite de 5 MB e precisam ser JPEG/PNG.
+- Não há retry automático, fila durável ou monitor de custos.
+- Qualidade, ângulo, iluminação e tamanho do rosto afetam o resultado.
 
-Reconhecimento facial envolve dado biométrico. O sistema futuro deve:
-
-- coletar consentimento específico;
-- permitir revogação;
-- permitir remoção de fotos e referências;
-- manter finalidade clara;
-- evitar exposição de dados sensíveis;
-- registrar auditoria de revisão.
-
-## Banco Supabase
-
-Tabelas Supabase preparadas:
-
-- `photos`;
-- `albums`;
-- `photo_player_tags`;
-- `face_detection_suggestions`;
-- `player_face_references`;
-- `admin_profiles`;
-- `audit_logs`.
-
-## Apoio do Supabase
-
-- `photos` guarda a imagem pública e o status de processamento.
-- `player_face_references` guarda imagens privadas de referência.
-- `face_detection_suggestions` guarda sugestões pendentes, alteradas ou
-  ignoradas.
-- `photo_player_tags` guarda marcações manuais e confirmações de IA.
-- `admin_profiles` define permissões de revisão.
-- `audit_logs` registra confirmações, trocas, remoções e revogações.
-- Supabase Storage entrega buckets públicos para galeria e bucket privado
-  `face-references`.
-- Supabase Auth protegerá a revisão humana no painel administrativo.
-
-O site público só deve ler marcações confirmadas. A service role nunca deve ser
-usada no client.
-
-## Serviços possíveis
-
-Nenhum serviço final foi escolhido. A arquitetura deve permitir:
-
-- serviço próprio de embeddings faciais;
-- API externa de reconhecimento;
-- processamento em background;
-- fila de revisão humana;
-- troca de fornecedor sem alterar o site público.
-
-## Limitações atuais
-
-- Dados são mockados.
-- Não há embeddings faciais.
-- Upload administrativo para fotos públicas existe, mas ainda não dispara processamento de IA.
-- Supabase Auth protege o admin MVP.
-- Bounding boxes são armazenadas nos mocks, mas ainda não são desenhadas sobre a imagem.
+Lotes grandes devem migrar para background jobs/queue antes de escalar o
+acervo. A decisão humana continua obrigatória mesmo após essa evolução.
