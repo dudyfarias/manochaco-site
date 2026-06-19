@@ -44,6 +44,7 @@ aparecem publicamente quando `confirmed_by_admin = true` e `tag_type` é
 ## Tabelas administrativas e biometria
 
 - `admin_profiles`
+- `member_profiles`
 - `audit_logs`
 - `player_face_references`
 - `face_detection_suggestions`
@@ -51,6 +52,19 @@ aparecem publicamente quando `confirmed_by_admin = true` e `tag_type` é
 Essas tabelas não têm leitura pública. Fotos de referência facial são privadas e
 exigem consentimento específico. Sugestões de IA ficam internas até revisão
 humana.
+
+`member_profiles` guarda os dados privados das contas públicas. O campo
+`account_type` aceita `supporter`, `player`, `candidate` ou `partner`; o campo
+`status` aceita `pending`, `active`, `rejected` ou `blocked`. Jogadores,
+candidatos e parceiros entram como pendentes. O vínculo opcional
+`linked_player_id` só é definido após revisão de `sports_admin` ou
+`super_admin`.
+
+O trigger `private.handle_new_member_profile` provisiona o perfil quando o
+Supabase Auth cria um usuário. Metadados do cadastro podem solicitar um tipo de
+conta, mas nunca definem role administrativa. RLS permite ao usuário ler e
+atualizar apenas seus dados editáveis; status, tipo, e-mail e vínculo são
+protegidos por trigger e pelas policies.
 
 `player_face_references` registra `storage_path`, provider, Face ID, collection,
 estado/erro de indexação e data. Consentimento e aprovação são obrigatórios

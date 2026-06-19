@@ -10,6 +10,8 @@
 - `face_detection_suggestions` sem leitura pública.
 - Tabelas financeiras sem leitura pública.
 - `audit_logs` sem leitura pública.
+- `member_profiles` sem leitura anônima e limitada ao titular ou admin esportivo.
+- Campos protegidos de `member_profiles` reforçados por trigger no banco.
 
 ## Chaves
 
@@ -24,9 +26,12 @@
 
 ## Admin
 
-- `/admin/login` é a única rota admin pública.
+- Login unificado disponível em `/entrar`; `/admin/login` apenas redireciona por compatibilidade.
 - `/admin/*` protegido por `src/proxy.ts`.
 - Server Actions chamam `requireAdmin`.
+- Cadastro público nunca escreve em `admin_profiles`.
+- `user_metadata` não concede roles nem acesso administrativo.
+- `/admin/cadastros` restrito a `super_admin` e `sports_admin`.
 - Financeiro liberado apenas para `super_admin` e `finance_admin`.
 - Gestão esportiva restrita a roles administrativas.
 - Ações críticas devem registrar `audit_logs`.
@@ -64,6 +69,9 @@
 - Rodar `npm run audit:images`.
 - Rodar `npm run validate:prod` com Supabase configurado.
 - Validar login e logout admin.
+- Validar cadastro, confirmação de e-mail, recuperação de senha e logout de membro.
+- Configurar Site URL, Redirect URLs e SMTP próprio no Supabase Auth.
+- Confirmar que conta comum não acessa `/admin`.
 - Validar que o menu público não mostra admin.
 - Configurar AWS Budgets/alertas e acompanhar custo por volume de rostos.
 - Testar indexação e remoção com uma referência consentida antes de liberar o lote.

@@ -14,6 +14,7 @@ const requiredTables = [
   "player_face_references",
   "face_detection_suggestions",
   "admin_profiles",
+  "member_profiles",
   "audit_logs",
   "financial_categories",
   "financial_transactions",
@@ -25,6 +26,7 @@ const requiredTables = [
 const privateTables = [
   "player_face_references",
   "face_detection_suggestions",
+  "member_profiles",
   "financial_transactions",
   "player_monthly_fees",
 ];

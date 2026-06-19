@@ -166,6 +166,17 @@
 - Auditoria de eventos principais e documentação de setup operacional.
 - Próxima evolução: mover lotes grandes para fila/background job e definir política formal de retenção biométrica.
 
+## Fase 9.1 - Contas públicas e comunidade
+
+- Status: implementada em 2026-06-19; ativação depende do Supabase de produção e do SMTP configurado.
+- Login unificado para membros e administradores em `/entrar`.
+- Cadastro público para torcedores, jogadores, candidatos e parceiros.
+- Confirmação de e-mail, recuperação e troca de senha pelo Supabase Auth.
+- Área `/conta` com dados privados e status da solicitação.
+- Fila `/admin/cadastros` para aprovação e vínculo com jogadores históricos.
+- Roles administrativas continuam separadas e não podem ser solicitadas pelo formulário público.
+- Próxima evolução: recursos específicos por perfil, notificações, convite para partidas e gestão formal de processos seletivos.
+
 ## Fase 10 - Financeiro
 
 - Área financeira privada, sem qualquer item no menu público.

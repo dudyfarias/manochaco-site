@@ -50,6 +50,7 @@ Crie `.env.local` com base em `.env.example` quando o projeto Supabase existir:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SUPABASE_SERVICE_ROLE_KEY=
 FACE_RECOGNITION_PROVIDER=aws
 AWS_REGION=
@@ -104,12 +105,16 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
 ## Escopo atual
 
 - Site público com fallback local e camada preparada para Supabase.
+- Entrada e cadastro públicos em `/entrar` e `/cadastro` com Supabase Auth.
+- Área privada `/conta` para torcedores, jogadores, candidatos e parceiros.
+- Solicitações de jogador, candidato e parceiro revisadas em `/admin/cadastros`.
+- Contas administrativas concedidas somente pelo clube em `admin_profiles`.
 - Planilha usada como fonte inicial de migração, não como banco permanente.
 - Supabase definido como fonte oficial de jogadores, jogos,
   estatísticas, fotos, álbuns, campeonatos, temporadas e tags.
 - Dados locais em TypeScript mantidos como fallback temporário de
   desenvolvimento/preview.
-- Login administrativo com Supabase Auth em `/admin/login`.
+- Login unificado com Supabase Auth em `/entrar`; `/admin/login` é mantida como rota de compatibilidade.
 - Rotas `/admin/*` protegidas por `src/proxy.ts` e checagens server-side.
 - Dashboard admin com resumo de jogadores, jogos, fotos, álbuns e revisão IA.
 - CRUD MVP de jogadores, jogos, campeonatos, temporadas, álbuns e fotos.
@@ -149,6 +154,7 @@ Ainda não há financeiro completo, processamento assíncrono em background, ges
 - `docs/FACE_RECOGNITION_ARCHITECTURE.md`
 - `docs/FACE_RECOGNITION_SETUP.md`
 - `docs/AUTH_ADMIN.md`
+- `docs/PUBLIC_ACCOUNTS.md`
 - `docs/SUPABASE_STORAGE.md`
 - `docs/ADMIN_MVP.md`
 - `docs/DEPLOYMENT.md`

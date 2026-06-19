@@ -3,16 +3,41 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublicEnv } from "./env";
 
 const ADMIN_LOGIN_PATH = "/admin/login";
+const PUBLIC_LOGIN_PATH = "/entrar";
+
+function redirectWithCookies(url: URL, source: NextResponse) {
+  const response = NextResponse.redirect(url);
+  source.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+  return response;
+}
 
 export async function updateSession(request: NextRequest) {
   const { url, anonKey, isConfigured } = getSupabasePublicEnv();
-  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
-  const isLoginRoute = request.nextUrl.pathname === ADMIN_LOGIN_PATH;
+  const pathname = request.nextUrl.pathname;
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isAdminLoginRoute = pathname === ADMIN_LOGIN_PATH;
+  const isAccountRoute = pathname === "/conta" || pathname.startsWith("/conta/");
+  const isNewPasswordRoute = pathname === "/nova-senha";
+  const isPublicAuthRoute =
+    pathname === PUBLIC_LOGIN_PATH ||
+    pathname === "/cadastro" ||
+    pathname.startsWith("/cadastro/");
+  const isProtectedRoute =
+    (isAdminRoute && !isAdminLoginRoute) || isAccountRoute || isNewPasswordRoute;
 
   if (!isConfigured || !url || !anonKey) {
-    if (isAdminRoute && !isLoginRoute) {
+    if (isAdminLoginRoute) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = ADMIN_LOGIN_PATH;
+      redirectUrl.pathname = PUBLIC_LOGIN_PATH;
+      redirectUrl.search = "?next=/admin&error=missing-env";
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    if (isProtectedRoute) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = PUBLIC_LOGIN_PATH;
+      redirectUrl.search = "";
+      redirectUrl.searchParams.set("next", pathname);
       redirectUrl.searchParams.set("error", "missing-env");
       return NextResponse.redirect(redirectUrl);
     }
@@ -44,18 +69,26 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (isAdminRoute && !isLoginRoute && !user) {
+  if (isAdminLoginRoute) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = ADMIN_LOGIN_PATH;
-    redirectUrl.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
+    redirectUrl.pathname = user ? "/admin" : PUBLIC_LOGIN_PATH;
+    redirectUrl.search = user ? "" : "?next=/admin";
+    return redirectWithCookies(redirectUrl, supabaseResponse);
   }
 
-  if (isLoginRoute && user) {
+  if (isProtectedRoute && !user) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/admin";
+    redirectUrl.pathname = PUBLIC_LOGIN_PATH;
     redirectUrl.search = "";
-    return NextResponse.redirect(redirectUrl);
+    redirectUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+    return redirectWithCookies(redirectUrl, supabaseResponse);
+  }
+
+  if (isPublicAuthRoute && user) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/conta";
+    redirectUrl.search = "";
+    return redirectWithCookies(redirectUrl, supabaseResponse);
   }
 
   return supabaseResponse;

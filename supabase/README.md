@@ -16,6 +16,8 @@ painel administrativo deve ser o caminho principal para manutenção.
   dos dados locais roda com `npm run seed:supabase`.
 - `migrations/20260619130011_add_face_recognition_pipeline.sql`: atualização de
   projetos da Fase 8 para o fluxo real de reconhecimento facial.
+- `migrations/20260619134023_add_public_member_accounts.sql`: cria contas
+  públicas, provisionamento por Auth, proteção de campos e RLS.
 
 ## Ordem sugerida
 
@@ -26,9 +28,8 @@ painel administrativo deve ser o caminho principal para manutenção.
 5. Rodar `storage-policies.sql`.
 6. Rodar `seed.sql` ou `npm run seed:supabase` para a carga inicial.
 
-Projetos já criados com a Fase 8 podem aplicar apenas a migration de
-reconhecimento facial e depois reaplicar `policies.sql` e
-`storage-policies.sql` para confirmar as proteções.
+Projetos existentes devem aplicar as migrations em ordem e depois reaplicar
+`policies.sql` e `storage-policies.sql` para confirmar as proteções.
 
 `npm run seed:supabase` deve ser tratado como migração inicial. Reimportações
 futuras precisam de dry-run, diff, logs e confirmação para não sobrescrever
@@ -59,6 +60,9 @@ service role não participa das rotas de indexação ou processamento.
 - As tabelas financeiras não possuem leitura pública e devem ser acessadas
   apenas por `super_admin` ou `finance_admin`.
 - Sugestões de IA e referências faciais não possuem policy de leitura pública.
+- Perfis de membros não possuem leitura anônima; cada usuário lê o próprio
+  registro e somente admins esportivos revisam a fila completa.
+- Tipo de conta pública nunca deve ser confundido com role administrativa.
 - O site público só deve exibir tags em `photo_player_tags` com
   `confirmed_by_admin = true`.
 

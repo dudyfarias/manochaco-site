@@ -6,8 +6,10 @@ inicial e reimportações controladas.
 
 ## Rotas
 
-- `/admin/login`: login público por e-mail e senha.
+- `/entrar`: login unificado de membros e administradores.
+- `/admin/login`: rota de compatibilidade que encaminha ao login unificado.
 - `/admin`: dashboard protegido.
+- `/admin/cadastros`: revisão de contas públicas e vínculos com jogadores.
 - `/admin/jogadores`, `/admin/jogadores/novo`, `/admin/jogadores/[id]`.
 - `/admin/jogos`, `/admin/jogos/novo`, `/admin/jogos/[id]`.
 - `/admin/campeonatos`.
@@ -19,10 +21,17 @@ inicial e reimportações controladas.
 
 ## Proteção
 
-- `src/proxy.ts` protege `/admin/*`, exceto `/admin/login`.
+- `src/proxy.ts` protege `/admin/*` e encaminha visitantes para `/entrar`.
 - Server Components e Server Actions usam `requireAdmin`.
 - A role vem de `admin_profiles`.
 - `SUPABASE_SERVICE_ROLE_KEY` não é usada no client.
+
+## Cadastros públicos
+
+`/admin/cadastros` reúne contas de torcedores, jogadores, candidatos e
+parceiros. `super_admin` e `sports_admin` podem revisar status, ajustar o tipo
+de conta e vincular uma conta a um registro existente de jogador. Essa tela não
+cria administradores; roles continuam em `admin_profiles`.
 
 ## Roles
 

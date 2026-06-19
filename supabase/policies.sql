@@ -13,6 +13,7 @@ alter table public.photo_player_tags enable row level security;
 alter table public.player_face_references enable row level security;
 alter table public.face_detection_suggestions enable row level security;
 alter table public.admin_profiles enable row level security;
+alter table public.member_profiles enable row level security;
 alter table public.audit_logs enable row level security;
 alter table public.financial_categories enable row level security;
 alter table public.financial_transactions enable row level security;
@@ -43,6 +44,7 @@ grant select, insert, update, delete on public.photo_player_tags to authenticate
 grant select, insert, update, delete on public.player_face_references to authenticated;
 grant select, insert, update, delete on public.face_detection_suggestions to authenticated;
 grant select, insert, update, delete on public.admin_profiles to authenticated;
+grant select, insert, update on public.member_profiles to authenticated;
 grant select, insert on public.audit_logs to authenticated;
 grant select, insert, update, delete on public.financial_categories to authenticated;
 grant select, insert, update, delete on public.financial_transactions to authenticated;
@@ -285,6 +287,50 @@ for all
 to authenticated
 using (private.can_manage_admins())
 with check (private.can_manage_admins());
+
+drop policy if exists "Members can read own profile" on public.member_profiles;
+create policy "Members can read own profile"
+on public.member_profiles
+for select
+to authenticated
+using (user_id = (select auth.uid()));
+
+drop policy if exists "Admins can read member profiles" on public.member_profiles;
+create policy "Admins can read member profiles"
+on public.member_profiles
+for select
+to authenticated
+using (private.can_manage_sports());
+
+drop policy if exists "Members can create own profile" on public.member_profiles;
+create policy "Members can create own profile"
+on public.member_profiles
+for insert
+to authenticated
+with check (
+  user_id = (select auth.uid())
+  and linked_player_id is null
+  and (
+    (account_type = 'supporter' and status = 'active')
+    or (account_type in ('player', 'candidate', 'partner') and status = 'pending')
+  )
+);
+
+drop policy if exists "Members can update own profile" on public.member_profiles;
+create policy "Members can update own profile"
+on public.member_profiles
+for update
+to authenticated
+using (user_id = (select auth.uid()))
+with check (user_id = (select auth.uid()));
+
+drop policy if exists "Sports admins can manage member profiles" on public.member_profiles;
+create policy "Sports admins can manage member profiles"
+on public.member_profiles
+for all
+to authenticated
+using (private.can_manage_sports())
+with check (private.can_manage_sports());
 
 drop policy if exists "Admins can read audit logs" on public.audit_logs;
 create policy "Admins can read audit logs"

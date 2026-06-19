@@ -1,17 +1,26 @@
-# Autenticação administrativa
+# Autenticação e acesso administrativo
 
-A área pública do site não exige login. A área administrativa usa Supabase Auth
-para proteger edição de jogadores, jogos, estatísticas, fotos, álbuns,
-marcações, financeiro e auditoria.
+O conteúdo público do site não exige login. Contas de membros e administradores
+usam o mesmo Supabase Auth, mas possuem autorização separada.
+
+- `/entrar`: login unificado.
+- `/cadastro`: criação de conta pública.
+- `/conta`: área privada do usuário.
+- `/admin/*`: somente usuários existentes em `admin_profiles`.
+
+Escolher “Jogador do Manochaco” no cadastro cria uma solicitação pendente em
+`member_profiles`; não cria role administrativa nem modifica a tabela pública
+`players`.
 
 ## Escopo da Fase 8
 
 - Cliente Supabase server/browser criado.
-- Login por e-mail e senha em `/admin/login`.
+- Login por e-mail e senha em `/entrar`.
 - Logout via Server Action.
-- `src/proxy.ts` redireciona visitantes sem sessão para `/admin/login`.
+- `src/proxy.ts` redireciona visitantes sem sessão para `/entrar`.
 - `src/lib/auth.ts` faz a checagem server-side de usuário e role.
 - Tabela `admin_profiles` usada para permissões administrativas.
+- Tabela `member_profiles` usada para contas públicas e solicitações de vínculo.
 - Tabela `audit_logs` preparada e usada em ações críticas.
 - RLS preparada para separar edição esportiva, edição de fotos e financeiro.
 
@@ -38,6 +47,7 @@ marcações, financeiro e auditoria.
 ## Rotas implementadas ou preparadas
 
 - `/admin/login`
+- `/admin/cadastros`
 - `/admin`
 - `/admin/jogadores`
 - `/admin/jogadores/novo`

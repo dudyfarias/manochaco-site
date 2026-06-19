@@ -84,7 +84,12 @@ export async function requireAdmin(allowedRoles?: AdminRole[]) {
   const context = await getAdminContext();
 
   if (!context) {
-    redirect("/admin/login");
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+
+    redirect(user ? "/conta?error=not-admin" : "/entrar?next=/admin");
   }
 
   if (allowedRoles && !allowedRoles.includes(context.profile.role)) {

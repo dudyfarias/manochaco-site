@@ -156,6 +156,29 @@ export type AdminFaceReferenceRow = {
   signed_url?: string | null;
 };
 
+export type AdminMemberProfileRow = {
+  id: string;
+  user_id: string;
+  email: string;
+  full_name: string;
+  phone: string | null;
+  city: string | null;
+  account_type: "supporter" | "player" | "candidate" | "partner";
+  status: "pending" | "active" | "rejected" | "blocked";
+  linked_player_id: string | null;
+  preferred_position: string | null;
+  birth_year: number | null;
+  message: string | null;
+  privacy_accepted_at: string | null;
+  created_at: string | null;
+  players?: {
+    id?: string | null;
+    slug?: string | null;
+    nickname?: string | null;
+    name?: string | null;
+  } | null;
+};
+
 export async function getAdminSupabase() {
   const supabase = await createSupabaseServerClient();
 
@@ -186,6 +209,16 @@ export async function listAdminPlayers() {
     .order("nickname");
 
   return (assertAdminData(data, error, "players") ?? []) as AdminPlayerRow[];
+}
+
+export async function listAdminMemberProfiles() {
+  const supabase = await getAdminSupabase();
+  const { data, error } = await supabase
+    .from("member_profiles")
+    .select("*, players(id, slug, nickname, name)")
+    .order("created_at", { ascending: false });
+
+  return (assertAdminData(data, error, "member_profiles") ?? []) as AdminMemberProfileRow[];
 }
 
 export async function getAdminPlayer(id: string) {

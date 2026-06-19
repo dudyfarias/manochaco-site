@@ -7,6 +7,8 @@ const footerLinks = [
   { href: "/contato", label: "Contato" },
   { href: "/patrocinio", label: "Patrocínio" },
   { href: "/galeria", label: "Galeria" },
+  { href: "/entrar", label: "Entrar" },
+  { href: "/cadastro", label: "Cadastre-se" },
 ];
 
 export function Footer() {
@@ -29,8 +31,8 @@ export function Footer() {
             </p>
             <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
               Portal oficial para história, jogadores, estatísticas, jogos, fotos
-              e bastidores. Dados estáticos hoje, estrutura pronta para o painel
-              administrativo amanhã.
+              e bastidores. Dados oficiais, contas de usuários e gestão protegida
+              pelo painel administrativo.
             </p>
           </div>
         </div>

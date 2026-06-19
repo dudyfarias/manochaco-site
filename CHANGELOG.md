@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.10.0 - 2026-06-19
+
+- Inclusão dos botões públicos “Entrar” e “Cadastre-se” no Header e no Footer.
+- Criação do login unificado em `/entrar` para membros e administradores com Supabase Auth.
+- Criação do cadastro público em `/cadastro` para torcedores, jogadores, candidatos e parceiros.
+- Criação dos fluxos de confirmação de e-mail, recuperação de senha e definição de nova senha.
+- Criação da área privada `/conta` para consulta do status e atualização de dados pessoais.
+- Criação da tabela privada `member_profiles`, trigger de provisionamento, validações, índices e RLS.
+- Criação da fila `/admin/cadastros` para analisar solicitações e vincular contas a jogadores existentes.
+- Separação explícita entre tipo de conta pública e role administrativa; cadastro público nunca concede acesso admin.
+- Ampliação da proteção de rotas e da atualização de sessão no `src/proxy.ts`.
+- Criação da página pública de privacidade e da documentação `docs/PUBLIC_ACCOUNTS.md`.
+- Atualização da validação de produção, documentação de Auth, banco, deploy, segurança e LGPD.
+
 ## 0.9.0 - 2026-06-19
 
 - Criação da camada modular `src/lib/face-recognition` com contrato de provider, implementação Amazon Rekognition e provider mock de desenvolvimento.

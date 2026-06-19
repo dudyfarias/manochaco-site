@@ -5,6 +5,7 @@ import { logoutAdmin } from "@/lib/admin/actions";
 
 const navItems = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/cadastros", label: "Cadastros" },
   { href: "/admin/jogadores", label: "Jogadores" },
   { href: "/admin/jogos", label: "Jogos" },
   { href: "/admin/campeonatos", label: "Campeonatos" },

@@ -38,6 +38,18 @@ function ensurePhotoCategory(value: string) {
     : "general";
 }
 
+function ensureAccountType(value: string) {
+  return ["supporter", "player", "candidate", "partner"].includes(value)
+    ? value
+    : "supporter";
+}
+
+function ensureMemberStatus(value: string) {
+  return ["pending", "active", "rejected", "blocked"].includes(value)
+    ? value
+    : "pending";
+}
+
 async function uploadPhotoIfPresent(formData: FormData) {
   const file = formData.get("file");
 
@@ -100,28 +112,6 @@ async function validateFaceReferenceFile(file: File) {
   }
 }
 
-export async function loginAdmin(formData: FormData) {
-  const email = requiredString(formData, "email", "E-mail");
-  const password = requiredString(formData, "password", "Senha");
-  const next = formString(formData, "next") || "/admin";
-  const supabase = await createSupabaseServerClient();
-
-  if (!supabase) {
-    redirect("/admin/login?error=missing-env");
-  }
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    redirect("/admin/login?error=invalid");
-  }
-
-  redirect(next.startsWith("/admin") ? next : "/admin");
-}
-
 export async function logoutAdmin() {
   const supabase = await createSupabaseServerClient();
 
@@ -129,7 +119,7 @@ export async function logoutAdmin() {
     await supabase.auth.signOut();
   }
 
-  redirect("/admin/login?loggedOut=1");
+  redirect("/entrar?loggedOut=1");
 }
 
 export async function createPlayer(formData: FormData) {
@@ -213,6 +203,37 @@ export async function deactivatePlayer(formData: FormData) {
   await logAudit(context, "deactivate", "players", id);
   revalidatePath("/jogadores");
   redirect(adminMessageHref(`/admin/jogadores/${id}`, "saved", "deactivated"));
+}
+
+export async function reviewMemberProfile(formData: FormData) {
+  const context = await requireAdmin(sportsRoles);
+  const supabase = await getAdminSupabase();
+  const id = requiredString(formData, "id", "Cadastro");
+  const status = ensureMemberStatus(formString(formData, "status"));
+  const accountType = ensureAccountType(formString(formData, "account_type"));
+  const linkedPlayerId = nullableString(formData, "linked_player_id");
+
+  const { error } = await supabase
+    .from("member_profiles")
+    .update({
+      status,
+      account_type: accountType,
+      linked_player_id: linkedPlayerId,
+    })
+    .eq("id", id);
+
+  if (error) {
+    redirect(adminMessageHref("/admin/cadastros", "error", error.message));
+  }
+
+  await logAudit(context, "review", "member_profiles", id, {
+    status,
+    accountType,
+    linkedPlayerId,
+  });
+  revalidatePath("/admin/cadastros");
+  revalidatePath("/conta");
+  redirect(adminMessageHref("/admin/cadastros", "saved", "reviewed"));
 }
 
 export async function addPlayerFaceReference(formData: FormData) {

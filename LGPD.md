@@ -15,6 +15,19 @@ produto deve seguir princípios de minimização, transparência e consentimento
 Dados como nome, apelido, posição, número e estatísticas devem ter finalidade
 clara: histórico esportivo e comunicação institucional do clube.
 
+Contas públicas podem guardar e-mail, telefone, cidade, ano de nascimento,
+posição preferida e mensagem de contato. Esses campos ficam privados em
+`member_profiles`, são usados para autenticação, contato e análise do vínculo
+solicitado e não devem aparecer automaticamente no site público.
+
+- Informar a finalidade no cadastro.
+- Exigir aceite da política de privacidade.
+- Permitir que o usuário atualize os campos editáveis da própria conta.
+- Restringir a fila de cadastros a `super_admin` e `sports_admin`.
+- Não tratar cadastro de jogador ou candidato como aprovação esportiva.
+- Não transformar metadados fornecidos pelo usuário em autorização admin.
+- Manter canal para correção, bloqueio e remoção da conta.
+
 ## Dados financeiros
 
 A planilha contém informações financeiras por jogador e competição. Esses dados
@@ -91,6 +104,11 @@ O painel administrativo usa Supabase Auth com checagem server-side de permissõe
 Roles administrativas ficam em `admin_profiles`; decisões de autorização não
 devem depender de `user_metadata`, pois esse campo pode ser editável pelo
 usuário. Chaves de service role são exclusivas de scripts e rotas confiáveis.
+
+Membros e administradores podem autenticar pela mesma tela `/entrar`, mas são
+autorizados por tabelas distintas. `member_profiles.account_type` descreve o
+relacionamento solicitado com o clube; `admin_profiles.role` é o único dado que
+concede acesso ao painel e só pode ser administrado internamente.
 
 Papéis previstos:
 
