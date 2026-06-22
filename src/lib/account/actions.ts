@@ -10,7 +10,7 @@ import {
   isValidEmail,
   nullableFormText,
   parseAccountType,
-  parseBirthYear,
+  parseBirthDate,
   rawFormText,
   safeInternalPath,
 } from "./utils";
@@ -67,7 +67,7 @@ export async function registerAccount(formData: FormData) {
   );
   const accountType = parseAccountType(formText(formData, "account_type", 30));
   const privacyAccepted = formData.get("privacy_accepted") === "on";
-  const rawBirthYear = formText(formData, "birth_year", 4);
+  const rawBirthDate = formText(formData, "birth_date", 10);
 
   if (fullName.length < 2 || !isValidEmail(email)) {
     redirect(accountMessageHref("/cadastro", "error", "invalid-data"));
@@ -85,8 +85,8 @@ export async function registerAccount(formData: FormData) {
     redirect(accountMessageHref("/cadastro", "error", "privacy-required"));
   }
 
-  if (rawBirthYear && !parseBirthYear(rawBirthYear)) {
-    redirect(accountMessageHref("/cadastro", "error", "invalid-birth-year"));
+  if (rawBirthDate && !parseBirthDate(rawBirthDate)) {
+    redirect(accountMessageHref("/cadastro", "error", "invalid-birth-date"));
   }
 
   const supabase = await createSupabaseServerClient();
@@ -107,8 +107,7 @@ export async function registerAccount(formData: FormData) {
         phone: nullableFormText(formData, "phone", 30),
         city: nullableFormText(formData, "city", 100),
         preferred_position: nullableFormText(formData, "preferred_position", 60),
-        birth_year: parseBirthYear(rawBirthYear),
-        message: nullableFormText(formData, "message", 1000),
+        birth_date: parseBirthDate(rawBirthDate),
         privacy_accepted: true,
       },
     },
@@ -150,9 +149,9 @@ export async function updateAccountProfile(formData: FormData) {
     redirect("/entrar?next=/conta");
   }
 
-  const rawBirthYear = formText(formData, "birth_year", 4);
-  if (rawBirthYear && !parseBirthYear(rawBirthYear)) {
-    redirect(accountMessageHref("/conta", "error", "invalid-birth-year"));
+  const rawBirthDate = formText(formData, "birth_date", 10);
+  if (rawBirthDate && !parseBirthDate(rawBirthDate)) {
+    redirect(accountMessageHref("/conta", "error", "invalid-birth-date"));
   }
 
   const fullName = formText(formData, "full_name", 120);
@@ -167,8 +166,7 @@ export async function updateAccountProfile(formData: FormData) {
       phone: nullableFormText(formData, "phone", 30),
       city: nullableFormText(formData, "city", 100),
       preferred_position: nullableFormText(formData, "preferred_position", 60),
-      birth_year: parseBirthYear(rawBirthYear),
-      message: nullableFormText(formData, "message", 1000),
+      birth_date: parseBirthDate(rawBirthDate),
     })
     .eq("user_id", user.id);
 

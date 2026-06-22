@@ -15,8 +15,8 @@ produto deve seguir princípios de minimização, transparência e consentimento
 Dados como nome, apelido, posição, número e estatísticas devem ter finalidade
 clara: histórico esportivo e comunicação institucional do clube.
 
-Contas públicas podem guardar e-mail, telefone, cidade, ano de nascimento,
-posição preferida e mensagem de contato. Esses campos ficam privados em
+Contas públicas podem guardar e-mail, telefone, cidade, data de nascimento e
+posição preferida. Esses campos ficam privados em
 `member_profiles`, são usados para autenticação, contato e análise do vínculo
 solicitado e não devem aparecer automaticamente no site público.
 

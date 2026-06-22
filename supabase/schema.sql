@@ -236,6 +236,7 @@ create table if not exists public.member_profiles (
   status text not null default 'pending',
   linked_player_id uuid references public.players(id) on delete set null,
   preferred_position text,
+  birth_date date,
   birth_year integer,
   message text,
   privacy_accepted_at timestamptz,
@@ -249,6 +250,9 @@ create table if not exists public.member_profiles (
   ),
   constraint member_profiles_birth_year_check check (
     birth_year is null or birth_year between 1940 and 2100
+  ),
+  constraint member_profiles_birth_date_check check (
+    birth_date is null or birth_date between date '1940-01-01' and current_date
   ),
   constraint member_profiles_full_name_length_check check (
     char_length(full_name) between 2 and 120
@@ -442,7 +446,7 @@ set search_path = ''
 as $$
 declare
   requested_type text;
-  requested_birth_year integer;
+  requested_birth_date date;
 begin
   requested_type := case
     when lower(coalesce(new.raw_user_meta_data ->> 'account_type', '')) in (
@@ -451,12 +455,15 @@ begin
     else 'supporter'
   end;
 
-  requested_birth_year := case
-    when coalesce(new.raw_user_meta_data ->> 'birth_year', '') ~ '^[0-9]{4}$'
-      and (new.raw_user_meta_data ->> 'birth_year')::integer between 1940 and 2100
-      then (new.raw_user_meta_data ->> 'birth_year')::integer
-    else null
+  begin
+    requested_birth_date := nullif(new.raw_user_meta_data ->> 'birth_date', '')::date;
+  exception
+    when others then requested_birth_date := null;
   end;
+
+  if requested_birth_date < date '1940-01-01' or requested_birth_date > current_date then
+    requested_birth_date := null;
+  end if;
 
   insert into public.member_profiles (
     user_id,
@@ -467,8 +474,7 @@ begin
     account_type,
     status,
     preferred_position,
-    birth_year,
-    message,
+    birth_date,
     privacy_accepted_at
   ) values (
     new.id,
@@ -483,8 +489,7 @@ begin
     requested_type,
     case when requested_type = 'supporter' then 'active' else 'pending' end,
     nullif(left(coalesce(new.raw_user_meta_data ->> 'preferred_position', ''), 60), ''),
-    requested_birth_year,
-    nullif(left(coalesce(new.raw_user_meta_data ->> 'message', ''), 1000), ''),
+    requested_birth_date,
     case
       when new.raw_user_meta_data ->> 'privacy_accepted' = 'true' then now()
       else null
@@ -495,6 +500,11 @@ begin
   return new;
 end;
 $$;
+
+comment on column public.member_profiles.birth_year is
+  'Campo legado. Novos cadastros usam birth_date.';
+comment on column public.member_profiles.message is
+  'Campo legado. Nao e mais coletado nos formularios publicos.';
 
 revoke all on function private.handle_new_member_profile() from public;
 

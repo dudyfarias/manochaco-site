@@ -5,7 +5,6 @@ import {
   AccountNotice,
   AccountShell,
   AccountSubmitButton,
-  AccountTextArea,
   AccountTextLink,
 } from "@/components/account/AccountUI";
 import { registerAccount } from "@/lib/account/actions";
@@ -34,7 +33,7 @@ function errorMessage(error: string) {
     "weak-password": "A senha deve ter pelo menos 8 caracteres.",
     "password-mismatch": "As senhas informadas não são iguais.",
     "privacy-required": "É necessário aceitar a política de privacidade.",
-    "invalid-birth-year": "Informe um ano de nascimento válido.",
+    "invalid-birth-date": "Informe uma data de nascimento válida.",
     "signup-failed": "Não foi possível concluir o cadastro. Se você já possui conta, tente entrar ou recuperar a senha.",
   };
 
@@ -44,7 +43,7 @@ function errorMessage(error: string) {
 export default async function RegisterPage({ searchParams }: RegisterPageProps) {
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : "";
-  const currentYear = new Date().getFullYear();
+  const today = new Date().toISOString().slice(0, 10);
 
   return (
     <AccountShell
@@ -104,16 +103,10 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           <AccountField label="Telefone" name="phone" type="tel" autoComplete="tel" maxLength={30} />
           <AccountField label="Cidade" name="city" autoComplete="address-level2" maxLength={100} />
           <AccountField label="Posição preferida" name="preferred_position" maxLength={60} placeholder="Ex.: atacante" />
-          <AccountField label="Ano de nascimento" name="birth_year" type="number" min={1940} max={currentYear} />
+          <AccountField label="Data de nascimento" name="birth_date" type="date" min="1940-01-01" max={today} autoComplete="bday" />
           <AccountField label="Senha" name="password" type="password" required autoComplete="new-password" minLength={8} maxLength={128} />
           <AccountField label="Confirmar senha" name="password_confirmation" type="password" required autoComplete="new-password" minLength={8} maxLength={128} />
         </div>
-
-        <AccountTextArea
-          label="Mensagem para o clube"
-          name="message"
-          placeholder="Conte brevemente seu vínculo ou interesse no Manochaco."
-        />
 
         <label className="flex gap-3 text-sm leading-6 text-zinc-600">
           <input type="checkbox" name="privacy_accepted" required className="mt-1 accent-[#9a6a12]" />

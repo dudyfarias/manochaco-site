@@ -27,8 +27,7 @@ export type MemberProfile = {
   status: MemberStatus;
   linkedPlayerId: string | null;
   preferredPosition: string | null;
-  birthYear: number | null;
-  message: string | null;
+  birthDate: string | null;
   privacyAcceptedAt: string | null;
   createdAt: string | null;
 };

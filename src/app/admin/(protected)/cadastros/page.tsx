@@ -21,6 +21,14 @@ export const metadata: Metadata = {
 
 const allowedRoles = ["super_admin", "sports_admin"] as const;
 
+function formatBirthDate(value: string | null) {
+  if (!value) return null;
+
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(
+    new Date(`${value}T00:00:00Z`),
+  );
+}
+
 export default async function MemberRegistrationsPage({
   searchParams,
 }: MemberRegistrationsPageProps) {
@@ -95,13 +103,10 @@ export default async function MemberRegistrationsPage({
                     <p className="text-lg font-black text-zinc-950">{profile.full_name}</p>
                     <p className="mt-1 text-sm text-zinc-600">{profile.email}</p>
                     <p className="mt-2 text-xs leading-5 text-zinc-500">
-                      {[profile.phone, profile.city, profile.preferred_position]
+                      {[profile.phone, profile.city, profile.preferred_position, formatBirthDate(profile.birth_date)]
                         .filter(Boolean)
                         .join(" · ") || "Sem dados adicionais"}
                     </p>
-                    {profile.message ? (
-                      <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-700">{profile.message}</p>
-                    ) : null}
                   </div>
 
                   <label className="block">

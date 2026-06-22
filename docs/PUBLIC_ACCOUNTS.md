@@ -6,6 +6,10 @@ O portal permite criar contas para torcedores, jogadores do Manochaco,
 candidatos interessados em jogar e parceiros. A autenticação usa Supabase Auth;
 os dados privados ficam em `member_profiles`.
 
+O formulário coleta a data de nascimento completa, além de dados básicos de
+contato e posição preferida. Não existe mais campo de mensagem livre no
+cadastro. `birth_year` e `message` permanecem no banco somente como legado.
+
 ## Tipos de conta
 
 - `supporter`: fica ativa após confirmação do e-mail.
@@ -44,8 +48,9 @@ depois dessa revisão.
 ## Configuração do Supabase
 
 1. Aplique `supabase/schema.sql` e `supabase/policies.sql` em projetos novos.
-2. Em projetos existentes, aplique a migration
-   `20260619134023_add_public_member_accounts.sql`.
+2. Em projetos existentes, aplique as migrations
+   `20260619134023_add_public_member_accounts.sql` e
+   `20260622164522_add_member_birth_date.sql`.
 3. Configure Site URL e Redirect URLs para `/auth/confirm`.
 4. Configure SMTP próprio em produção.
 5. Defina `NEXT_PUBLIC_SITE_URL` no ambiente local e na Vercel.

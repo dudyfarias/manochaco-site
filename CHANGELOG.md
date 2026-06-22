@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.2 - 2026-06-22
+
+- Substituição do ano de nascimento pela data de nascimento completa no cadastro e na conta.
+- Remoção do campo livre “Mensagem para o clube” dos formulários e da fila administrativa.
+- Criação da migration `20260622164522_add_member_birth_date.sql` para persistir `birth_date` no Supabase.
+- Preservação de `birth_year` e `message` apenas como campos legados, sem novas gravações.
+
 ## 0.10.1 - 2026-06-22
 
 - Conexão do site de produção ao projeto Supabase `manochaco`.

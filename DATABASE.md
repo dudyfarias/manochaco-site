@@ -58,7 +58,9 @@ humana.
 `status` aceita `pending`, `active`, `rejected` ou `blocked`. Jogadores,
 candidatos e parceiros entram como pendentes. O vínculo opcional
 `linked_player_id` só é definido após revisão de `sports_admin` ou
-`super_admin`.
+`super_admin`. A data de nascimento completa fica em `birth_date`; os campos
+`birth_year` e `message` existem somente para compatibilidade com cadastros
+anteriores e não são mais coletados.
 
 O trigger `private.handle_new_member_profile` provisiona o perfil quando o
 Supabase Auth cria um usuário. Metadados do cadastro podem solicitar um tipo de

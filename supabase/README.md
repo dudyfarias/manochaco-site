@@ -24,6 +24,8 @@ O Auth usa `https://manochaco-site.vercel.app` como Site URL e aceita o callback
   públicas, provisionamento por Auth, proteção de campos e RLS.
 - `migrations/20260622163717_harden_database_functions.sql`: fixa o
   `search_path` e remove execução pública de função administrativa.
+- `migrations/20260622164522_add_member_birth_date.sql`: troca a coleta do ano
+  pela data de nascimento completa e descontinua a mensagem livre no cadastro.
 
 ## Ordem sugerida
 

@@ -4,7 +4,6 @@ import {
   AccountField,
   AccountNotice,
   AccountSubmitButton,
-  AccountTextArea,
 } from "@/components/account/AccountUI";
 import { logoutAccount, updateAccountProfile } from "@/lib/account/actions";
 import { requireAccount } from "@/lib/account/data";
@@ -22,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 function errorMessage(error: string) {
   if (error === "not-admin") return "Sua conta não possui permissão administrativa.";
-  if (error === "invalid-birth-year") return "Informe um ano de nascimento válido.";
+  if (error === "invalid-birth-date") return "Informe uma data de nascimento válida.";
   if (error === "invalid-data") return "Revise os dados obrigatórios.";
   return "Não foi possível salvar suas alterações.";
 }
@@ -33,7 +32,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const error = typeof params.error === "string" ? params.error : "";
   const saved = typeof params.saved === "string" ? params.saved : "";
   const welcome = params.welcome === "1";
-  const currentYear = new Date().getFullYear();
+  const today = new Date().toISOString().slice(0, 10);
 
   return (
     <section className="bg-[#f4f1e8] px-4 py-12 sm:px-6 lg:px-8">
@@ -102,9 +101,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                   <AccountField label="Telefone" name="phone" type="tel" autoComplete="tel" maxLength={30} defaultValue={context.member.phone} />
                   <AccountField label="Cidade" name="city" autoComplete="address-level2" maxLength={100} defaultValue={context.member.city} />
                   <AccountField label="Posição preferida" name="preferred_position" maxLength={60} defaultValue={context.member.preferredPosition} />
-                  <AccountField label="Ano de nascimento" name="birth_year" type="number" min={1940} max={currentYear} defaultValue={context.member.birthYear} />
+                  <AccountField label="Data de nascimento" name="birth_date" type="date" min="1940-01-01" max={today} autoComplete="bday" defaultValue={context.member.birthDate} />
                 </div>
-                <AccountTextArea label="Mensagem para o clube" name="message" defaultValue={context.member.message} />
                 <AccountSubmitButton>Salvar dados</AccountSubmitButton>
               </form>
             </div>

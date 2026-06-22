@@ -24,13 +24,19 @@ export function parseAccountType(value: unknown): AccountType {
   return isAccountType(value) ? value : "supporter";
 }
 
-export function parseBirthYear(value: string) {
-  if (!/^\d{4}$/.test(value)) {
+export function parseBirthDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return null;
   }
 
-  const year = Number(value);
-  return year >= 1940 && year <= new Date().getFullYear() ? year : null;
+  const date = new Date(`${value}T00:00:00Z`);
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+    return null;
+  }
+
+  return value >= "1940-01-01" && value <= today ? value : null;
 }
 
 export function isValidEmail(value: string) {

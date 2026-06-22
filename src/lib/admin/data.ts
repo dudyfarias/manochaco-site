@@ -167,8 +167,7 @@ export type AdminMemberProfileRow = {
   status: "pending" | "active" | "rejected" | "blocked";
   linked_player_id: string | null;
   preferred_position: string | null;
-  birth_year: number | null;
-  message: string | null;
+  birth_date: string | null;
   privacy_accepted_at: string | null;
   created_at: string | null;
   players?: {

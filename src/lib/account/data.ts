@@ -17,8 +17,7 @@ type MemberProfileRow = {
   status: string;
   linked_player_id: string | null;
   preferred_position: string | null;
-  birth_year: number | null;
-  message: string | null;
+  birth_date: string | null;
   privacy_accepted_at: string | null;
   created_at: string | null;
 };
@@ -43,8 +42,7 @@ function adaptMemberProfile(row: MemberProfileRow): MemberProfile {
     status: (isMemberStatus(row.status) ? row.status : "pending") as MemberStatus,
     linkedPlayerId: row.linked_player_id,
     preferredPosition: row.preferred_position,
-    birthYear: row.birth_year,
-    message: row.message,
+    birthDate: row.birth_date,
     privacyAcceptedAt: row.privacy_accepted_at,
     createdAt: row.created_at,
   };
