@@ -3,6 +3,8 @@
 ## Supabase
 
 - RLS ativo em tabelas expostas.
+- Funções auxiliares usam `search_path` fixo.
+- Funções `security definer` administrativas não concedem `EXECUTE` a `anon` ou `authenticated`.
 - Leitura pública limitada a dados esportivos permitidos.
 - `photo_player_tags` públicas somente com `confirmed_by_admin = true`.
 - `photos` públicas somente com `is_public = true`.

@@ -4,6 +4,10 @@ Esta pasta prepara o Manochaco para usar Supabase como backend real. Depois da
 migração inicial da planilha, o Supabase deve ser a fonte oficial dos dados, e o
 painel administrativo deve ser o caminho principal para manutenção.
 
+Projeto de produção: `yfjniefejnahenwbtdyn` (`manochaco`, região `sa-east-1`).
+O Auth usa `https://manochaco-site.vercel.app` como Site URL e aceita o callback
+`/auth/confirm` em produção e no desenvolvimento local.
+
 ## Arquivos
 
 - `schema.sql`: cria tabelas esportivas, administrativas, biométricas e
@@ -18,6 +22,8 @@ painel administrativo deve ser o caminho principal para manutenção.
   projetos da Fase 8 para o fluxo real de reconhecimento facial.
 - `migrations/20260619134023_add_public_member_accounts.sql`: cria contas
   públicas, provisionamento por Auth, proteção de campos e RLS.
+- `migrations/20260622163717_harden_database_functions.sql`: fixa o
+  `search_path` e remove execução pública de função administrativa.
 
 ## Ordem sugerida
 

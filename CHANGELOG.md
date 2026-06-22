@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.1 - 2026-06-22
+
+- Conexão do site de produção ao projeto Supabase `manochaco`.
+- Aplicação do schema, policies RLS, buckets de Storage e seed inicial.
+- Configuração das variáveis Supabase na Vercel para produção, preview e desenvolvimento.
+- Configuração do Site URL, redirects de confirmação e senha mínima de 8 caracteres no Supabase Auth.
+- Validação controlada do provisionamento de `member_profiles` e da leitura pública das competições.
+- Endurecimento das permissões de funções apontadas pelo advisor de segurança do Supabase.
+
 ## 0.10.0 - 2026-06-19
 
 - Inclusão dos botões públicos “Entrar” e “Cadastre-se” no Header e no Footer.
