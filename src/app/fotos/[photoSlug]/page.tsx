@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { SectionTitle } from "@/components/SectionTitle";
 import { SmartImage } from "@/components/SmartImage";
@@ -47,6 +48,7 @@ export async function generateMetadata({
 }
 
 export default async function PhotoPage({ params }: PhotoPageProps) {
+  await connection();
   const { photoSlug } = await params;
   const photo = await getPhotoBySlug(photoSlug);
 
@@ -155,16 +157,6 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
         </div>
         <div className="rounded-lg border border-zinc-200 bg-white p-6">
           <TaggedPlayersList photoId={photo.id} />
-          <div className="mt-6 rounded-lg border border-zinc-200 bg-[#f7f5ef] p-4">
-            <p className="text-sm font-black uppercase text-[#9a6a12]">
-              Estrutura futura
-            </p>
-            <p className="mt-2 text-sm leading-6 text-zinc-600">
-              As coordenadas de rosto já estão previstas nos dados por
-              `boundingBox`; a renderização visual sobre a imagem virá quando o
-              painel de revisão estiver funcional.
-            </p>
-          </div>
         </div>
       </section>
 

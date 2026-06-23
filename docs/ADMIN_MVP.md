@@ -16,6 +16,8 @@ inicial e reimportações controladas.
 - `/admin/temporadas`.
 - `/admin/galeria`, `/admin/galeria/albuns`, `/admin/galeria/fotos`, `/admin/galeria/fotos/[id]`.
 - `/admin/fotos/revisao`.
+- `/admin/reconhecimento-facial`.
+- `/admin/diagnostico/fotos`.
 - `/admin/financeiro`.
 - `/admin/configuracoes`.
 
@@ -52,6 +54,7 @@ cria administradores; roles continuam em `admin_profiles`.
 - Tags: adicionar ou remover marcação manual confirmada em uma foto.
 - Referências faciais: upload privado, consentimento, aprovação, geração de embedding e remoção no perfil do jogador.
 - Reconhecimento facial: processamento individual ou sequencial, sugestões reais, bounding box e revisão humana.
+- Diagnóstico: fila elegível, motivo de exclusão, tags públicas e fotos vinculadas por jogador.
 
 ## Placeholders
 
@@ -65,6 +68,8 @@ cria administradores; roles continuam em `admin_profiles`.
 - `/admin/jogadores/[id]` gerencia referências privadas e consentimento.
 - `/admin/galeria/fotos/[id]` dispara o processamento de uma foto.
 - `/admin/fotos/revisao` exibe sugestões, bounding boxes e processamento pendente.
+- `/admin/reconhecimento-facial` resume a operação e lista marcações confirmadas.
+- `/admin/diagnostico/fotos` explica por que cada foto entra ou não na fila.
 - APIs em `/api/admin/face-recognition/*` exigem sessão e role autorizada.
 - Confirmar ou trocar cria tag `ai_confirmed`; ignorar não publica nada.
 - O provider padrão é `mock`; `faceapi` oferece processamento open source server-side e AWS permanece opcional.

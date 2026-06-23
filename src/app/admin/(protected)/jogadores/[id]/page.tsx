@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   AdminButtonLink,
@@ -19,7 +20,12 @@ import {
   updatePlayerFaceReferenceConsent,
   updatePlayer,
 } from "@/lib/admin/actions";
-import { getAdminPlayer, listPlayerFaceReferences } from "@/lib/admin/data";
+import {
+  getAdminPlayer,
+  listConfirmedPhotoTags,
+  listPlayerFaceReferences,
+} from "@/lib/admin/data";
+import { getPhotosForPlayer } from "@/lib/data";
 import { getFaceRecognitionProviderName } from "@/lib/face-recognition/provider";
 
 type EditPlayerPageProps = {
@@ -37,14 +43,20 @@ export default async function EditPlayerPage({
 }: EditPlayerPageProps) {
   const recognitionProvider = getFaceRecognitionProviderName();
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
-  const [player, faceReferences] = await Promise.all([
+  const [player, faceReferences, confirmedPhotoTags] = await Promise.all([
     getAdminPlayer(id),
     listPlayerFaceReferences(id),
+    listConfirmedPhotoTags(id),
   ]);
 
   if (!player) {
     notFound();
   }
+  const publicPhotos = await getPhotosForPlayer(player.slug);
+  const publicPhotoIds = new Set(publicPhotos.map((photo) => photo.id));
+  const missingPublicPhotos = confirmedPhotoTags.filter(
+    (tag) => tag.photos?.is_public && !publicPhotoIds.has(tag.photo_id),
+  );
 
   return (
     <div>
@@ -225,6 +237,63 @@ export default async function EditPlayerPage({
             </div>
           </AdminCard>
         </div>
+      </section>
+
+      <section className="mt-6">
+        <AdminPageTitle
+          eyebrow="Publicação"
+          title="Fotos públicas vinculadas"
+          description={`${confirmedPhotoTags.length} marcação(ões) confirmada(s) para este jogador.`}
+          action={
+            <AdminButtonLink href={`/jogadores/${player.slug}`} tone="secondary">
+              Abrir perfil público
+            </AdminButtonLink>
+          }
+        />
+
+        {missingPublicPhotos.length > 0 ? (
+          <div className="mt-5 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">
+            Existem marcações confirmadas no banco que ainda não retornaram na consulta pública do perfil.
+          </div>
+        ) : null}
+
+        <AdminCard className="mt-5">
+          {confirmedPhotoTags.length > 0 ? (
+            <div className="divide-y divide-zinc-200">
+              {confirmedPhotoTags.map((tag) => (
+                <div
+                  key={tag.id}
+                  className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-black text-zinc-950">
+                      {tag.photos?.title ?? tag.photo_id}
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-500">
+                      {tag.tag_type === "manual" ? "Manual" : "IA confirmada"} · {tag.photos?.is_public ? "foto pública" : "foto privada"}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-3 text-sm font-black">
+                    {tag.photos?.id ? (
+                      <Link href={`/admin/galeria/fotos/${tag.photos.id}`} className="text-[#9a6a12]">
+                        Abrir no admin
+                      </Link>
+                    ) : null}
+                    {tag.photos?.slug ? (
+                      <Link href={`/fotos/${tag.photos.slug}`} className="text-[#9a6a12]">
+                        Abrir foto pública
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm leading-6 text-zinc-500">
+              Nenhuma foto possui marcação confirmada para este jogador.
+            </p>
+          )}
+        </AdminCard>
       </section>
     </div>
   );

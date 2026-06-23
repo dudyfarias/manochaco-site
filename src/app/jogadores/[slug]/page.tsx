@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { ButtonLink } from "@/components/ButtonLink";
 import { EmptyState } from "@/components/EmptyState";
 import { MatchCard } from "@/components/MatchCard";
@@ -67,6 +68,7 @@ function formatAverage(value: number) {
 }
 
 export default async function PlayerPage({ params }: PlayerPageProps) {
+  await connection();
   const { slug } = await params;
   const [player, players] = await Promise.all([getPlayerBySlug(slug), getPlayers()]);
 
@@ -248,7 +250,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
           <SectionTitle
             eyebrow="Fotos"
             title={`Fotos em que ${player.nickname} aparece`}
-            description="Esta seção usa a relação local entre fotos e jogadores, simulando a marcação manual que virá em fase futura."
+            description="Marcações manuais e sugestões de IA confirmadas pela administração."
             tone="dark"
           />
           <div className="mt-10">
@@ -258,7 +260,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
               <EmptyState
                 dark
                 title="Ainda não há fotos marcadas"
-                description="Quando a marcação manual por jogador avançar, as fotos deste atleta aparecerão aqui."
+                description="Nenhuma foto pública possui marcação confirmada para este atleta."
               />
             )}
           </div>

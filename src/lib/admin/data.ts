@@ -1,4 +1,8 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  getPhotoQueueReason,
+  isPhotoProcessable,
+} from "@/lib/photo-pipeline";
 
 export type AdminPlayerRow = {
   id: string;
@@ -97,6 +101,8 @@ export type AdminPhotoRow = {
   uploaded_at: string | null;
   face_recognition_status: string;
   is_public?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 export type AdminPhotoTagRow = {
@@ -157,6 +163,50 @@ export type AdminFaceReferenceRow = {
   indexed_at: string | null;
   created_at: string | null;
   signed_url?: string | null;
+};
+
+export type AdminConfirmedPhotoTagRow = {
+  id: string;
+  photo_id: string;
+  player_id: string;
+  tag_type: string;
+  confidence: number | null;
+  confirmed_by_admin: boolean;
+  created_at: string | null;
+  photos?: {
+    id?: string | null;
+    slug?: string | null;
+    title?: string | null;
+    url?: string | null;
+    is_public?: boolean | null;
+  } | null;
+  players?: {
+    id?: string | null;
+    slug?: string | null;
+    nickname?: string | null;
+    name?: string | null;
+  } | null;
+};
+
+export type AdminPhotoDiagnosticRow = AdminPhotoRow & {
+  albumTitle: string | null;
+  suggestionCount: number;
+  pendingSuggestionCount: number;
+  confirmedTagCount: number;
+  appearsInQueue: boolean;
+  queueReason: string;
+};
+
+export type PhotoRecognitionSummary = {
+  total: number;
+  pending: number;
+  processing: number;
+  needsReview: number;
+  processed: number;
+  approved: number;
+  errors: number;
+  withoutUrl: number;
+  confirmedTags: number;
 };
 
 export type AdminMemberProfileRow = {
@@ -306,6 +356,106 @@ export async function listAdminPhotos() {
   return (assertAdminData(data, error, "photos") ?? []) as AdminPhotoRow[];
 }
 
+export async function listConfirmedPhotoTags(playerId?: string) {
+  const supabase = await getAdminSupabase();
+  let query = supabase
+    .from("photo_player_tags")
+    .select(
+      "id, photo_id, player_id, tag_type, confidence, confirmed_by_admin, created_at, photos(id, slug, title, url, is_public), players(id, slug, nickname, name)",
+    )
+    .eq("confirmed_by_admin", true)
+    .in("tag_type", ["manual", "ai_confirmed"])
+    .order("created_at", { ascending: false });
+
+  if (playerId) query = query.eq("player_id", playerId);
+  const { data, error } = await query;
+
+  return (assertAdminData(data, error, "confirmed_photo_tags") ??
+    []) as unknown as AdminConfirmedPhotoTagRow[];
+}
+
+export async function listPhotoDiagnostics(): Promise<AdminPhotoDiagnosticRow[]> {
+  const supabase = await getAdminSupabase();
+  const [photosResult, suggestionsResult, tagsResult, albumsResult] =
+    await Promise.all([
+      supabase.from("photos").select("*").order("uploaded_at", { ascending: false }),
+      supabase.from("face_detection_suggestions").select("photo_id, status"),
+      supabase
+        .from("photo_player_tags")
+        .select("photo_id, confirmed_by_admin"),
+      supabase.from("albums").select("id, title"),
+    ]);
+
+  const photos = (assertAdminData(
+    photosResult.data,
+    photosResult.error,
+    "photo_diagnostics.photos",
+  ) ?? []) as AdminPhotoRow[];
+  const suggestions = assertAdminData(
+    suggestionsResult.data,
+    suggestionsResult.error,
+    "photo_diagnostics.suggestions",
+  ) ?? [];
+  const tags = assertAdminData(
+    tagsResult.data,
+    tagsResult.error,
+    "photo_diagnostics.tags",
+  ) ?? [];
+  const albums = assertAdminData(
+    albumsResult.data,
+    albumsResult.error,
+    "photo_diagnostics.albums",
+  ) ?? [];
+  const albumTitles = new Map(
+    albums.map((album) => [album.id as string, album.title as string]),
+  );
+
+  return photos.map((photo) => {
+    const photoSuggestions = suggestions.filter(
+      (suggestion) => suggestion.photo_id === photo.id,
+    );
+    const pendingSuggestionCount = photoSuggestions.filter(
+      (suggestion) => suggestion.status === "pending",
+    ).length;
+    const confirmedTagCount = tags.filter(
+      (tag) => tag.photo_id === photo.id && tag.confirmed_by_admin,
+    ).length;
+
+    return {
+      ...photo,
+      albumTitle: photo.album_id ? albumTitles.get(photo.album_id) ?? null : null,
+      suggestionCount: photoSuggestions.length,
+      pendingSuggestionCount,
+      confirmedTagCount,
+      appearsInQueue: isPhotoProcessable(photo.face_recognition_status, photo.url),
+      queueReason: getPhotoQueueReason({
+        status: photo.face_recognition_status,
+        url: photo.url,
+        pendingSuggestions: pendingSuggestionCount,
+      }),
+    };
+  });
+}
+
+export async function getPhotoRecognitionSummary(): Promise<PhotoRecognitionSummary> {
+  const [photos, confirmedTags] = await Promise.all([
+    listPhotoDiagnostics(),
+    listConfirmedPhotoTags(),
+  ]);
+
+  return {
+    total: photos.length,
+    pending: photos.filter((photo) => photo.appearsInQueue).length,
+    processing: photos.filter((photo) => photo.face_recognition_status === "processing").length,
+    needsReview: photos.filter((photo) => photo.face_recognition_status === "needs_review").length,
+    processed: photos.filter((photo) => photo.face_recognition_status === "processed").length,
+    approved: photos.filter((photo) => photo.face_recognition_status === "approved").length,
+    errors: photos.filter((photo) => photo.face_recognition_status === "error").length,
+    withoutUrl: photos.filter((photo) => !photo.url?.trim()).length,
+    confirmedTags: confirmedTags.length,
+  };
+}
+
 export async function getAdminPhoto(id: string) {
   const supabase = await getAdminSupabase();
   const { data, error } = await supabase
@@ -357,18 +507,20 @@ export async function listPendingRecognitionPhotos() {
   const supabase = await getAdminSupabase();
   const { data, error } = await supabase
     .from("photos")
-    .select("id, title, face_recognition_status")
+    .select("id, title, url, face_recognition_status")
     .in("face_recognition_status", ["not_processed", "queued", "error"])
     .order("uploaded_at", { ascending: true });
 
-  return assertAdminData(data, error, "pending_recognition_photos") ?? [];
+  return (assertAdminData(data, error, "pending_recognition_photos") ?? []).filter(
+    (photo) => isPhotoProcessable(photo.face_recognition_status, photo.url),
+  );
 }
 
 export async function listPendingFaceSuggestions() {
   const supabase = await getAdminSupabase();
   const { data, error } = await supabase
     .from("face_detection_suggestions")
-    .select("*, photos(id, title, url, alt), players(nickname, name)")
+    .select("*, photos(id, title, url, alt), players(id, slug, nickname, name)")
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 

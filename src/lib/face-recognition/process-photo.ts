@@ -14,6 +14,7 @@ import { readGalleryPhoto } from "./image-source";
 
 type RecognitionPhotoRow = {
   id: string;
+  slug: string;
   url: string;
 };
 
@@ -79,11 +80,12 @@ export async function processGalleryPhoto(
   photoId: string,
   context: AdminContext,
   requestOrigin: string,
+  options: { reprocess?: boolean } = {},
 ) {
   const supabase = await getAdminSupabase();
   const { data, error } = await supabase
     .from("photos")
-    .select("id, url")
+    .select("id, slug, url")
     .eq("id", photoId)
     .maybeSingle();
   const photo = data as RecognitionPhotoRow | null;
@@ -94,6 +96,30 @@ export async function processGalleryPhoto(
       error?.message ?? "Foto não encontrada.",
       "A foto selecionada não foi encontrada.",
     );
+  }
+
+  if (options.reprocess) {
+    const { error: cleanupPreviousError } = await supabase
+      .from("face_detection_suggestions")
+      .delete()
+      .eq("photo_id", photo.id)
+      .in("status", ["pending", "error"]);
+
+    if (cleanupPreviousError) {
+      throw new FaceRecognitionError(
+        "suggestion_cleanup_failed",
+        cleanupPreviousError.message,
+      );
+    }
+
+    const { error: queuedStatusError } = await supabase
+      .from("photos")
+      .update({ face_recognition_status: "queued" })
+      .eq("id", photo.id);
+
+    if (queuedStatusError) {
+      throw new FaceRecognitionError("photo_status_failed", queuedStatusError.message);
+    }
   }
 
   const { error: processingStatusError } = await supabase
@@ -204,6 +230,7 @@ export async function processGalleryPhoto(
 
     return {
       photoId: photo.id,
+      photoSlug: photo.slug,
       detectedFaces: matches.length,
       suggestions: matches.length,
       status: nextStatus,

@@ -177,6 +177,17 @@
 - Roles administrativas continuam separadas e não podem ser solicitadas pelo formulário público.
 - Próxima evolução: recursos específicos por perfil, notificações, convite para partidas e gestão formal de processos seletivos.
 
+## Fase 9.2 - Confiabilidade do pipeline de fotos
+
+- Status: concluída em 2026-06-23.
+- Confirmação e troca de sugestões passam a fazer upsert da tag pública sem duplicar vínculos.
+- Perfis e páginas de foto consultam tags confirmadas no Supabase por `player_id` e `photo_id`.
+- Páginas públicas relacionadas a fotos deixam de depender do cache gerado antes da revisão administrativa.
+- Fila considera `not_processed`, `queued` e `error`, com motivo explícito para cada foto excluída.
+- Diagnóstico administrativo reúne status, sugestões, tags e publicação por foto e jogador.
+- Scripts de sincronização do Storage e validação do pipeline adicionados.
+- Migration normaliza status antigos sem apagar tags já confirmadas.
+
 ## Fase 10 - Financeiro
 
 - Área financeira privada, sem qualquer item no menu público.

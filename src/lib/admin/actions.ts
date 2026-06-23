@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AdminRole } from "@/lib/auth";
 import { requireAdmin } from "@/lib/auth";
 import {
@@ -43,6 +44,30 @@ async function removeProviderFaceBestEffort(
     await provider.deleteIndexedFace(providerFaceId);
   } catch (error) {
     console.error("[face-recognition] Falha ao limpar índice externo", error);
+  }
+}
+
+async function revalidatePublicPhotoRelations(
+  supabase: SupabaseClient,
+  photoId: string,
+  playerIds: string[] = [],
+) {
+  const [{ data: photo }, playersResult] = await Promise.all([
+    supabase.from("photos").select("slug").eq("id", photoId).maybeSingle(),
+    playerIds.length > 0
+      ? supabase.from("players").select("slug").in("id", [...new Set(playerIds)])
+      : Promise.resolve({ data: [] as { slug: string }[] }),
+  ]);
+
+  revalidatePath("/");
+  revalidatePath("/galeria");
+
+  if (photo?.slug) {
+    revalidatePath(`/fotos/${photo.slug}`);
+  }
+
+  for (const player of playersResult.data ?? []) {
+    if (player.slug) revalidatePath(`/jogadores/${player.slug}`);
   }
 }
 
@@ -750,7 +775,7 @@ export async function addPhotoPlayerTag(formData: FormData) {
     photoId,
     playerId,
   });
-  revalidatePath("/galeria");
+  await revalidatePublicPhotoRelations(supabase, photoId, [playerId]);
   redirect(adminMessageHref(`/admin/galeria/fotos/${photoId}`, "saved", "tag"));
 }
 
@@ -760,6 +785,12 @@ export async function removePhotoPlayerTag(formData: FormData) {
   const id = requiredString(formData, "id", "ID");
   const photoId = requiredString(formData, "photo_id", "Foto");
 
+  const { data: existingTag } = await supabase
+    .from("photo_player_tags")
+    .select("player_id")
+    .eq("id", id)
+    .maybeSingle();
+
   const { error } = await supabase.from("photo_player_tags").delete().eq("id", id);
 
   if (error) {
@@ -767,8 +798,32 @@ export async function removePhotoPlayerTag(formData: FormData) {
   }
 
   await logAudit(context, "remove_tag", "photo_player_tags", id, { photoId });
-  revalidatePath("/galeria");
+  await revalidatePublicPhotoRelations(
+    supabase,
+    photoId,
+    existingTag?.player_id ? [existingTag.player_id] : [],
+  );
   redirect(adminMessageHref(`/admin/galeria/fotos/${photoId}`, "saved", "tag-removed"));
+}
+
+export async function markPhotoRecognitionPending(formData: FormData) {
+  const context = await requireAdmin(photoRoles);
+  const supabase = await getAdminSupabase();
+  const photoId = requiredString(formData, "photo_id", "Foto");
+  const { error } = await supabase
+    .from("photos")
+    .update({ face_recognition_status: "not_processed" })
+    .eq("id", photoId);
+
+  if (error) {
+    redirect(adminMessageHref(`/admin/galeria/fotos/${photoId}`, "error", error.message));
+  }
+
+  await logAudit(context, "mark_face_recognition_pending", "photos", photoId);
+  revalidatePath("/admin/reconhecimento-facial");
+  revalidatePath("/admin/diagnostico/fotos");
+  revalidatePath("/admin/fotos/revisao");
+  redirect(adminMessageHref(`/admin/galeria/fotos/${photoId}`, "saved", "queued"));
 }
 
 export async function confirmFaceSuggestion(formData: FormData) {
@@ -786,7 +841,7 @@ export async function confirmFaceSuggestion(formData: FormData) {
     redirect(adminMessageHref("/admin/fotos/revisao", "error", "Sugestão inválida."));
   }
 
-  const { error: tagError } = await supabase.from("photo_player_tags").upsert(
+  const { data: tag, error: tagError } = await supabase.from("photo_player_tags").upsert(
     {
       photo_id: suggestion.photo_id,
       player_id: suggestion.suggested_player_id,
@@ -796,7 +851,7 @@ export async function confirmFaceSuggestion(formData: FormData) {
       confirmed_by_admin: true,
     },
     { onConflict: "photo_id,player_id" },
-  );
+  ).select("id").single();
 
   if (tagError) {
     redirect(adminMessageHref("/admin/fotos/revisao", "error", tagError.message));
@@ -814,8 +869,19 @@ export async function confirmFaceSuggestion(formData: FormData) {
   await logAudit(context, "confirm_ai_suggestion", "face_detection_suggestions", id, {
     photoId: suggestion.photo_id,
     playerId: suggestion.suggested_player_id,
+    tagId: tag.id,
   });
-  revalidatePath("/galeria");
+  console.info("[face-recognition] sugestão confirmada", {
+    suggestionId: id,
+    tagId: tag.id,
+    photoId: suggestion.photo_id,
+    playerId: suggestion.suggested_player_id,
+  });
+  await revalidatePublicPhotoRelations(supabase, suggestion.photo_id, [
+    suggestion.suggested_player_id,
+  ]);
+  revalidatePath("/admin/reconhecimento-facial");
+  revalidatePath("/admin/diagnostico/fotos");
   redirect(adminMessageHref("/admin/fotos/revisao", "saved", "confirmed"));
 }
 
@@ -827,7 +893,7 @@ export async function changeFaceSuggestion(formData: FormData) {
 
   const { data: suggestion, error: suggestionError } = await supabase
     .from("face_detection_suggestions")
-    .select("id, photo_id, confidence, bounding_box")
+    .select("id, photo_id, suggested_player_id, confidence, bounding_box, status")
     .eq("id", id)
     .single();
 
@@ -835,7 +901,23 @@ export async function changeFaceSuggestion(formData: FormData) {
     redirect(adminMessageHref("/admin/fotos/revisao", "error", "Sugestão inválida."));
   }
 
-  const { error: tagError } = await supabase.from("photo_player_tags").upsert(
+  if (
+    suggestion.suggested_player_id &&
+    suggestion.suggested_player_id !== playerId
+  ) {
+    const { error: staleTagError } = await supabase
+      .from("photo_player_tags")
+      .delete()
+      .eq("photo_id", suggestion.photo_id)
+      .eq("player_id", suggestion.suggested_player_id)
+      .eq("tag_type", "ai_confirmed");
+
+    if (staleTagError) {
+      redirect(adminMessageHref("/admin/fotos/revisao", "error", staleTagError.message));
+    }
+  }
+
+  const { data: tag, error: tagError } = await supabase.from("photo_player_tags").upsert(
     {
       photo_id: suggestion.photo_id,
       player_id: playerId,
@@ -845,7 +927,7 @@ export async function changeFaceSuggestion(formData: FormData) {
       confirmed_by_admin: true,
     },
     { onConflict: "photo_id,player_id" },
-  );
+  ).select("id").single();
 
   if (tagError) {
     redirect(adminMessageHref("/admin/fotos/revisao", "error", tagError.message));
@@ -863,8 +945,24 @@ export async function changeFaceSuggestion(formData: FormData) {
   await logAudit(context, "change_ai_suggestion", "face_detection_suggestions", id, {
     photoId: suggestion.photo_id,
     playerId,
+    previousPlayerId: suggestion.suggested_player_id,
+    tagId: tag.id,
   });
-  revalidatePath("/galeria");
+  console.info("[face-recognition] sugestão alterada e confirmada", {
+    suggestionId: id,
+    tagId: tag.id,
+    photoId: suggestion.photo_id,
+    playerId,
+  });
+  await revalidatePublicPhotoRelations(
+    supabase,
+    suggestion.photo_id,
+    [playerId, suggestion.suggested_player_id].filter(
+      (value): value is string => Boolean(value),
+    ),
+  );
+  revalidatePath("/admin/reconhecimento-facial");
+  revalidatePath("/admin/diagnostico/fotos");
   redirect(adminMessageHref("/admin/fotos/revisao", "saved", "changed"));
 }
 

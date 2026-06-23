@@ -388,6 +388,14 @@ create index if not exists photos_is_public_idx on public.photos(is_public);
 create index if not exists photo_player_tags_photo_id_idx on public.photo_player_tags(photo_id);
 create index if not exists photo_player_tags_player_id_idx on public.photo_player_tags(player_id);
 create index if not exists face_detection_suggestions_status_idx on public.face_detection_suggestions(status);
+create index if not exists photos_face_recognition_queue_idx
+on public.photos(face_recognition_status, uploaded_at)
+where face_recognition_status in ('not_processed', 'queued', 'error');
+create index if not exists photo_player_tags_public_player_idx
+on public.photo_player_tags(player_id, created_at desc)
+where confirmed_by_admin = true;
+create index if not exists face_detection_suggestions_photo_status_idx
+on public.face_detection_suggestions(photo_id, status);
 create index if not exists admin_profiles_user_id_idx on public.admin_profiles(user_id);
 create index if not exists admin_profiles_role_idx on public.admin_profiles(role);
 create index if not exists member_profiles_user_id_idx on public.member_profiles(user_id);

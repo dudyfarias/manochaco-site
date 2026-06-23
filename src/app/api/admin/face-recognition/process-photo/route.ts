@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { canManagePhotos, getAdminContext } from "@/lib/auth";
 import { processGalleryPhoto } from "@/lib/face-recognition/process-photo";
@@ -23,7 +24,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as { photoId?: unknown };
+    const body = (await request.json()) as {
+      photoId?: unknown;
+      reprocess?: unknown;
+    };
 
     if (!isValidUuid(body.photoId)) {
       return NextResponse.json({ error: "Foto inválida." }, { status: 400 });
@@ -33,7 +37,12 @@ export async function POST(request: Request) {
       body.photoId,
       context,
       new URL(request.url).origin,
+      { reprocess: body.reprocess === true || body.reprocess === "true" },
     );
+    revalidatePath(`/fotos/${result.photoSlug}`);
+    revalidatePath("/admin/fotos/revisao");
+    revalidatePath("/admin/reconhecimento-facial");
+    revalidatePath("/admin/diagnostico/fotos");
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     console.error("[face-recognition] Erro ao processar foto", error);

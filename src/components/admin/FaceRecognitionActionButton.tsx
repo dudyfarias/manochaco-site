@@ -9,6 +9,7 @@ type FaceRecognitionActionButtonProps = {
   label: string;
   pendingLabel: string;
   disabled?: boolean;
+  confirmationMessage?: string;
 };
 
 export function FaceRecognitionActionButton({
@@ -17,6 +18,7 @@ export function FaceRecognitionActionButton({
   label,
   pendingLabel,
   disabled = false,
+  confirmationMessage,
 }: FaceRecognitionActionButtonProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -24,6 +26,8 @@ export function FaceRecognitionActionButton({
   const [isError, setIsError] = useState(false);
 
   async function run() {
+    if (confirmationMessage && !window.confirm(confirmationMessage)) return;
+
     setPending(true);
     setMessage("");
     setIsError(false);

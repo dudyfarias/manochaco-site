@@ -72,10 +72,19 @@ export type SiteRankings = {
   cardRanking: RankingRow[];
 };
 
+const loggedDataSources = new Set<string>();
+
+function logDataSource(scope: string, source: "supabase" | "local-fallback", reason?: string) {
+  const key = `${scope}:${source}:${reason ?? ""}`;
+
+  if (loggedDataSources.has(key)) return;
+  loggedDataSources.add(key);
+  console.info(`[data-source] ${scope}: ${source}${reason ? ` (${reason})` : ""}`);
+}
+
 function logSupabaseFallback(scope: string, error: unknown) {
-  if (process.env.NODE_ENV !== "production") {
-    console.warn(`[supabase:fallback] ${scope}`, error);
-  }
+  const message = error instanceof Error ? error.message : "erro desconhecido";
+  console.warn(`[supabase:fallback] ${scope}: ${message}`);
 }
 
 async function withSupabaseFallback<T>(
@@ -86,13 +95,17 @@ async function withSupabaseFallback<T>(
   const supabase = getSupabasePublicClient();
 
   if (!supabase) {
+    logDataSource(scope, "local-fallback", "Supabase não configurado");
     return fallback();
   }
 
   try {
-    return await loader();
+    const result = await loader();
+    logDataSource(scope, "supabase");
+    return result;
   } catch (error) {
     logSupabaseFallback(scope, error);
+    logDataSource(scope, "local-fallback", "falha na consulta Supabase");
     return fallback();
   }
 }
@@ -460,21 +473,77 @@ export async function getAlbumForMatch(matchId: string) {
 }
 
 export async function getPhotosForPlayer(playerSlug: string) {
-  const [player, tags, photos] = await Promise.all([
-    getPlayerBySlug(playerSlug),
-    getConfirmedPhotoTags(),
-    getPhotos(),
-  ]);
-  const uniquePhotoIds = new Set(
-    tags
-      .filter(
-        (relation) =>
-          relation.playerSlug === playerSlug || relation.playerId === player?.id,
-      )
-      .map((relation) => relation.photoId),
-  );
+  return withSupabaseFallback(
+    `photos_for_player:${playerSlug}`,
+    async () => {
+      const supabase = getSupabasePublicClient();
 
-  return photos.filter((photo) => uniquePhotoIds.has(photo.id));
+      if (!supabase) return [];
+
+      const { data: player, error: playerError } = await supabase
+        .from("players")
+        .select("id")
+        .eq("slug", playerSlug)
+        .maybeSingle();
+
+      assertNoError(playerError);
+      if (!player?.id) return [];
+
+      const { data: tagRows, error: tagError } = await supabase
+        .from("photo_player_tags")
+        .select("photo_id")
+        .eq("player_id", player.id)
+        .eq("confirmed_by_admin", true)
+        .in("tag_type", ["manual", "ai_confirmed"]);
+
+      assertNoError(tagError);
+      const photoIds = [...new Set((tagRows ?? []).map((tag) => tag.photo_id as string))];
+      if (photoIds.length === 0) return [];
+
+      const [competitionRows, seasonRows, { data: photoRows, error: photoError }] =
+        await Promise.all([
+          loadCompetitionRows(),
+          loadSeasonRows(),
+          supabase
+            .from("photos")
+            .select("*")
+            .in("id", photoIds)
+            .eq("is_public", true)
+            .order("date", { ascending: false }),
+        ]);
+
+      assertNoError(photoError);
+      const competitionByUuid = new Map(
+        competitionRows.map((competition) => [competition.id, competition]),
+      );
+      const seasonByUuid = new Map(
+        seasonRows.map((season) => [season.id, adaptSeason(season)]),
+      );
+
+      return ((photoRows ?? []) as SupabasePhotoRow[]).map((row) =>
+        adaptPhoto(row, {
+          competition: row.competition_id
+            ? competitionByUuid.get(row.competition_id)
+            : undefined,
+          seasonSlug: row.season_id ? seasonByUuid.get(row.season_id)?.slug : undefined,
+        }),
+      );
+    },
+    () => {
+      const player = getLocalPlayerBySlug(playerSlug);
+      const photoIds = new Set(
+        localPhotoPlayers
+          .filter(
+            (tag) =>
+              isPublicPhotoTag(tag) &&
+              (tag.playerSlug === playerSlug || tag.playerId === player?.id),
+          )
+          .map((tag) => tag.photoId),
+      );
+
+      return localPhotos.filter((photo) => photoIds.has(photo.id));
+    },
+  );
 }
 
 export async function getPlayersForPhoto(photoId: string) {

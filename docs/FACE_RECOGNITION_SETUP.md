@@ -74,6 +74,14 @@ aparecem no site público.
 4. Confirme, troque ou ignore.
 5. Verifique que apenas a tag confirmada aparece publicamente.
 
+Depois da confirmação, consulte `/admin/reconhecimento-facial` para verificar a
+tag publicada e abrir diretamente o perfil do jogador ou a foto pública. A
+auditoria completa de status fica em `/admin/diagnostico/fotos`.
+
+Para reprocessar uma foto, use a ação correspondente na edição da foto. Ela
+remove somente sugestões pendentes ou com erro e preserva tags já confirmadas.
+Também é possível marcar a foto como pendente para recolocá-la na fila.
+
 O botão de lote processa uma foto por request. Mantenha lotes pequenos.
 
 ## Calibração
@@ -96,6 +104,11 @@ runtime Node.js com duração máxima declarada.
 - **Timeout:** processe individualmente ou use `mock` até mover para worker.
 - **Sem sugestões:** gere embeddings no mesmo provider ativo.
 - **Download privado falhou:** revise o bucket e as policies de Storage.
+- **Foto fora da fila:** confira o motivo em `/admin/diagnostico/fotos`.
+- **Tag confirmada não aparece:** rode `npm run validate:photos` e confira se a
+  foto é pública e se a tag está confirmada para o UUID correto do jogador.
+
+O procedimento completo está em `docs/FACE_RECOGNITION_OPERATIONS.md`.
 
 Se o face-api não atender precisão ou escala, siga
 `docs/INSIGHTFACE_FUTURE.md`.

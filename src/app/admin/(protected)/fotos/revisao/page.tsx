@@ -5,6 +5,7 @@ import {
   AdminEmptyState,
   AdminNotice,
   AdminPageTitle,
+  AdminStatCard,
   SelectField,
 } from "@/components/admin/AdminUI";
 import { FaceBoundingBoxOverlay } from "@/components/admin/FaceBoundingBoxOverlay";
@@ -18,6 +19,7 @@ import {
   listAdminPlayers,
   listPendingFaceSuggestions,
   listPendingRecognitionPhotos,
+  getPhotoRecognitionSummary,
 } from "@/lib/admin/data";
 import { getFaceRecognitionProviderName } from "@/lib/face-recognition/provider";
 
@@ -31,11 +33,12 @@ export const metadata: Metadata = {
 
 export default async function AdminReviewPage({ searchParams }: ReviewPageProps) {
   const provider = getFaceRecognitionProviderName();
-  const [params, suggestions, players, pendingPhotos] = await Promise.all([
+  const [params, suggestions, players, pendingPhotos, summary] = await Promise.all([
     searchParams,
     listPendingFaceSuggestions(),
     listAdminPlayers(),
     listPendingRecognitionPhotos(),
+    getPhotoRecognitionSummary(),
   ]);
 
   return (
@@ -44,6 +47,11 @@ export default async function AdminReviewPage({ searchParams }: ReviewPageProps)
         eyebrow="Revisão IA"
         title="Sugestões pendentes"
         description="Sugestões de reconhecimento facial só viram públicas depois da aprovação humana."
+        action={
+          <AdminButtonLink href="/admin/diagnostico/fotos" tone="secondary">
+            Diagnóstico de fotos
+          </AdminButtonLink>
+        }
       />
       <AdminNotice searchParams={params} />
 
@@ -61,6 +69,15 @@ export default async function AdminReviewPage({ searchParams }: ReviewPageProps)
           />
         </div>
       </AdminCard>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <AdminStatCard label="Total" value={summary.total} />
+        <AdminStatCard label="Na fila" value={summary.pending} />
+        <AdminStatCard label="Processando" value={summary.processing} />
+        <AdminStatCard label="Revisão" value={summary.needsReview} />
+        <AdminStatCard label="Aprovadas" value={summary.approved} />
+        <AdminStatCard label="Com erro" value={summary.errors} />
+      </div>
 
       {suggestions.length > 0 ? (
         <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">

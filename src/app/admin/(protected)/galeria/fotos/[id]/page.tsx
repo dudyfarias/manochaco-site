@@ -14,6 +14,7 @@ import { FaceRecognitionActionButton } from "@/components/admin/FaceRecognitionA
 import { SmartImage } from "@/components/SmartImage";
 import {
   addPhotoPlayerTag,
+  markPhotoRecognitionPending,
   removePhotoPlayerTag,
   updatePhoto,
 } from "@/lib/admin/actions";
@@ -57,6 +58,9 @@ export default async function PhotoDetailPage({
   if (!photo) {
     notFound();
   }
+  const isFreshPending = ["not_processed", "queued"].includes(
+    photo.face_recognition_status,
+  );
 
   return (
     <div>
@@ -219,13 +223,33 @@ export default async function PhotoDetailPage({
               O processamento gera sugestões internas. Nenhuma marcação será publicada sem confirmação humana na fila de revisão.
             </p>
           </div>
-          <FaceRecognitionActionButton
-            endpoint="/api/admin/face-recognition/process-photo"
-            payload={{ photoId: photo.id }}
-            label={photo.face_recognition_status === "error" ? "Tentar novamente" : "Processar reconhecimento facial"}
-            pendingLabel="Processando foto..."
-            disabled={photo.face_recognition_status === "processing"}
-          />
+          <div className="flex flex-wrap items-start gap-3">
+            <FaceRecognitionActionButton
+              endpoint="/api/admin/face-recognition/process-photo"
+              payload={{
+                photoId: photo.id,
+                ...(isFreshPending ? {} : { reprocess: "true" }),
+              }}
+              label={
+                isFreshPending
+                  ? "Processar reconhecimento facial"
+                  : "Reprocessar reconhecimento facial"
+              }
+              pendingLabel="Processando foto..."
+              disabled={photo.face_recognition_status === "processing"}
+              confirmationMessage={
+                isFreshPending
+                  ? undefined
+                  : "Reprocessar esta foto? Sugestões pendentes antigas serão removidas; marcações já confirmadas serão preservadas."
+              }
+            />
+            <form action={markPhotoRecognitionPending}>
+              <input type="hidden" name="photo_id" value={photo.id} />
+              <button className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-black text-zinc-800 transition hover:border-[#d1a137] hover:text-[#9a6a12]">
+                Marcar como pendente
+              </button>
+            </form>
+          </div>
         </div>
       </AdminCard>
     </div>

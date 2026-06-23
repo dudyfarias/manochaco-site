@@ -61,6 +61,24 @@ face-references/dudu/reference-001.jpg
 
 ## Relação com o site
 
+Um objeto existente no Storage não aparece automaticamente no site. Ele precisa
+de um registro correspondente na tabela `photos`, que guarda slug, metadados,
+publicação e status de reconhecimento. Da mesma forma, uma URL em `photos` não
+prova que o arquivo está no bucket: o registro também pode apontar para um asset
+versionado em `public/`.
+
+Para auditar e sincronizar o bucket público:
+
+```bash
+npm run sync:photos
+npm run sync:photos -- --apply
+npm run validate:photos
+```
+
+O primeiro comando é um dry-run. `--apply` cria somente os registros ausentes,
+com slug seguro, categoria inferida, publicação ativa e status
+`not_processed`; arquivos já cadastrados não são duplicados.
+
 Enquanto Supabase não estiver configurado, o site usa arquivos em `public/`.
 Quando Storage estiver ativo, a camada híbrida aceita URLs remotas de imagem e
 o componente `SmartImage` renderiza sem quebrar o layout.

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.11.1 - 2026-06-23
+
+- Correção da confirmação e troca de sugestões para criar tags públicas por upsert, sem duplicatas ou vínculos antigos incorretos.
+- Leitura pública de fotos por jogador refeita com relações oficiais por UUID no Supabase.
+- Página pública da foto passa a consultar jogadores marcados no Supabase em vez de depender apenas dos mocks locais.
+- Revalidação imediata dos perfis e fotos afetados após adicionar, remover, confirmar ou trocar uma marcação.
+- Fila de reconhecimento normalizada para `not_processed`, `queued` e `error`, preservando fotos em revisão e já aprovadas.
+- Criação de `/admin/reconhecimento-facial` e `/admin/diagnostico/fotos` para acompanhar fila, motivos e tags publicadas.
+- Inclusão de ações para reprocessar uma foto e marcá-la novamente como pendente.
+- Criação de `sync:photos` para cadastrar objetos do Storage ausentes na tabela `photos` e `validate:photos` para auditar o pipeline.
+- Migration de reparo para status nulos, inválidos ou herdados de seeds ilustrativos, sem remover marcações confirmadas.
+- Criação de `docs/FACE_RECOGNITION_OPERATIONS.md` com o fluxo operacional e diagnóstico.
+
 ## 0.11.0 - 2026-06-23
 
 - Substituição da dependência obrigatória da AWS por arquitetura open source com `faceapi` e fallback `mock`.

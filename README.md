@@ -29,6 +29,8 @@ npm run start      # executa o build
 npm run import:spreadsheet # importa a planilha Manochaco
 npm run seed:supabase # envia dados esportivos locais para Supabase
 npm run audit:images # audita imagens locais e vínculos de fotos
+npm run sync:photos # simula sincronização do bucket photos com o banco
+npm run validate:photos # valida o pipeline público de fotos e marcações
 npm run validate:prod # valida env, Supabase, tabelas e buckets
 npm run typecheck  # valida TypeScript
 npm run lint       # valida ESLint
@@ -118,6 +120,10 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
 - Upload de fotos preparado via bucket `photos` do Supabase Storage.
 - Marcação manual de jogadores em fotos com tags confirmadas.
 - Revisão de sugestões de IA com confirmação, troca ou descarte.
+- Diagnóstico de fotos, fila de reconhecimento e marcações publicadas em
+  `/admin/reconhecimento-facial` e `/admin/diagnostico/fotos`.
+- Sincronização segura entre o bucket `photos` e a tabela `photos`, com dry-run
+  por padrão e validação automatizada do pipeline.
 - Reconhecimento facial modular com provider mock e face-api.js open source, embeddings privados, consentimento e revisão humana obrigatória.
 - Financeiro disponível apenas como rota protegida placeholder.
 - Filtros públicos por campeonato, temporada, resultado, adversário e status do jogador.
@@ -150,6 +156,7 @@ Ainda não há financeiro completo, processamento assíncrono em background, ges
 - `docs/ADMIN_PHOTO_WORKFLOW.md`
 - `docs/FACE_RECOGNITION_ARCHITECTURE.md`
 - `docs/FACE_RECOGNITION_SETUP.md`
+- `docs/FACE_RECOGNITION_OPERATIONS.md`
 - `docs/INSIGHTFACE_FUTURE.md`
 - `docs/AUTH_ADMIN.md`
 - `docs/PUBLIC_ACCOUNTS.md`

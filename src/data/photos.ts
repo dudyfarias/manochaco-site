@@ -13,7 +13,7 @@ export const photos: Photo[] = [
     seasonSlug: "2025",
     date: "2025-03-15T14:00:00-03:00",
     uploadedAt: "2026-06-17T10:00:00-03:00",
-    faceRecognitionStatus: "approved",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T10:00:00-03:00",
   },
   {
@@ -29,7 +29,7 @@ export const photos: Photo[] = [
     seasonSlug: "2024",
     date: "2024-08-20T14:00:00-03:00",
     uploadedAt: "2026-06-17T10:05:00-03:00",
-    faceRecognitionStatus: "approved",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T10:05:00-03:00",
   },
   {
@@ -46,7 +46,7 @@ export const photos: Photo[] = [
     seasonSlug: "2024",
     date: "2024-02-25T17:42:00-03:00",
     uploadedAt: "2026-06-17T10:10:00-03:00",
-    faceRecognitionStatus: "processed",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T10:10:00-03:00",
   },
   {
@@ -63,7 +63,7 @@ export const photos: Photo[] = [
     seasonSlug: "2024",
     date: "2024-10-13T17:18:00-03:00",
     uploadedAt: "2026-06-17T10:15:00-03:00",
-    faceRecognitionStatus: "approved",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T10:15:00-03:00",
   },
   {
@@ -80,7 +80,7 @@ export const photos: Photo[] = [
     seasonSlug: "2023",
     date: "2023-06-04T20:00:00-03:00",
     uploadedAt: "2026-06-17T10:20:00-03:00",
-    faceRecognitionStatus: "approved",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T10:20:00-03:00",
   },
   {
@@ -96,7 +96,7 @@ export const photos: Photo[] = [
     seasonSlug: "2024",
     date: "2024-09-16T18:00:00-03:00",
     uploadedAt: "2026-06-17T10:25:00-03:00",
-    faceRecognitionStatus: "processed",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T10:25:00-03:00",
   },
   {
@@ -113,7 +113,7 @@ export const photos: Photo[] = [
     seasonSlug: "2024",
     date: "2024-10-05T18:00:00-03:00",
     uploadedAt: "2026-06-17T10:30:00-03:00",
-    faceRecognitionStatus: "approved",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T10:30:00-03:00",
   },
   {
@@ -130,7 +130,7 @@ export const photos: Photo[] = [
     seasonSlug: "2024",
     date: "2024-11-09T18:00:00-03:00",
     uploadedAt: "2026-06-17T10:35:00-03:00",
-    faceRecognitionStatus: "needs_review",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T10:35:00-03:00",
   },
   {
@@ -145,7 +145,7 @@ export const photos: Photo[] = [
     seasonSlug: "2024",
     date: "2024-08-21T17:18:00-03:00",
     uploadedAt: "2026-06-17T10:40:00-03:00",
-    faceRecognitionStatus: "processed",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T10:40:00-03:00",
   },
   {
@@ -176,7 +176,7 @@ export const photos: Photo[] = [
     seasonSlug: "2023",
     date: "2023-06-04T20:30:00-03:00",
     uploadedAt: "2026-06-17T10:50:00-03:00",
-    faceRecognitionStatus: "approved",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T10:50:00-03:00",
   },
   {
@@ -208,7 +208,7 @@ export const photos: Photo[] = [
     seasonSlug: "2025",
     date: "2025-06-01T16:00:00-03:00",
     uploadedAt: "2026-06-17T11:00:00-03:00",
-    faceRecognitionStatus: "processing",
+    faceRecognitionStatus: "not_processed",
     createdAt: "2026-06-17T11:00:00-03:00",
   },
 ];

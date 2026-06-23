@@ -12,6 +12,7 @@ const navItems = [
   { href: "/admin/temporadas", label: "Temporadas" },
   { href: "/admin/galeria/albuns", label: "Álbuns" },
   { href: "/admin/galeria/fotos", label: "Fotos" },
+  { href: "/admin/reconhecimento-facial", label: "Reconhecimento" },
   { href: "/admin/fotos/revisao", label: "Revisão IA" },
   { href: "/admin/financeiro", label: "Financeiro" },
   { href: "/admin/configuracoes", label: "Configurações" },
