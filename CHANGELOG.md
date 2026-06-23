@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.3 - 2026-06-23
+
+- Navegação pública agora acompanha a sessão do Supabase Auth.
+- Substituição de “Entrar” e “Cadastre-se” por “Meu perfil” para usuários autenticados.
+- Sincronização do Header e Footer após login, logout e mudanças de rota.
+
 ## 0.10.2 - 2026-06-22
 
 - Substituição do ano de nascimento pela data de nascimento completa no cadastro e na conta.

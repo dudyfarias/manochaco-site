@@ -45,6 +45,12 @@ depois dessa revisão.
 - `/conta`
 - `/admin/cadastros`
 
+## Navegação autenticada
+
+O Header e o Footer acompanham a sessão do Supabase no navegador. Visitantes
+veem “Entrar” e “Cadastre-se”; usuários autenticados veem “Meu perfil”, com
+link para `/conta`. A proteção da conta continua sendo validada no servidor.
+
 ## Configuração do Supabase
 
 1. Aplique `supabase/schema.sql` e `supabase/policies.sql` em projetos novos.

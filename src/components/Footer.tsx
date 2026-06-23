@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PublicAccountLinks } from "./account/PublicAccountLinks";
 import { SmartImage } from "./SmartImage";
 
 const footerLinks = [
@@ -7,8 +8,6 @@ const footerLinks = [
   { href: "/contato", label: "Contato" },
   { href: "/patrocinio", label: "Patrocínio" },
   { href: "/galeria", label: "Galeria" },
-  { href: "/entrar", label: "Entrar" },
-  { href: "/cadastro", label: "Cadastre-se" },
 ];
 
 export function Footer() {
@@ -46,6 +45,7 @@ export function Footer() {
               {link.label}
             </Link>
           ))}
+          <PublicAccountLinks variant="footer" />
         </div>
       </div>
     </footer>

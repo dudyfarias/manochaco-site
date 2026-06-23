@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PublicAccountLinks } from "./account/PublicAccountLinks";
 import { SmartImage } from "./SmartImage";
 
 const navItems = [
@@ -47,20 +48,7 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <div className="order-2 flex items-center gap-2 lg:order-none">
-          <Link
-            href="/entrar"
-            className="inline-flex min-h-10 items-center justify-center rounded-md border border-white/20 px-3 py-2 text-sm font-black text-white transition hover:border-[#d1a137] hover:text-[#f0c35d]"
-          >
-            Entrar
-          </Link>
-          <Link
-            href="/cadastro"
-            className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#d1a137] bg-[#d1a137] px-3 py-2 text-sm font-black text-black transition hover:bg-[#f0c35d]"
-          >
-            Cadastre-se
-          </Link>
-        </div>
+        <PublicAccountLinks variant="header" />
       </div>
     </header>
   );
