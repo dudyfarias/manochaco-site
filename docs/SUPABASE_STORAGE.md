@@ -49,7 +49,7 @@ face-references/dudu/reference-001.jpg
 - O perfil admin do jogador envia JPEG/PNG de até 5 MB para `face-references`.
 - A interface recebe apenas signed URL temporária para pré-visualização administrativa.
 - `storage_path` é usado pelo servidor para download autenticado durante a indexação.
-- Revogar/remover referência exclui o objeto privado e o índice do provider.
+- Revogar consentimento limpa o embedding; remover a referência também exclui o objeto privado.
 
 ## Reconhecimento facial
 
@@ -57,7 +57,7 @@ face-references/dudu/reference-001.jpg
 - O download do bucket privado usa a sessão Supabase do admin e as policies de `storage.objects`.
 - Fotos públicas do bucket `photos` são baixadas pelo SDK quando a URL permite recuperar o path.
 - Arquivos locais do próprio site podem ser processados; hosts externos arbitrários são bloqueados.
-- AWS recebe somente os bytes necessários para a operação e não recebe credenciais Supabase.
+- O face-api processa bytes apenas no servidor. Providers externos opcionais não recebem credenciais Supabase.
 
 ## Relação com o site
 

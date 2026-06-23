@@ -19,6 +19,7 @@ import {
   listPendingFaceSuggestions,
   listPendingRecognitionPhotos,
 } from "@/lib/admin/data";
+import { getFaceRecognitionProviderName } from "@/lib/face-recognition/provider";
 
 type ReviewPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -29,6 +30,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminReviewPage({ searchParams }: ReviewPageProps) {
+  const provider = getFaceRecognitionProviderName();
   const [params, suggestions, players, pendingPhotos] = await Promise.all([
     searchParams,
     listPendingFaceSuggestions(),
@@ -53,7 +55,10 @@ export default async function AdminReviewPage({ searchParams }: ReviewPageProps)
               As fotos são processadas uma por vez para manter a operação previsível na Vercel.
             </p>
           </div>
-          <ProcessPendingPhotosButton photoIds={pendingPhotos.map((photo) => photo.id)} />
+          <ProcessPendingPhotosButton
+            photoIds={pendingPhotos.map((photo) => photo.id)}
+            provider={provider}
+          />
         </div>
       </AdminCard>
 
@@ -132,7 +137,7 @@ export default async function AdminReviewPage({ searchParams }: ReviewPageProps)
         <div className="mt-6">
           <AdminEmptyState
             title="Nenhuma sugestão pendente"
-            description="Quando o reconhecimento facial real for implementado, sugestões pendentes aparecerão aqui."
+            description="Não há rostos aguardando revisão humana neste momento."
           />
         </div>
       )}

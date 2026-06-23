@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { AdminRole } from "@/lib/auth";
 import { requireAdmin } from "@/lib/auth";
-import { getFaceRecognitionProvider } from "@/lib/face-recognition";
+import {
+  getFaceRecognitionProvider,
+  getFaceRecognitionProviderName,
+  type FaceRecognitionProviderName,
+} from "@/lib/face-recognition";
 import { refreshPhotoRecognitionReviewStatus } from "@/lib/face-recognition/process-photo";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { logAudit } from "./audit";
@@ -23,6 +27,24 @@ import {
 
 const sportsRoles: AdminRole[] = ["super_admin", "sports_admin"];
 const photoRoles: AdminRole[] = ["super_admin", "sports_admin", "photo_editor"];
+
+function knownFaceProvider(value: unknown): value is FaceRecognitionProviderName {
+  return ["aws", "mock", "faceapi", "insightface"].includes(String(value));
+}
+
+async function removeProviderFaceBestEffort(
+  providerName: unknown,
+  providerFaceId: string | null,
+) {
+  if (!providerFaceId || !knownFaceProvider(providerName)) return;
+
+  try {
+    const provider = await getFaceRecognitionProvider(providerName);
+    await provider.deleteIndexedFace(providerFaceId);
+  } catch (error) {
+    console.error("[face-recognition] Falha ao limpar índice externo", error);
+  }
+}
 
 function ensureStatus(value: string) {
   return ["active", "former", "staff"].includes(value) ? value : "active";
@@ -269,7 +291,7 @@ export async function addPlayerFaceReference(formData: FormData) {
       player_id: playerId,
       image_url: `storage://face-references/${storagePath}`,
       storage_path: storagePath,
-      provider: process.env.FACE_RECOGNITION_PROVIDER ?? "aws",
+      provider: getFaceRecognitionProviderName(),
       approved_for_recognition: formData.get("approved_for_recognition") === "on",
       consent_given: formData.get("consent_given") === "on",
       indexing_status: "not_indexed",
@@ -300,7 +322,7 @@ export async function updatePlayerFaceReferenceConsent(formData: FormData) {
     formData.get("approved_for_recognition") === "on";
   const { data, error } = await supabase
     .from("player_face_references")
-    .select("provider_face_id")
+    .select("provider, provider_face_id, embedding")
     .eq("id", id)
     .maybeSingle();
 
@@ -315,15 +337,11 @@ export async function updatePlayerFaceReferenceConsent(formData: FormData) {
   }
 
   const revokingIndexedReference =
-    Boolean(data.provider_face_id) && (!consentGiven || !approvedForRecognition);
+    Boolean(data.provider_face_id || data.embedding) &&
+    (!consentGiven || !approvedForRecognition);
 
-  if (revokingIndexedReference && data.provider_face_id) {
-    try {
-      await getFaceRecognitionProvider().deleteIndexedFace(data.provider_face_id);
-    } catch (deleteError) {
-      const message = deleteError instanceof Error ? deleteError.message : "Falha no provedor.";
-      redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", message));
-    }
+  if (revokingIndexedReference) {
+    await removeProviderFaceBestEffort(data.provider, data.provider_face_id);
   }
 
   const { error: updateError } = await supabase
@@ -335,6 +353,9 @@ export async function updatePlayerFaceReferenceConsent(formData: FormData) {
         ? {
             provider_face_id: null,
             provider_collection_id: null,
+            embedding: null,
+            embedding_model: null,
+            embedding_generated_at: null,
             indexed_at: null,
             indexing_status: "not_indexed",
             indexing_error: null,
@@ -363,7 +384,7 @@ export async function removePlayerFaceReference(formData: FormData) {
   const playerId = requiredString(formData, "player_id", "Jogador");
   const { data, error } = await supabase
     .from("player_face_references")
-    .select("storage_path, provider_face_id")
+    .select("storage_path, provider, provider_face_id")
     .eq("id", id)
     .maybeSingle();
 
@@ -377,14 +398,7 @@ export async function removePlayerFaceReference(formData: FormData) {
     );
   }
 
-  if (data.provider_face_id) {
-    try {
-      await getFaceRecognitionProvider().deleteIndexedFace(data.provider_face_id);
-    } catch (deleteError) {
-      const message = deleteError instanceof Error ? deleteError.message : "Falha no provedor.";
-      redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "error", message));
-    }
-  }
+  await removeProviderFaceBestEffort(data.provider, data.provider_face_id);
 
   if (data.storage_path) {
     const { error: storageError } = await supabase.storage

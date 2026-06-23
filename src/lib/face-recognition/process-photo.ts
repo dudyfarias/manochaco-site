@@ -4,7 +4,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AdminContext } from "@/lib/auth";
 import { logAudit } from "@/lib/admin/audit";
 import { getAdminSupabase } from "@/lib/admin/data";
-import { getFaceRecognitionProvider, getMinimumConfidence } from "./index";
+import {
+  getFaceRecognitionProvider,
+  getMaximumDistance,
+  getMinimumConfidence,
+} from "./index";
 import { FaceRecognitionError } from "./provider";
 import { readGalleryPhoto } from "./image-source";
 
@@ -14,11 +18,20 @@ type RecognitionPhotoRow = {
 };
 
 type IndexedReferenceRow = {
+  id: string;
   player_id: string;
   provider_face_id: string | null;
+  embedding: unknown;
+  embedding_model: string | null;
   approved_for_recognition: boolean;
   consent_given: boolean;
 };
+
+function numberArray(value: unknown): number[] | null {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  const numbers = value.map(Number);
+  return numbers.every(Number.isFinite) ? numbers : null;
+}
 
 function jsonValue(value: unknown) {
   try {
@@ -94,34 +107,41 @@ export async function processGalleryPhoto(
 
   try {
     const imageBytes = await readGalleryPhoto(supabase, photo.url, requestOrigin);
-    const provider = getFaceRecognitionProvider();
+    const provider = await getFaceRecognitionProvider();
+    const { data: referenceData, error: referenceError } = await supabase
+      .from("player_face_references")
+      .select(
+        "id, player_id, provider_face_id, embedding, embedding_model, approved_for_recognition, consent_given",
+      )
+      .eq("provider", provider.name)
+      .eq("approved_for_recognition", true)
+      .eq("consent_given", true);
+
+    if (referenceError) {
+      throw new FaceRecognitionError("reference_lookup_failed", referenceError.message);
+    }
+
+    const references = (referenceData ?? []) as IndexedReferenceRow[];
+    const embeddings = references.flatMap((reference) => {
+      const embedding = numberArray(reference.embedding);
+
+      return embedding && reference.embedding_model
+        ? [{
+            referenceId: reference.id,
+            playerId: reference.player_id,
+            providerFaceId: reference.provider_face_id ?? undefined,
+            embedding,
+            embeddingModel: reference.embedding_model,
+          }]
+        : [];
+    });
     const matches = await provider.searchFacesInPhoto({
       imageBytes,
       photoId: photo.id,
       minConfidence: getMinimumConfidence(),
+      maxDistance: getMaximumDistance(),
+      references: embeddings,
     });
-    const matchedFaceIds = matches
-      .map((match) => match.providerFaceId)
-      .filter((faceId): faceId is string => Boolean(faceId));
-    let references: IndexedReferenceRow[] = [];
-
-    if (matchedFaceIds.length > 0) {
-      const { data: referenceData, error: referenceError } = await supabase
-        .from("player_face_references")
-        .select(
-          "player_id, provider_face_id, approved_for_recognition, consent_given",
-        )
-        .in("provider_face_id", matchedFaceIds)
-        .eq("approved_for_recognition", true)
-        .eq("consent_given", true);
-
-      if (referenceError) {
-        throw new FaceRecognitionError("reference_lookup_failed", referenceError.message);
-      }
-
-      references = (referenceData ?? []) as IndexedReferenceRow[];
-    }
-
     const referencesByFaceId = new Map(
       references
         .filter((reference) => reference.provider_face_id)
@@ -141,9 +161,11 @@ export async function processGalleryPhoto(
     if (matches.length > 0) {
       const suggestions = matches.map((match) => ({
         photo_id: photo.id,
-        suggested_player_id: match.providerFaceId
-          ? referencesByFaceId.get(match.providerFaceId)?.player_id ?? null
-          : null,
+        suggested_player_id:
+          match.playerExternalId ??
+          (match.providerFaceId
+            ? referencesByFaceId.get(match.providerFaceId)?.player_id ?? null
+            : null),
         provider: match.provider,
         provider_face_id: match.providerFaceId ?? null,
         confidence: match.confidence,
@@ -173,7 +195,10 @@ export async function processGalleryPhoto(
       provider: provider.name,
       detectedFaces: matches.length,
       suggestedPlayers: matches.filter((match) =>
-        match.providerFaceId && referencesByFaceId.has(match.providerFaceId),
+        Boolean(
+          match.playerExternalId ||
+          (match.providerFaceId && referencesByFaceId.has(match.providerFaceId)),
+        ),
       ).length,
     });
 

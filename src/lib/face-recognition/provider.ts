@@ -14,12 +14,12 @@ export class FaceRecognitionError extends Error {
 export function getFaceRecognitionProviderName(): FaceRecognitionProviderName {
   const provider = process.env.FACE_RECOGNITION_PROVIDER?.trim().toLowerCase();
 
-  if (!provider || provider === "aws") {
-    return "aws";
+  if (!provider) {
+    return "mock";
   }
 
-  if (provider === "mock") {
-    return "mock";
+  if (["aws", "mock", "faceapi", "insightface"].includes(provider)) {
+    return provider as FaceRecognitionProviderName;
   }
 
   throw new FaceRecognitionError(
@@ -30,16 +30,29 @@ export function getFaceRecognitionProviderName(): FaceRecognitionProviderName {
 }
 
 export function getMinimumConfidence() {
-  const raw = Number(process.env.FACE_RECOGNITION_MIN_CONFIDENCE ?? "80");
+  const raw = Number(process.env.FACE_RECOGNITION_MIN_CONFIDENCE ?? "0.75");
 
   if (!Number.isFinite(raw) || raw < 0 || raw > 100) {
     throw new FaceRecognitionError(
       "invalid_min_confidence",
-      "FACE_RECOGNITION_MIN_CONFIDENCE deve estar entre 0 e 100.",
+      "FACE_RECOGNITION_MIN_CONFIDENCE deve estar entre 0 e 1, ou usar percentual entre 1 e 100.",
     );
   }
 
-  return raw / 100;
+  return raw > 1 ? raw / 100 : raw;
+}
+
+export function getMaximumDistance() {
+  const raw = Number(process.env.FACE_RECOGNITION_MAX_DISTANCE ?? "0.6");
+
+  if (!Number.isFinite(raw) || raw <= 0 || raw > 2) {
+    throw new FaceRecognitionError(
+      "invalid_max_distance",
+      "FACE_RECOGNITION_MAX_DISTANCE deve estar acima de 0 e até 2.",
+    );
+  }
+
+  return raw;
 }
 
 export function assertHumanReviewRequired() {

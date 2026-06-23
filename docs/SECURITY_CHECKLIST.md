@@ -22,7 +22,7 @@
 - `SUPABASE_SERVICE_ROLE_KEY` apenas em scripts/server-side.
 - `.env.local` ignorado pelo Git.
 - `.env.example` sem valores reais.
-- `AWS_SECRET_ACCESS_KEY` e `AWS_ACCESS_KEY_ID` somente server-side.
+- Credenciais AWS, quando o provider opcional for usado, somente server-side.
 - Módulos do provider protegidos por `server-only`.
 - `FACE_RECOGNITION_AUTO_APPROVE=false` em todos os ambientes.
 
@@ -58,7 +58,7 @@
 - Manter fotos de referência privadas.
 - Permitir remoção de foto ou marcação.
 - Publicar apenas tags confirmadas por humano.
-- Revogar consentimento remove o Face ID indexado antes de limpar o registro.
+- Revogar consentimento limpa o embedding e metadados biométricos privados.
 - Definir responsável, prazo de retenção e processo de atendimento ao titular.
 - Respostas brutas e IDs do provider permanecem privados.
 - Não publicar mensalidades, dívidas, pagamentos ou caixa do clube.
@@ -75,5 +75,5 @@
 - Configurar Site URL, Redirect URLs e SMTP próprio no Supabase Auth.
 - Confirmar que conta comum não acessa `/admin`.
 - Validar que o menu público não mostra admin.
-- Configurar AWS Budgets/alertas e acompanhar custo por volume de rostos.
-- Testar indexação e remoção com uma referência consentida antes de liberar o lote.
+- Validar que o provider de produção não ficou em `mock` por engano.
+- Testar geração e remoção de embedding com uma referência consentida antes de liberar o lote.

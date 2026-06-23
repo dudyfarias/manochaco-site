@@ -50,7 +50,7 @@ cria administradores; roles continuam em `admin_profiles`.
 - Álbuns: listar, criar e editar.
 - Fotos: listar, filtrar, criar, editar, enviar arquivo para Storage e controlar publicação.
 - Tags: adicionar ou remover marcação manual confirmada em uma foto.
-- Referências faciais: upload privado, consentimento, aprovação, indexação e remoção no perfil do jogador.
+- Referências faciais: upload privado, consentimento, aprovação, geração de embedding e remoção no perfil do jogador.
 - Reconhecimento facial: processamento individual ou sequencial, sugestões reais, bounding box e revisão humana.
 
 ## Placeholders
@@ -67,7 +67,7 @@ cria administradores; roles continuam em `admin_profiles`.
 - `/admin/fotos/revisao` exibe sugestões, bounding boxes e processamento pendente.
 - APIs em `/api/admin/face-recognition/*` exigem sessão e role autorizada.
 - Confirmar ou trocar cria tag `ai_confirmed`; ignorar não publica nada.
-- O provider padrão é AWS, configurado somente no servidor.
+- O provider padrão é `mock`; `faceapi` oferece processamento open source server-side e AWS permanece opcional.
 
 ## Relação com o site público
 

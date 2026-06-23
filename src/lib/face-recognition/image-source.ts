@@ -4,10 +4,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { FaceRecognitionError } from "./provider";
 
-const MAX_REKOGNITION_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_FACE_IMAGE_BYTES = 5 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png"]);
 
-async function blobToRekognitionBytes(blob: Blob) {
+async function blobToFaceImageBytes(blob: Blob) {
   const contentType = blob.type.split(";")[0].toLowerCase();
 
   if (!SUPPORTED_IMAGE_TYPES.has(contentType)) {
@@ -18,11 +18,11 @@ async function blobToRekognitionBytes(blob: Blob) {
     );
   }
 
-  if (blob.size === 0 || blob.size > MAX_REKOGNITION_IMAGE_BYTES) {
+  if (blob.size === 0 || blob.size > MAX_FACE_IMAGE_BYTES) {
     throw new FaceRecognitionError(
       "invalid_image_size",
       `Imagem com tamanho inválido: ${blob.size} bytes`,
-      "A imagem precisa ter até 5 MB para ser processada pelo Rekognition.",
+      "A imagem precisa ter até 5 MB para ser processada.",
     );
   }
 
@@ -45,7 +45,7 @@ export async function readPrivateFaceReference(
     );
   }
 
-  return blobToRekognitionBytes(data);
+  return blobToFaceImageBytes(data);
 }
 
 function storagePathFromPublicPhotoUrl(photoUrl: string) {
@@ -82,7 +82,7 @@ export async function readGalleryPhoto(
       );
     }
 
-    return blobToRekognitionBytes(data);
+    return blobToFaceImageBytes(data);
   }
 
   const target = new URL(photoUrl, requestOrigin);
@@ -122,5 +122,5 @@ export async function readGalleryPhoto(
     );
   }
 
-  return blobToRekognitionBytes(await response.blob());
+  return blobToFaceImageBytes(await response.blob());
 }

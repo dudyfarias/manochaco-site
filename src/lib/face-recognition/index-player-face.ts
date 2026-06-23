@@ -65,7 +65,7 @@ export async function indexPlayerFace(
 
   try {
     const imageBytes = await readPrivateFaceReference(supabase, reference.storage_path);
-    const provider = getFaceRecognitionProvider();
+    const provider = await getFaceRecognitionProvider();
     const indexed = await provider.indexPlayerFace({
       imageBytes,
       externalImageId: reference.player_id,
@@ -78,6 +78,11 @@ export async function indexPlayerFace(
         provider: indexed.provider,
         provider_face_id: indexed.providerFaceId,
         provider_collection_id: indexed.providerCollectionId,
+        embedding: indexed.embedding ?? null,
+        embedding_model: indexed.embeddingModel ?? null,
+        embedding_generated_at: indexed.embedding
+          ? new Date().toISOString()
+          : null,
         indexing_status: "indexed",
         indexing_error: null,
         indexed_at: new Date().toISOString(),
@@ -103,6 +108,7 @@ export async function indexPlayerFace(
       playerId: reference.player_id,
       provider: indexed.provider,
       providerCollectionId: indexed.providerCollectionId,
+      embeddingModel: indexed.embeddingModel ?? null,
     });
 
     return indexed;

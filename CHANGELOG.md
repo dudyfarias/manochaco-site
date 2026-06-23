@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.11.0 - 2026-06-23
+
+- Substituição da dependência obrigatória da AWS por arquitetura open source com `faceapi` e fallback `mock`.
+- Integração server-side de `@vladmandic/face-api`, TensorFlow.js, Sharp e modelos locais de detecção, landmarks e reconhecimento.
+- Criação de comparação por distância euclidiana e similaridade de cosseno com limiares configuráveis.
+- Persistência privada de embedding, modelo e data de geração em `player_face_references`.
+- Provider mock agora permite testar indexação, processamento, sugestão e revisão sem ML externo.
+- Admin atualizado com provider ativo, geração de embedding e indicação explícita de simulação.
+- Revogação de consentimento passa a limpar embeddings mesmo se um provider externo estiver indisponível.
+- Criação de `docs/INSIGHTFACE_FUTURE.md` e revisão da documentação de arquitetura, setup, LGPD e segurança.
+
 ## 0.10.3 - 2026-06-23
 
 - Navegação pública agora acompanha a sessão do Supabase Auth.

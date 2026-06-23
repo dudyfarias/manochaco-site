@@ -2,89 +2,72 @@
 
 ## Objetivo
 
-O reconhecimento facial ajuda a organizar o acervo esportivo sugerindo quais
-jogadores aparecem em cada foto. O resultado do provedor nunca é publicado
-automaticamente: toda sugestão precisa ser confirmada, corrigida ou ignorada por
-um administrador.
+O reconhecimento facial organiza o acervo sugerindo jogadores presentes nas
+fotos. Nenhum resultado é publicado automaticamente: toda sugestão precisa ser
+confirmada, corrigida ou ignorada por um administrador.
 
-## Componentes
+## Providers
 
-- `src/lib/face-recognition/types.ts`: contrato normalizado do domínio.
-- `src/lib/face-recognition/provider.ts`: configuração, erros e regras comuns.
-- `src/lib/face-recognition/aws-rekognition.ts`: provider Amazon Rekognition.
-- `src/lib/face-recognition/mock-provider.ts`: provider sem chamadas externas.
-- `src/lib/face-recognition/index-player-face.ts`: indexação consentida.
-- `src/lib/face-recognition/process-photo.ts`: geração de sugestões.
-- `src/lib/face-recognition/image-source.ts`: leitura segura de imagens.
+O contrato `FaceRecognitionProvider` fica em `src/lib/face-recognition/` e
+isola as telas e o banco da tecnologia usada:
 
-As telas e rotas administrativas dependem apenas do contrato
-`FaceRecognitionProvider`. Outro serviço pode substituir a AWS sem alterar o
-fluxo público ou as tabelas de revisão.
+- `mock-provider.ts`: simula embeddings e sugestões para testar o fluxo.
+- `faceapi-provider.ts`: implementação open source com o fork mantido
+  `@vladmandic/face-api`, TensorFlow.js e modelos versionados em
+  `public/models/face-api/`.
+- `aws-rekognition.ts`: integração opcional legada.
+- `insightface`: reservado para um microserviço futuro.
 
-## Fluxo de referência
+O provider padrão é `mock`. `faceapi` roda apenas no Node.js server-side; a
+Vercel inclui os modelos no trace das duas Route Handlers.
+
+## Referências e embeddings
 
 1. O admin envia JPEG/PNG de até 5 MB em `/admin/jogadores/[id]`.
-2. O arquivo entra no bucket privado `face-references`.
-3. `player_face_references` registra caminho, consentimento e aprovação.
-4. A rota autenticada valida role, consentimento e aprovação.
-5. O provider indexa no collection e usa o UUID do jogador como
-   `ExternalImageId`.
-6. `provider_face_id`, collection e data de indexação ficam no banco privado.
+2. A imagem entra no bucket privado `face-references`.
+3. Consentimento e aprovação ficam em `player_face_references`.
+4. A API autenticada valida a role e as duas autorizações.
+5. O provider detecta exatamente um rosto e gera um descritor de 128 valores.
+6. O embedding, modelo e data ficam em colunas privadas da referência.
 
-Revogar consentimento ou aprovação de uma referência indexada remove primeiro o
-vetor no provider e depois limpa os metadados locais.
+Revogar consentimento ou aprovação limpa embedding, identificadores e data de
+geração. Remover a referência também remove o arquivo privado.
 
-## Fluxo de foto coletiva
+## Processamento da galeria
 
-1. O admin solicita processamento em `/admin/galeria/fotos/[id]`.
-2. A foto passa por `queued`/`processing` e é lida do site ou Supabase Storage.
-3. O provider indexa temporariamente até 100 rostos da imagem.
-4. Cada rosto temporário é comparado à collection com `SearchFaces`.
-5. Os rostos temporários são removidos da collection em `finally`.
-6. Cada detecção gera uma sugestão pendente, inclusive rostos sem match.
+1. O admin solicita o processamento de uma foto.
+2. A foto passa para `processing` e é carregada de origem autorizada.
+3. O face-api detecta rostos e gera um embedding para cada um.
+4. `findBestMatch` compara o rosto com referências consentidas do provider.
+5. Distância máxima e confiança mínima decidem se há jogador sugerido.
+6. Cada rosto detectado gera uma sugestão `pending`, inclusive sem match.
 7. A foto fica `needs_review`, `processed` ou `error`.
 
-As buscas dentro de uma foto são sequenciais para não gerar uma rajada acima da
-quota de transações por segundo do Rekognition.
-
-Bounding boxes e confiança são normalizados entre 0 e 1. `raw_response` guarda
-apenas a detecção e o match selecionado do provider, fica restrita ao
-banco/admin e nunca é enviada ao site público.
+`FACE_RECOGNITION_MAX_DISTANCE` controla o match do face-api por distância
+euclidiana; o padrão `0.6` é um ponto inicial, não uma garantia.
+`FACE_RECOGNITION_MIN_CONFIDENCE` permanece no contrato normalizado para
+providers baseados em confiança, como AWS. Os limiares precisam ser calibrados
+com fotos reais.
 
 ## Revisão e publicação
 
-Em `/admin/fotos/revisao`, o admin vê a região detectada e pode:
+`/admin/fotos/revisao` mostra bounding box, confiança e provider. Confirmar ou
+trocar cria `photo_player_tags` com `tag_type = ai_confirmed` e
+`confirmed_by_admin = true`. Ignorar não cria tag.
 
-- confirmar o jogador sugerido;
-- trocar por outro jogador;
-- ignorar o rosto.
+O site público consulta apenas tags confirmadas. Nunca consulta embeddings,
+fotos de referência, sugestões pendentes, respostas brutas ou IDs internos.
 
-Confirmar ou trocar cria `photo_player_tags` com `tag_type = ai_confirmed` e
-`confirmed_by_admin = true`. Quando não há mais sugestões pendentes, a foto
-passa a `approved` se houve confirmação, ou `processed` se todas foram
-ignoradas.
+## Segurança e limites
 
-O site público consulta apenas tags manuais ou de IA confirmadas. Não consulta
-referências, sugestões, respostas brutas nem identificadores do provider.
-
-## Segurança
-
-- Módulos AWS usam `server-only`.
-- Credenciais AWS não possuem prefixo `NEXT_PUBLIC_`.
-- Rotas chamam `getAdminContext` e validam role de fotos.
-- Bucket de referências é privado e protegido por RLS.
-- Downloads privados usam a sessão Supabase do admin.
-- Fotos remotas só podem vir do host do site ou do Supabase configurado.
+- APIs exigem sessão e role administrativa de fotos.
+- Referências e embeddings são dados biométricos privados protegidos por RLS.
 - `FACE_RECOGNITION_AUTO_APPROVE=true` é bloqueado em runtime.
-- Erros técnicos completos ficam no servidor/auditoria; o client recebe mensagem segura.
+- Imagens externas arbitrárias são bloqueadas.
+- O processamento é síncrono e usa TensorFlow.js em CPU, portanto lotes grandes
+  devem migrar para fila ou microserviço.
+- Fotos coletivas pequenas, ângulo, luz e resolução afetam a detecção.
+- O provider `mock` é identificado no admin e não representa reconhecimento real.
 
-## Limitações
-
-- O processamento atual acontece em uma Route Handler síncrona.
-- O lote do admin chama uma foto por vez e para no primeiro erro.
-- Imagens enviadas como bytes à AWS têm limite de 5 MB e precisam ser JPEG/PNG.
-- Não há retry automático, fila durável ou monitor de custos.
-- Qualidade, ângulo, iluminação e tamanho do rosto afetam o resultado.
-
-Lotes grandes devem migrar para background jobs/queue antes de escalar o
-acervo. A decisão humana continua obrigatória mesmo após essa evolução.
+Se precisão ou escala forem insuficientes, a evolução recomendada está em
+`docs/INSIGHTFACE_FUTURE.md`.

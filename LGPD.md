@@ -57,17 +57,17 @@ uso real:
 - Permitir remoção de foto, marcação e referência facial.
 - Registrar qual provider processou a imagem e quando ocorreu a indexação.
 - Definir prazo de retenção para referências, sugestões e respostas técnicas.
-- Revisar o contrato, região de processamento e responsabilidades do fornecedor externo.
+- Revisar responsabilidades do software open source e de qualquer fornecedor externo futuro.
 - Limitar o acesso às roles `super_admin`, `sports_admin` e `photo_editor`.
 
 ## Fluxo implementado
 
 - A referência fica no bucket privado `face-references`.
 - Consentimento e aprovação são validados antes da indexação.
-- O Amazon Rekognition armazena vetor/metadata facial em collection dedicada; a foto de referência permanece no Supabase privado.
+- O face-api.js gera um embedding no servidor; referência e embedding permanecem privados no Supabase.
 - Fotos coletivas geram sugestões pendentes, nunca tags públicas automáticas.
 - Confirmar ou trocar uma sugestão é uma decisão humana auditada.
-- Revogar consentimento de uma referência indexada solicita a exclusão do Face ID no provider antes de limpar os metadados locais.
+- Revogar consentimento limpa embedding, identificadores e metadados; integrações externas são removidas em melhor esforço sem impedir o direito de exclusão local.
 - `raw_response`, Face IDs e referências não são expostos nas APIs públicas.
 
 Antes da ativação em produção, o clube deve registrar base legal aplicável,

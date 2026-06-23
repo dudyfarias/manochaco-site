@@ -94,9 +94,10 @@ Reconhecimento facial só deve sugerir marcações. O fluxo correto:
 5. Um humano confirma, troca ou ignora cada sugestão.
 6. Apenas marcações aprovadas aparecem no site público.
 
-O fluxo real usa Amazon Rekognition por meio de provider modular. A revisão fica
-em `/admin/fotos/revisao`, com confiança e bounding box. A interface também pode
-processar fotos pendentes uma por vez.
+O fluxo usa provider modular: `faceapi` gera embeddings open source no servidor
+e `mock` testa a operação sem ML real. A revisão fica em
+`/admin/fotos/revisao`, com confiança, provider e bounding box. A interface
+processa fotos pendentes uma por vez.
 
 ## Cuidados
 

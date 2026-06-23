@@ -147,6 +147,9 @@ export type AdminFaceReferenceRow = {
   provider: string | null;
   provider_face_id: string | null;
   provider_collection_id: string | null;
+  embedding: unknown;
+  embedding_model: string | null;
+  embedding_generated_at: string | null;
   approved_for_recognition: boolean;
   consent_given: boolean;
   indexing_status: "not_indexed" | "indexing" | "indexed" | "error";

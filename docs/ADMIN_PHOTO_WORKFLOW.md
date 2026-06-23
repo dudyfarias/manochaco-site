@@ -2,7 +2,7 @@
 
 O admin MVP implementa autenticação, upload de fotos públicas no Supabase
 Storage e persistência de álbuns, fotos e tags manuais. A Fase 9 adiciona
-referências privadas, Amazon Rekognition e revisão real de sugestões em
+referências privadas, embeddings com face-api.js e revisão real de sugestões em
 `/admin/fotos/revisao`.
 
 O painel é a fonte oficial para fotos, álbuns e marcações depois da migração

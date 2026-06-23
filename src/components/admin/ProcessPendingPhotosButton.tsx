@@ -3,7 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function ProcessPendingPhotosButton({ photoIds }: { photoIds: string[] }) {
+export function ProcessPendingPhotosButton({
+  photoIds,
+  provider,
+}: {
+  photoIds: string[];
+  provider: string;
+}) {
   const router = useRouter();
   const [progress, setProgress] = useState("");
   const [pending, setPending] = useState(false);
@@ -53,6 +59,9 @@ export function ProcessPendingPhotosButton({ photoIds }: { photoIds: string[] })
       >
         {pending ? "Processando fila..." : `Processar pendentes (${photoIds.length})`}
       </button>
+      <p className="mt-2 text-xs font-bold text-zinc-500">
+        Modo: {provider === "mock" ? "simulação local" : provider}
+      </p>
       {progress ? (
         <p aria-live="polite" className="mt-2 text-xs font-bold text-zinc-600">
           {progress}

@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabasePublicEnv, getSupabaseServiceEnv } from "../src/lib/supabase/env";
 import { createSupabaseServiceClient } from "../src/lib/supabase/service";
@@ -132,32 +134,62 @@ async function validateBuckets() {
 }
 
 function validateFaceRecognitionEnv() {
-  const provider = process.env.FACE_RECOGNITION_PROVIDER;
-  const confidence = Number(process.env.FACE_RECOGNITION_MIN_CONFIDENCE ?? "80");
+  const provider = process.env.FACE_RECOGNITION_PROVIDER ?? "mock";
+  const confidence = Number(process.env.FACE_RECOGNITION_MIN_CONFIDENCE ?? "0.75");
+  const normalizedConfidence = confidence > 1 ? confidence / 100 : confidence;
+  const maxDistance = Number(process.env.FACE_RECOGNITION_MAX_DISTANCE ?? "0.6");
 
-  if (provider !== "aws") {
-    fail("FACE_RECOGNITION_PROVIDER deve ser aws em produção.");
+  if (!["mock", "faceapi", "aws"].includes(provider)) {
+    fail(`FACE_RECOGNITION_PROVIDER não implementado: ${provider}.`);
   } else {
-    pass("Provider de reconhecimento facial configurado como AWS");
+    pass(`Provider de reconhecimento facial configurado como ${provider}`);
   }
 
-  for (const key of [
-    "AWS_REGION",
-    "AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY",
-    "AWS_REKOGNITION_COLLECTION_ID",
-  ]) {
-    if (process.env[key]) {
-      pass(`${key} configurada`);
-    } else {
-      fail(`${key} não configurada.`);
+  if (provider === "aws") {
+    for (const key of [
+      "AWS_REGION",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "AWS_REKOGNITION_COLLECTION_ID",
+    ]) {
+      if (process.env[key]) {
+        pass(`${key} configurada`);
+      } else {
+        fail(`${key} não configurada.`);
+      }
     }
   }
 
-  if (!Number.isFinite(confidence) || confidence < 0 || confidence > 100) {
-    fail("FACE_RECOGNITION_MIN_CONFIDENCE deve estar entre 0 e 100.");
+  if (!Number.isFinite(normalizedConfidence) || normalizedConfidence < 0 || normalizedConfidence > 1) {
+    fail("FACE_RECOGNITION_MIN_CONFIDENCE deve estar entre 0 e 1, ou usar percentual.");
   } else {
-    pass(`Confiança mínima configurada em ${confidence}%`);
+    pass(`Confiança mínima configurada em ${Math.round(normalizedConfidence * 100)}%`);
+  }
+
+  if (!Number.isFinite(maxDistance) || maxDistance <= 0 || maxDistance > 2) {
+    fail("FACE_RECOGNITION_MAX_DISTANCE deve estar acima de 0 e até 2.");
+  } else {
+    pass(`Distância facial máxima configurada em ${maxDistance}`);
+  }
+
+  if (provider === "faceapi") {
+    const modelFiles = [
+      "tiny_face_detector_model-weights_manifest.json",
+      "tiny_face_detector_model.bin",
+      "face_landmark_68_model-weights_manifest.json",
+      "face_landmark_68_model.bin",
+      "face_recognition_model-weights_manifest.json",
+      "face_recognition_model.bin",
+    ];
+    const missingModels = modelFiles.filter(
+      (file) => !existsSync(path.join(process.cwd(), "public", "models", "face-api", file)),
+    );
+
+    if (missingModels.length > 0) {
+      missingModels.forEach((file) => fail(`Modelo face-api ausente: ${file}`));
+    } else {
+      pass("Modelos face-api encontrados");
+    }
   }
 
   if (process.env.FACE_RECOGNITION_AUTO_APPROVE?.toLowerCase() === "true") {
@@ -171,7 +203,7 @@ async function validateFaceRecognitionSchema() {
   const supabase = createSupabaseServiceClient();
   const { error: referenceError } = await supabase
     .from("player_face_references")
-    .select("id, storage_path, provider_face_id, indexing_status, indexed_at")
+    .select("id, storage_path, provider_face_id, embedding, embedding_model, embedding_generated_at, indexing_status, indexed_at")
     .limit(1);
   const { error: suggestionError } = await supabase
     .from("face_detection_suggestions")

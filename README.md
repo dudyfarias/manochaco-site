@@ -52,12 +52,9 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SUPABASE_SERVICE_ROLE_KEY=
-FACE_RECOGNITION_PROVIDER=aws
-AWS_REGION=
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REKOGNITION_COLLECTION_ID=manochaco-players
-FACE_RECOGNITION_MIN_CONFIDENCE=80
+FACE_RECOGNITION_PROVIDER=mock
+FACE_RECOGNITION_MIN_CONFIDENCE=0.75
+FACE_RECOGNITION_MAX_DISTANCE=0.6
 FACE_RECOGNITION_AUTO_APPROVE=false
 ```
 
@@ -121,7 +118,7 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
 - Upload de fotos preparado via bucket `photos` do Supabase Storage.
 - Marcação manual de jogadores em fotos com tags confirmadas.
 - Revisão de sugestões de IA com confirmação, troca ou descarte.
-- Reconhecimento facial real e modular com Amazon Rekognition, referências privadas, consentimento e revisão humana obrigatória.
+- Reconhecimento facial modular com provider mock e face-api.js open source, embeddings privados, consentimento e revisão humana obrigatória.
 - Financeiro disponível apenas como rota protegida placeholder.
 - Filtros públicos por campeonato, temporada, resultado, adversário e status do jogador.
 - Páginas de jogadores e jogos por slug.
@@ -141,7 +138,7 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
 - Estatísticas recalculadas a partir dos jogos filtrados e rankings derivados
   dos jogadores históricos ou das abas por campeonato/temporada.
 
-Ainda não há financeiro completo, processamento assíncrono em background, gestão completa de usuários admin ou relatórios avançados nesta fase. O reconhecimento facial só funciona quando Supabase e AWS estão configurados; sem essas credenciais, o restante do site continua operando normalmente.
+Ainda não há financeiro completo, processamento assíncrono em background, gestão completa de usuários admin ou relatórios avançados nesta fase. O fluxo pode operar em modo mock ou com face-api.js sem AWS; o provider real depende dos modelos versionados e do Supabase configurado.
 
 ## Documentação do produto
 
@@ -153,6 +150,7 @@ Ainda não há financeiro completo, processamento assíncrono em background, ges
 - `docs/ADMIN_PHOTO_WORKFLOW.md`
 - `docs/FACE_RECOGNITION_ARCHITECTURE.md`
 - `docs/FACE_RECOGNITION_SETUP.md`
+- `docs/INSIGHTFACE_FUTURE.md`
 - `docs/AUTH_ADMIN.md`
 - `docs/PUBLIC_ACCOUNTS.md`
 - `docs/SUPABASE_STORAGE.md`

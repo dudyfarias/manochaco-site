@@ -1,6 +1,18 @@
 import type { BoundingBox } from "@/types";
 
-export type FaceRecognitionProviderName = "aws" | "mock";
+export type FaceRecognitionProviderName =
+  | "aws"
+  | "mock"
+  | "faceapi"
+  | "insightface";
+
+export interface FaceReferenceEmbedding {
+  referenceId: string;
+  playerId: string;
+  embedding: number[];
+  embeddingModel: string;
+  providerFaceId?: string;
+}
 
 export interface IndexPlayerFaceInput {
   imageBytes: Uint8Array;
@@ -13,6 +25,8 @@ export interface IndexedPlayerFace {
   providerFaceId: string;
   providerCollectionId: string;
   confidence?: number;
+  embedding?: number[];
+  embeddingModel?: string;
   raw?: unknown;
 }
 
@@ -20,6 +34,8 @@ export interface SearchPhotoInput {
   imageBytes: Uint8Array;
   photoId: string;
   minConfidence: number;
+  maxDistance: number;
+  references: FaceReferenceEmbedding[];
 }
 
 export interface FaceRecognitionMatch {

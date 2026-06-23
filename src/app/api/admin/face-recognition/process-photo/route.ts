@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { canManagePhotos, getAdminContext } from "@/lib/auth";
 import { processGalleryPhoto } from "@/lib/face-recognition/process-photo";
 import { toPublicFaceRecognitionError } from "@/lib/face-recognition";
+
+export const runtime = "nodejs";
+export const maxDuration = 60;
 import { isSameOriginMutation, isValidUuid } from "@/lib/security/admin-request";
 
 export async function POST(request: Request) {

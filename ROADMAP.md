@@ -152,19 +152,19 @@
 - Logs de auditoria preparados e usados em ações críticas do admin.
 - Documentação criada para admin MVP, deploy e checklist de segurança.
 
-## Fase 9 - Reconhecimento facial assistido real
+## Fase 9 - Reconhecimento facial assistido open source
 
-- Status: implementada em 2026-06-19; ativação operacional depende das credenciais AWS e do projeto Supabase de produção.
-- Provider modular com Amazon Rekognition e mock explícito para desenvolvimento.
+- Status: refinada em 2026-06-23; ativação real usa face-api.js e Supabase, com mock seguro para fallback.
+- Provider modular com face-api.js open source, mock explícito e AWS opcional.
 - Upload privado de referências faciais com consentimento e aprovação.
-- Indexação de rostos em collection dedicada e vínculo por jogador.
+- Geração e persistência privada de embeddings faciais por jogador.
 - Processamento individual ou sequencial de fotos da galeria.
 - Sugestões persistidas com confiança e bounding box.
 - Revisão humana obrigatória para confirmar, trocar ou ignorar.
 - Publicação limitada a `photo_player_tags` confirmadas.
-- Revogação de consentimento remove o índice facial do provider.
+- Revogação de consentimento remove embedding e metadados biométricos.
 - Auditoria de eventos principais e documentação de setup operacional.
-- Próxima evolução: mover lotes grandes para fila/background job e definir política formal de retenção biométrica.
+- Próxima evolução: microserviço InsightFace, fila/background job e política formal de retenção biométrica.
 
 ## Fase 9.1 - Contas públicas e comunidade
 

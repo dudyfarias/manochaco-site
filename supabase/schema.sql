@@ -179,6 +179,9 @@ create table if not exists public.player_face_references (
   provider text,
   provider_face_id text,
   provider_collection_id text,
+  embedding jsonb,
+  embedding_model text,
+  embedding_generated_at timestamptz,
   approved_for_recognition boolean not null default false,
   consent_given boolean not null default false,
   indexing_status text not null default 'not_indexed',
@@ -188,6 +191,9 @@ create table if not exists public.player_face_references (
   updated_at timestamptz default now(),
   constraint player_face_references_indexing_status_check check (
     indexing_status in ('not_indexed', 'indexing', 'indexed', 'error')
+  ),
+  constraint player_face_references_embedding_array_check check (
+    embedding is null or jsonb_typeof(embedding) = 'array'
   )
 );
 
@@ -596,12 +602,21 @@ alter table public.player_face_references add column if not exists provider_coll
 alter table public.player_face_references add column if not exists indexing_status text not null default 'not_indexed';
 alter table public.player_face_references add column if not exists indexing_error text;
 alter table public.player_face_references add column if not exists indexed_at timestamptz;
+alter table public.player_face_references add column if not exists embedding jsonb;
+alter table public.player_face_references add column if not exists embedding_model text;
+alter table public.player_face_references add column if not exists embedding_generated_at timestamptz;
 
 alter table public.player_face_references
 drop constraint if exists player_face_references_indexing_status_check;
 alter table public.player_face_references
 add constraint player_face_references_indexing_status_check
 check (indexing_status in ('not_indexed', 'indexing', 'indexed', 'error'));
+
+alter table public.player_face_references
+drop constraint if exists player_face_references_embedding_array_check;
+alter table public.player_face_references
+add constraint player_face_references_embedding_array_check
+check (embedding is null or jsonb_typeof(embedding) = 'array');
 
 alter table public.face_detection_suggestions add column if not exists provider text;
 alter table public.face_detection_suggestions add column if not exists provider_face_id text;

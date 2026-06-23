@@ -1,123 +1,101 @@
 # Configuração do reconhecimento facial
 
-## 1. Pré-requisitos
+## Pré-requisitos
 
-- Projeto Supabase com schema e policies aplicados.
-- Bucket privado `face-references` criado por `supabase/storage-policies.sql`.
-- Conta AWS em uma região que ofereça Amazon Rekognition.
-- Administrador com role `super_admin`, `sports_admin` ou `photo_editor`.
+- Supabase com schema, RLS e bucket privado `face-references` aplicados.
+- Admin `super_admin`, `sports_admin` ou `photo_editor`.
+- Node.js runtime nas APIs de reconhecimento.
 
-## 2. Aplicar a migration
+## Banco
 
-Em instalações existentes da Fase 8, aplique:
-
-```text
-supabase/migrations/20260619130011_add_face_recognition_pipeline.sql
-```
-
-Em um projeto novo, `supabase/schema.sql`, `supabase/policies.sql` e
-`supabase/storage-policies.sql` já contêm a estrutura completa.
-
-## 3. Criar credencial AWS
-
-Crie um usuário ou role IAM exclusivo para o site com acesso apenas ao
-collection configurado. As operações usadas são:
+Além da migration do pipeline, aplique:
 
 ```text
-rekognition:DescribeCollection
-rekognition:CreateCollection
-rekognition:IndexFaces
-rekognition:SearchFaces
-rekognition:DeleteFaces
+supabase/migrations/20260623122352_add_face_embeddings.sql
 ```
 
-O sistema envia bytes obtidos do Supabase; não precisa liberar um bucket S3 da
-AWS. Use o menor escopo de recurso permitido pela AWS e rotacione as credenciais
-periodicamente.
+Ela adiciona `embedding`, `embedding_model` e `embedding_generated_at` a
+`player_face_references`. Esses campos são privados.
 
-## 4. Configurar ambiente
+## Providers
 
-```env
-FACE_RECOGNITION_PROVIDER=aws
-AWS_REGION=sa-east-1
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REKOGNITION_COLLECTION_ID=manochaco-players
-FACE_RECOGNITION_MIN_CONFIDENCE=80
-FACE_RECOGNITION_AUTO_APPROVE=false
-```
-
-Cadastre as mesmas variáveis server-side na Vercel. Nunca use prefixo
-`NEXT_PUBLIC_` nas credenciais AWS. `FACE_RECOGNITION_AUTO_APPROVE` deve
-permanecer `false`; o código bloqueia a execução se estiver `true`.
-
-Para testar a interface sem chamar a AWS:
+Para testar todo o fluxo sem ML real:
 
 ```env
 FACE_RECOGNITION_PROVIDER=mock
+FACE_RECOGNITION_MIN_CONFIDENCE=0.75
+FACE_RECOGNITION_MAX_DISTANCE=0.6
 FACE_RECOGNITION_AUTO_APPROVE=false
 ```
 
-O mock permite indexar referências, mas não gera correspondências reais.
+O mock gera embedding determinístico e uma sugestão simulada quando existe uma
+referência indexada. O admin mostra claramente “simulação local”.
 
-## 5. Collection
+Para usar o provider gratuito real:
 
-Não é necessário criar o collection manualmente. A primeira indexação chama
-`DescribeCollection` e cria `AWS_REKOGNITION_COLLECTION_ID` se ele não existir.
-O UUID do jogador é usado como `ExternalImageId`, e o `FaceId` retornado fica em
-`player_face_references`.
+```env
+FACE_RECOGNITION_PROVIDER=faceapi
+FACE_RECOGNITION_MIN_CONFIDENCE=0.75
+FACE_RECOGNITION_MAX_DISTANCE=0.6
+FACE_RECOGNITION_AUTO_APPROVE=false
+```
 
-## 6. Cadastrar e indexar uma referência
+AWS continua opcional com `FACE_RECOGNITION_PROVIDER=aws` e suas credenciais,
+mas não é necessária para o sistema funcionar.
+
+## Modelos face-api
+
+Os arquivos ficam em `public/models/face-api/`:
+
+- `tiny_face_detector_model-weights_manifest.json` e `.bin`;
+- `face_landmark_68_model-weights_manifest.json` e `.bin`;
+- `face_recognition_model-weights_manifest.json` e `.bin`.
+
+O projeto versiona esses seis arquivos a partir do pacote
+`@vladmandic/face-api`. Se algum estiver ausente, a API retorna erro amigável e
+o restante do site continua funcionando.
+
+## Gerar referência
 
 1. Acesse `/admin/jogadores/[id]`.
-2. Envie uma foto com um rosto frontal, nítido e bem iluminado.
-3. Registre o consentimento específico.
-4. Marque a referência como aprovada.
-5. Clique em **Indexar rosto**.
-6. Confirme o estado **Indexada** e o Face ID no admin.
+2. Envie uma foto nítida com apenas o rosto do jogador.
+3. Registre consentimento específico e aprovação.
+4. Clique em **Gerar embedding**.
+5. Confira provider, modelo e estado indexado.
 
-Use mais de uma referência por jogador apenas quando houver consentimento e
-necessidade clara. Fotos de referência nunca aparecem no site público.
+Sem consentimento e aprovação a API rejeita a operação. Fotos e embeddings não
+aparecem no site público.
 
-## 7. Processar e revisar fotos
+## Processar e revisar
 
-1. Abra `/admin/galeria/fotos/[id]`.
-2. Clique em **Processar reconhecimento facial**.
-3. Abra `/admin/fotos/revisao`.
-4. Confira bounding box, jogador e confiança.
-5. Confirme, troque ou ignore cada sugestão.
-6. Verifique a tag confirmada na foto e no perfil público do jogador.
+1. Em `/admin/galeria/fotos/[id]`, clique em **Processar reconhecimento facial**.
+2. Abra `/admin/fotos/revisao`.
+3. Confira rosto, jogador sugerido e confiança.
+4. Confirme, troque ou ignore.
+5. Verifique que apenas a tag confirmada aparece publicamente.
 
-O botão **Processar pendentes** executa uma foto por request. Ele não é uma fila
-durável; mantenha lotes pequenos.
+O botão de lote processa uma foto por request. Mantenha lotes pequenos.
 
-## 8. Limites e custos
+## Calibração
 
-- AWS Rekognition aceita JPEG/PNG de até 5 MB quando a imagem é enviada em bytes.
-- Cada foto coletiva usa uma indexação temporária, buscas por rosto e uma remoção.
-- A quantidade de chamadas cresce com o número de rostos detectados.
-- Configure AWS Budgets/alerts e acompanhe a página oficial de preços:
-  https://aws.amazon.com/rekognition/pricing/
-- Não use o fluxo em massa sem revisar custo, timeout e quotas da região.
+- Menor `MAX_DISTANCE` torna a comparação mais rigorosa.
+- No face-api, `MAX_DISTANCE` controla o match; `MIN_CONFIDENCE` atende providers baseados em confiança.
+- Comece com distância `0.6`, registre falsos positivos/negativos e ajuste.
+- Cadastre referências frontais, bem iluminadas e atuais.
+- Nunca use confiança como aprovação automática.
 
-## 9. Privacidade
+## Vercel e diagnóstico
 
-- Reconhecimento facial envolve dado biométrico sensível.
-- O clube precisa manter prova do consentimento e canal de revogação.
-- Revogar uma referência indexada remove o Face ID do collection.
-- Sugestões e respostas brutas são privadas.
-- Apenas tags confirmadas por humano podem ser públicas.
-- Defina prazo de retenção e responsável interno antes do uso em produção.
+O provider usa TensorFlow.js em CPU para evitar dependência nativa obrigatória.
+Os modelos são incluídos no trace da função por `next.config.ts` e as APIs usam
+runtime Node.js com duração máxima declarada.
 
-## 10. Diagnóstico
+- **Modelos ausentes:** confira os seis arquivos em `public/models/face-api/`.
+- **Nenhum rosto:** use foto maior, frontal e com boa iluminação.
+- **Múltiplos rostos na referência:** recorte para apenas um jogador.
+- **Timeout:** processe individualmente ou use `mock` até mover para worker.
+- **Sem sugestões:** gere embeddings no mesmo provider ativo.
+- **Download privado falhou:** revise o bucket e as policies de Storage.
 
-- **Credenciais ausentes:** confira as variáveis server-side e redeploy da Vercel.
-- **Collection inexistente:** confirme `CreateCollection` na policy IAM.
-- **Nenhum rosto:** use imagem maior, frontal e com melhor iluminação.
-- **Imagem recusada:** converta para JPEG/PNG e reduza para até 5 MB.
-- **Download privado falhou:** aplique `storage-policies.sql` e confirme a role admin.
-- **Foto externa bloqueada:** mova a imagem para o bucket `photos`.
-
-Depois da configuração, rode `npm run validate:prod` para validar Supabase e os
-checks normais de produção. A validação de chamadas AWS deve ser feita por uma
-indexação consentida de teste no admin para evitar custos automáticos no build.
+Se o face-api não atender precisão ou escala, siga
+`docs/INSIGHTFACE_FUTURE.md`.

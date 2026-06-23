@@ -20,6 +20,7 @@ import {
   updatePlayer,
 } from "@/lib/admin/actions";
 import { getAdminPlayer, listPlayerFaceReferences } from "@/lib/admin/data";
+import { getFaceRecognitionProviderName } from "@/lib/face-recognition/provider";
 
 type EditPlayerPageProps = {
   params: Promise<{ id: string }>;
@@ -34,6 +35,7 @@ export default async function EditPlayerPage({
   params,
   searchParams,
 }: EditPlayerPageProps) {
+  const recognitionProvider = getFaceRecognitionProviderName();
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const [player, faceReferences] = await Promise.all([
     getAdminPlayer(id),
@@ -97,6 +99,9 @@ export default async function EditPlayerPage({
           title="Reconhecimento facial"
           description="Referências privadas usadas somente para gerar sugestões. A publicação continua dependendo de revisão humana."
         />
+        <p className="mt-3 text-xs font-black uppercase text-[#9a6a12]">
+          Provedor ativo: {recognitionProvider === "mock" ? "simulação local" : recognitionProvider}
+        </p>
 
         <div className="mt-6 grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
           <AdminCard>
@@ -168,6 +173,11 @@ export default async function EditPlayerPage({
                         Face ID: {reference.provider_face_id}
                       </p>
                     ) : null}
+                    {reference.embedding_model ? (
+                      <p className="mt-2 break-all text-xs text-zinc-500">
+                        Embedding: {reference.embedding_model}
+                      </p>
+                    ) : null}
                     {reference.indexing_error ? (
                       <p className="mt-2 text-xs font-bold text-red-700">
                         {reference.indexing_error}
@@ -192,8 +202,8 @@ export default async function EditPlayerPage({
                       <FaceRecognitionActionButton
                         endpoint="/api/admin/face-recognition/index-player-face"
                         payload={{ playerFaceReferenceId: reference.id }}
-                        label={reference.indexing_status === "indexed" ? "Reindexar rosto" : "Indexar rosto"}
-                        pendingLabel="Indexando..."
+                        label={reference.indexing_status === "indexed" ? "Gerar embedding novamente" : "Gerar embedding"}
+                        pendingLabel="Gerando embedding..."
                         disabled={!reference.consent_given || !reference.approved_for_recognition}
                       />
                       <form action={removePlayerFaceReference}>
