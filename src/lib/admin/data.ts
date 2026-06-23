@@ -1,8 +1,14 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
+  adaptPlayerCompetitionStat,
+  type SupabasePlayerCompetitionStatRow,
+} from "@/lib/adapters/playerStatsAdapter";
+import {
   getPhotoQueueReason,
   isPhotoProcessable,
 } from "@/lib/photo-pipeline";
+import { buildStatsConsistencyReport } from "@/lib/stats-consistency";
+import type { HistoricalPlayerStatLine } from "@/types";
 
 export type AdminPlayerRow = {
   id: string;
@@ -68,6 +74,30 @@ export type AdminPlayerMatchStatRow = {
   goals_conceded: number | null;
   players?: {
     nickname?: string | null;
+    name?: string | null;
+  } | null;
+};
+
+export type AdminPlayerCompetitionStatRow = {
+  id: string;
+  player_id: string;
+  competition_id: string;
+  season_id: string;
+  source_sheet: string;
+  matches: number;
+  goals: number;
+  assists: number;
+  yellow_cards: number;
+  red_cards: number;
+  clean_sheets: number;
+  goals_conceded: number;
+  updated_at: string | null;
+  competitions?: {
+    slug?: string | null;
+    name?: string | null;
+  } | null;
+  seasons?: {
+    slug?: string | null;
     name?: string | null;
   } | null;
 };
@@ -334,6 +364,79 @@ export async function listPlayerMatchStats(matchId: string) {
     .order("created_at", { ascending: false });
 
   return (assertAdminData(data, error, "player_match_stats") ?? []) as AdminPlayerMatchStatRow[];
+}
+
+export async function listPlayerCompetitionStats(playerId: string) {
+  const supabase = await getAdminSupabase();
+  const { data, error } = await supabase
+    .from("player_competition_stats")
+    .select(
+      "id, player_id, competition_id, season_id, source_sheet, matches, goals, assists, yellow_cards, red_cards, clean_sheets, goals_conceded, updated_at, competitions(slug, name), seasons(slug, name)",
+    )
+    .eq("player_id", playerId)
+    .order("source_sheet");
+
+  return (assertAdminData(data, error, "player_competition_stats") ??
+    []) as unknown as AdminPlayerCompetitionStatRow[];
+}
+
+export async function getStatsConsistencyDiagnostic() {
+  const supabase = await getAdminSupabase();
+  const [granularResult, historicalResult] = await Promise.all([
+    supabase
+      .from("player_competition_stats")
+      .select(
+        "id, player_id, competition_id, season_id, source_sheet, matches, goals, assists, yellow_cards, red_cards, clean_sheets, goals_conceded, players!inner(slug, name, nickname), competitions!inner(slug, name), seasons!inner(slug, name)",
+      ),
+    supabase
+      .from("player_historical_stats")
+      .select(
+        "player_id, source_sheet, matches, goals, assists, yellow_cards, red_cards, clean_sheets, goals_conceded, players!inner(slug, name, nickname)",
+      ),
+  ]);
+
+  const granularRows = (assertAdminData(
+    granularResult.data,
+    granularResult.error,
+    "stats_consistency.granular",
+  ) ?? []) as unknown as SupabasePlayerCompetitionStatRow[];
+  const historicalRows = (assertAdminData(
+    historicalResult.data,
+    historicalResult.error,
+    "stats_consistency.historical",
+  ) ?? []) as unknown as Array<{
+    source_sheet: string;
+    matches: number;
+    goals: number;
+    assists: number;
+    yellow_cards: number;
+    red_cards: number;
+    clean_sheets: number;
+    goals_conceded: number;
+    players?: { slug?: string; name?: string; nickname?: string } | null;
+  }>;
+  const statLines = granularRows.map(adaptPlayerCompetitionStat);
+  const historicalLines = historicalRows.map<HistoricalPlayerStatLine>((row) => ({
+    playerSlug: row.players?.slug ?? "jogador-sem-slug",
+    fullName: row.players?.name ?? "Jogador sem nome",
+    nickname: row.players?.nickname ?? "-",
+    sourceSheet: row.source_sheet,
+    matches: row.matches,
+    goals: row.goals,
+    assists: row.assists,
+    yellowCards: row.yellow_cards,
+    redCards: row.red_cards,
+    cleanSheets: row.clean_sheets,
+    goalsConceded: row.goals_conceded,
+  }));
+
+  return buildStatsConsistencyReport({
+    sourceFile: "Supabase",
+    granularSheets: [...new Set(statLines.map((line) => line.sourceSheet))],
+    validationSheets: [...new Set(historicalLines.map((line) => line.sourceSheet))],
+    statLines,
+    historicalLines,
+  });
 }
 
 export async function listAdminAlbums() {

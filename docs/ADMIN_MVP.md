@@ -18,6 +18,7 @@ inicial e reimportações controladas.
 - `/admin/fotos/revisao`.
 - `/admin/reconhecimento-facial`.
 - `/admin/diagnostico/fotos`.
+- `/admin/diagnostico/dados`.
 - `/admin/financeiro`.
 - `/admin/configuracoes`.
 
@@ -55,6 +56,10 @@ cria administradores; roles continuam em `admin_profiles`.
 - Referências faciais: upload privado, consentimento, aprovação, geração de embedding e remoção no perfil do jogador.
 - Reconhecimento facial: processamento individual ou sequencial, sugestões reais, bounding box e revisão humana.
 - Diagnóstico: fila elegível, motivo de exclusão, tags públicas e fotos vinculadas por jogador.
+- Estatísticas granulares: visualização por campeonato, temporada, origem e
+  atualização no admin do jogador.
+- Consistência: comparação entre soma granular e histórico em
+  `/admin/diagnostico/dados`.
 
 ## Placeholders
 
@@ -62,6 +67,8 @@ cria administradores; roles continuam em `admin_profiles`.
 - Gestão de administradores ainda deve ser feita pelo Supabase Dashboard ou SQL.
 - Logs de auditoria estão preparados e usados em ações críticas, mas ainda não têm tela própria.
 - O processamento de fotos ainda é síncrono; lotes grandes precisam de fila/background job.
+- Estatísticas por competição são somente leitura no admin nesta fase; a edição
+  futura deverá registrar origem, motivo e log de auditoria.
 
 ## Reconhecimento facial
 
@@ -80,5 +87,9 @@ O site público deve ler dados do Supabase quando configurado. Se o Supabase
 estiver indisponível, usa fallback local. Fotos públicas dependem de
 `photos.is_public = true`, e tags públicas dependem de
 `confirmed_by_admin = true`.
+
+Rankings e totais dos jogadores leem `player_competition_stats`. O snapshot
+`player_historical_stats` é privado e aparece somente no diagnóstico para
+conferência.
 
 Nenhuma rota admin aparece no menu público.

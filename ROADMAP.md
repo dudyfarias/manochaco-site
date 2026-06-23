@@ -188,6 +188,23 @@
 - Scripts de sincronização do Storage e validação do pipeline adicionados.
 - Migration normaliza status antigos sem apagar tags já confirmadas.
 
+## Fase 9.3 - Estatísticas granulares por competição
+
+- Status: concluída em 2026-06-23.
+- Mapeamento explícito das 18 abas da planilha, separando fontes granulares,
+  consolidações de validação e conteúdo financeiro privado.
+- Importação de seis abas granulares para 129 linhas por jogador, campeonato,
+  temporada e origem.
+- Criação de `player_competition_stats`, `player_aliases` e
+  `player_historical_stats`, com RLS e policies específicas.
+- Rankings e perfis públicos passam a somar os dados granulares do Supabase;
+  a aba histórica deixa de ser a fonte direta.
+- Relatório automatizado compara a soma granular com o histórico por jogador e
+  campo, sem corrigir silenciosamente divergências da fonte.
+- Diagnóstico administrativo disponível em `/admin/diagnostico/dados`.
+- Próxima evolução: edição granular no admin com auditoria e reconciliação
+  assistida das divergências encontradas.
+
 ## Fase 10 - Financeiro
 
 - Área financeira privada, sem qualquer item no menu público.

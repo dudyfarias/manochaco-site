@@ -1,6 +1,6 @@
 // Arquivo gerado automaticamente por scripts/import-manochaco-spreadsheet.ts.
 // Fonte: planilha-manochaco.xlsx
-// Gerado em: 2026-06-18T13:57:25.946Z
+// Gerado em: 2026-06-23T15:04:37.942Z
 // Nao edite manualmente; rode npm run import:spreadsheet.
 
 import type { Player } from "@/types";
@@ -21,12 +21,12 @@ export const players: Player[] = [
     joinedYear: 2023,
     bio: "Artilheiro histórico do Manochaco, referência ofensiva e líder em gols na base estatística oficial.",
     stats: {
-      matches: 43,
-      goals: 52,
+      matches: 41,
+      goals: 50,
       assists: 9,
-      yellowCards: 11,
-      redCards: 2,
-      goalParticipation: 61
+      yellowCards: 13,
+      redCards: 3,
+      goalParticipation: 59
     }
   },
   {
@@ -44,7 +44,7 @@ export const players: Player[] = [
     joinedYear: 2023,
     bio: "Um dos nomes mais presentes da história do Manochaco, com alta participação e peso ofensivo desde a primeira base registrada.",
     stats: {
-      matches: 47,
+      matches: 48,
       goals: 25,
       assists: 8,
       yellowCards: 3,
@@ -93,7 +93,7 @@ export const players: Player[] = [
       matches: 35,
       goals: 7,
       assists: 3,
-      yellowCards: 0,
+      yellowCards: 1,
       redCards: 0,
       goalParticipation: 10
     }
@@ -113,10 +113,10 @@ export const players: Player[] = [
     joinedYear: 2023,
     bio: "Zagueiro histórico do Manochaco, constante em jogos registrados e parte importante da base defensiva.",
     stats: {
-      matches: 41,
+      matches: 42,
       goals: 5,
       assists: 3,
-      yellowCards: 2,
+      yellowCards: 3,
       redCards: 0,
       goalParticipation: 8
     }
@@ -139,7 +139,7 @@ export const players: Player[] = [
       matches: 21,
       goals: 10,
       assists: 6,
-      yellowCards: 0,
+      yellowCards: 1,
       redCards: 0,
       goalParticipation: 16
     }
@@ -159,11 +159,11 @@ export const players: Player[] = [
     joinedYear: 2023,
     bio: "Meio campista líder histórico em assistências, importante na organização e no último passe do Manochaco.",
     stats: {
-      matches: 36,
+      matches: 37,
       goals: 1,
       assists: 14,
       yellowCards: 4,
-      redCards: 0,
+      redCards: 1,
       goalParticipation: 15
     }
   },
@@ -182,12 +182,12 @@ export const players: Player[] = [
     joinedYear: 2023,
     bio: "Atleta registrado na base histórica do Manochaco, com 23 jogos, 8 gols e 4 assistências.",
     stats: {
-      matches: 23,
+      matches: 24,
       goals: 8,
-      assists: 4,
+      assists: 5,
       yellowCards: 0,
       redCards: 0,
-      goalParticipation: 12
+      goalParticipation: 13
     }
   },
   {
@@ -205,10 +205,10 @@ export const players: Player[] = [
     joinedYear: 2023,
     bio: "Zagueiro de presença histórica, referência defensiva e um dos atletas que mais vestiram a camisa do clube.",
     stats: {
-      matches: 46,
+      matches: 47,
       goals: 2,
       assists: 2,
-      yellowCards: 4,
+      yellowCards: 6,
       redCards: 0,
       goalParticipation: 4
     }
@@ -297,7 +297,7 @@ export const players: Player[] = [
     joinedYear: 2023,
     bio: "Zagueiro de presença alta no histórico do clube, com regularidade nas campanhas registradas.",
     stats: {
-      matches: 41,
+      matches: 42,
       goals: 2,
       assists: 3,
       yellowCards: 8,
@@ -343,11 +343,11 @@ export const players: Player[] = [
     joinedYear: 2023,
     bio: "Atleta registrado na base histórica do Manochaco, com 41 jogos, 0 gols e 3 assistências.",
     stats: {
-      matches: 41,
+      matches: 42,
       goals: 0,
       assists: 3,
       yellowCards: 7,
-      redCards: 1,
+      redCards: 2,
       goalParticipation: 3
     }
   },
@@ -527,7 +527,7 @@ export const players: Player[] = [
     joinedYear: 2025,
     bio: "Atleta registrado na base histórica do Manochaco, com 11 jogos, 1 gol e 2 assistências.",
     stats: {
-      matches: 11,
+      matches: 12,
       goals: 1,
       assists: 2,
       yellowCards: 0,
@@ -640,12 +640,12 @@ export const players: Player[] = [
     joinedYear: 2025,
     bio: "Atleta registrado na base histórica do Manochaco, com 4 jogos, 1 gol e 1 assistência.",
     stats: {
-      matches: 4,
-      goals: 1,
-      assists: 1,
+      matches: 5,
+      goals: 2,
+      assists: 2,
       yellowCards: 0,
       redCards: 0,
-      goalParticipation: 2
+      goalParticipation: 4
     }
   },
   {
@@ -663,10 +663,10 @@ export const players: Player[] = [
     joinedYear: 2025,
     bio: "Atleta registrado na base histórica do Manochaco, com 5 jogos, 1 gol e 0 assistências.",
     stats: {
-      matches: 5,
+      matches: 6,
       goals: 1,
       assists: 0,
-      yellowCards: 0,
+      yellowCards: 1,
       redCards: 0,
       goalParticipation: 1
     }
@@ -686,10 +686,10 @@ export const players: Player[] = [
     joinedYear: 2025,
     bio: "Atleta registrado na base histórica do Manochaco, com 6 jogos, 1 gol e 0 assistências.",
     stats: {
-      matches: 6,
+      matches: 7,
       goals: 1,
       assists: 0,
-      yellowCards: 1,
+      yellowCards: 0,
       redCards: 0,
       goalParticipation: 1
     }
@@ -712,7 +712,7 @@ export const players: Player[] = [
       matches: 4,
       goals: 0,
       assists: 2,
-      yellowCards: 0,
+      yellowCards: 1,
       redCards: 0,
       goalParticipation: 2
     }
@@ -776,7 +776,7 @@ export const players: Player[] = [
     joinedYear: 2025,
     bio: "Atleta registrado na base histórica do Manochaco, com 5 jogos, 0 gols e 1 assistência.",
     stats: {
-      matches: 5,
+      matches: 6,
       goals: 0,
       assists: 1,
       yellowCards: 0,
@@ -966,6 +966,29 @@ export const players: Player[] = [
       yellowCards: 0,
       redCards: 1,
       goalParticipation: 0
+    }
+  },
+  {
+    id: "player-rod",
+    slug: "rod",
+    name: "João Pedro",
+    fullName: "João Pedro",
+    nickname: "ROD",
+    position: "Ala",
+    number: 26,
+    shirtNumber: 26,
+    status: "former",
+    image: "/players/rod.jpg",
+    profileImage: "/players/rod.jpg",
+    joinedYear: 2025,
+    bio: "Atleta presente em uma aba esportiva granular e ainda sem linha correspondente na consolidação histórica.",
+    stats: {
+      matches: 2,
+      goals: 1,
+      assists: 0,
+      yellowCards: 0,
+      redCards: 0,
+      goalParticipation: 1
     }
   }
 ];

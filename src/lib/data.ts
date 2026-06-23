@@ -24,10 +24,14 @@ import {
 } from "@/lib/adapters/matchAdapter";
 import {
   adaptPlayer,
-  aggregatePlayerStats,
-  type SupabasePlayerMatchStatsRow,
+  aggregatePlayerCompetitionStats,
+  type SupabasePlayerCompetitionStatsRow,
   type SupabasePlayerRow,
 } from "@/lib/adapters/playerAdapter";
+import {
+  adaptPlayerCompetitionStat,
+  type SupabasePlayerCompetitionStatRow,
+} from "@/lib/adapters/playerStatsAdapter";
 import {
   adaptFaceSuggestion,
   adaptPhoto,
@@ -209,14 +213,16 @@ export async function getPlayers(): Promise<Player[]> {
       const [{ data: playerRows, error: playerError }, { data: statRows, error: statError }] =
         await Promise.all([
           supabase.from("players").select("*").order("nickname"),
-          supabase.from("player_match_stats").select("*"),
+          supabase
+            .from("player_competition_stats")
+            .select("player_id, matches, goals, assists, yellow_cards, red_cards"),
         ]);
 
       assertNoError(playerError);
       assertNoError(statError);
 
-      const statsByPlayer = aggregatePlayerStats(
-        (statRows ?? []) as SupabasePlayerMatchStatsRow[],
+      const statsByPlayer = aggregatePlayerCompetitionStats(
+        (statRows ?? []) as SupabasePlayerCompetitionStatsRow[],
       );
 
       return ((playerRows ?? []) as SupabasePlayerRow[]).map((row) =>
@@ -642,5 +648,29 @@ export async function getRankings(limit = 10): Promise<SiteRankings> {
 }
 
 export async function getPlayerStatLines(): Promise<PlayerStatLine[]> {
-  return localPlayerStatLines;
+  return withSupabaseFallback(
+    "player_competition_stats",
+    async () => {
+      const supabase = getSupabasePublicClient();
+      if (!supabase) return localPlayerStatLines;
+
+      const { data, error } = await supabase
+        .from("player_competition_stats")
+        .select(
+          "id, player_id, competition_id, season_id, source_sheet, matches, goals, assists, yellow_cards, red_cards, clean_sheets, goals_conceded, players!inner(slug, name, nickname), competitions!inner(slug, name), seasons!inner(slug, name)",
+        )
+        .order("source_sheet");
+
+      assertNoError(error);
+      return ((data ?? []) as unknown as SupabasePlayerCompetitionStatRow[]).map(
+        adaptPlayerCompetitionStat,
+      );
+    },
+    () => localPlayerStatLines,
+  );
+}
+
+export async function getPlayerStatLinesBySlug(playerSlug: string) {
+  const statLines = await getPlayerStatLines();
+  return statLines.filter((line) => line.playerSlug === playerSlug);
 }

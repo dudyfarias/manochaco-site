@@ -1,6 +1,6 @@
 // Arquivo gerado automaticamente por scripts/import-manochaco-spreadsheet.ts.
 // Fonte: planilha-manochaco.xlsx
-// Gerado em: 2026-06-18T13:57:25.950Z
+// Gerado em: 2026-06-23T15:04:37.944Z
 // Nao edite manualmente; rode npm run import:spreadsheet.
 
 import type { Competition } from "@/types";
@@ -21,6 +21,14 @@ export const competitions: Competition[] = [
     shortName: "FutFudas",
     description: "Campeonato à parte da Playball Pompeia, em formato de jogo único. O Manochaco já venceu duas vezes.",
     type: "cup"
+  },
+  {
+    id: "estrelato",
+    slug: "estrelato",
+    name: "Estrelato",
+    shortName: "Estrelato",
+    description: "Competição registrada na planilha esportiva de 2024 do Manochaco.",
+    type: "other"
   },
   {
     id: "copa-amstel",

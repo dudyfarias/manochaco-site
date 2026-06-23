@@ -228,20 +228,9 @@ export function getRankingRows(params: {
     competition: params.competition,
     season: params.season,
   });
-  const competition = normalizeFilter(params.competition);
-  const season = normalizeFilter(params.season);
-  const hasContextFilter =
-    Boolean(competition) ||
-    Boolean(season);
-
-  if (hasContextFilter && filteredStatLines.length > 0) {
-    const statLinesForRanking =
-      season && !competition
-        ? filteredStatLines.filter((statLine) => !statLine.competitionId)
-        : filteredStatLines;
-
+  if (params.statLines.length > 0) {
     return generateRankingFromStatLines(
-      statLinesForRanking.length > 0 ? statLinesForRanking : filteredStatLines,
+      filteredStatLines,
       params.metric,
       params.limit,
     );

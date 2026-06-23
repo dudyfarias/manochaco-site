@@ -10,6 +10,7 @@ const styles: Record<CompetitionKind, string> = {
   "copa-futfudas": "border-white bg-white text-black",
   "copa-amstel": "border-emerald-900 bg-emerald-900 text-white",
   chuteira: "border-sky-900 bg-sky-900 text-white",
+  estrelato: "border-zinc-700 bg-zinc-700 text-white",
   amistoso: "border-zinc-500 bg-zinc-500 text-white",
 };
 

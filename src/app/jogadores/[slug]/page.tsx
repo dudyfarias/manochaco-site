@@ -12,6 +12,7 @@ import {
   getMatchesForPlayer,
   getPhotosForPlayer,
   getPlayerBySlug,
+  getPlayerStatLinesBySlug,
   getPlayers,
 } from "@/lib/data";
 import { generateRankingFromPlayers, type RankingMetric } from "@/lib/stats";
@@ -70,7 +71,11 @@ function formatAverage(value: number) {
 export default async function PlayerPage({ params }: PlayerPageProps) {
   await connection();
   const { slug } = await params;
-  const [player, players] = await Promise.all([getPlayerBySlug(slug), getPlayers()]);
+  const [player, players, playerStatLines] = await Promise.all([
+    getPlayerBySlug(slug),
+    getPlayers(),
+    getPlayerStatLinesBySlug(slug),
+  ]);
 
   if (!player) {
     notFound();
@@ -243,6 +248,73 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
             detail="participação em gols"
           />
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <SectionTitle
+          eyebrow="Campeonatos"
+          title="Estatísticas por competição"
+          description="Linhas granulares importadas da planilha e somadas para formar o total geral do jogador."
+        />
+        {playerStatLines.length > 0 ? (
+          <div className="mt-8 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="bg-zinc-950 text-xs uppercase text-zinc-300">
+                <tr>
+                  <th className="px-4 py-3">Campeonato</th>
+                  <th className="px-4 py-3">Temporada</th>
+                  <th className="px-4 py-3 text-right">Jogos</th>
+                  <th className="px-4 py-3 text-right">Gols</th>
+                  <th className="px-4 py-3 text-right">Assistências</th>
+                  <th className="px-4 py-3 text-right">Cartões</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200">
+                {[...playerStatLines]
+                  .sort((first, second) =>
+                    (second.seasonSlug ?? "").localeCompare(first.seasonSlug ?? "") ||
+                    (first.competitionName ?? "").localeCompare(
+                      second.competitionName ?? "",
+                    ),
+                  )
+                  .map((line) => (
+                    <tr key={line.id}>
+                      <td className="px-4 py-3 font-black text-zinc-950">
+                        {line.competitionName ?? line.competitionSlug}
+                      </td>
+                      <td className="px-4 py-3 text-zinc-600">
+                        {line.seasonLabel ?? line.seasonSlug}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold">{line.matches}</td>
+                      <td className="px-4 py-3 text-right font-bold">{line.goals}</td>
+                      <td className="px-4 py-3 text-right font-bold">{line.assists}</td>
+                      <td className="px-4 py-3 text-right text-zinc-600">
+                        {line.yellowCards ?? 0}/{line.redCards ?? 0}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+              <tfoot className="border-t-2 border-[#d1a137] bg-[#f7f5ef] font-black">
+                <tr>
+                  <td className="px-4 py-3" colSpan={2}>Total calculado</td>
+                  <td className="px-4 py-3 text-right">{player.stats.matches}</td>
+                  <td className="px-4 py-3 text-right">{player.stats.goals}</td>
+                  <td className="px-4 py-3 text-right">{player.stats.assists}</td>
+                  <td className="px-4 py-3 text-right">
+                    {player.stats.yellowCards ?? 0}/{player.stats.redCards ?? 0}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        ) : (
+          <div className="mt-8">
+            <EmptyState
+              title="Sem estatísticas por campeonato"
+              description="Ainda não existem linhas granulares vinculadas a este jogador."
+            />
+          </div>
+        )}
       </section>
 
       <section className="bg-zinc-950 py-20 text-white">

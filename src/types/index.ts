@@ -3,6 +3,7 @@ export type CompetitionKind =
   | "copa-futfudas"
   | "copa-amstel"
   | "chuteira"
+  | "estrelato"
   | "amistoso";
 
 export type CompetitionType = "league" | "cup" | "friendly" | "other";
@@ -120,17 +121,78 @@ export type PlayerStatLine = {
   playerSlug: string;
   fullName: string;
   nickname: string;
+  position?: PlayerPosition;
+  shirtNumber?: number;
   competitionId?: string;
   competitionSlug?: string;
+  competitionName?: string;
   season?: string;
   seasonSlug?: string;
+  seasonLabel?: string;
   sourceSheet: string;
   matches: number;
   goals: number;
   assists: number;
   yellowCards?: number;
   redCards?: number;
+  cleanSheets?: number;
+  goalsConceded?: number;
   goalParticipation: number;
+};
+
+export type PlayerStatTotals = {
+  matches: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  cleanSheets: number;
+  goalsConceded: number;
+};
+
+export type HistoricalPlayerStatLine = PlayerStatTotals & {
+  playerSlug: string;
+  fullName: string;
+  nickname: string;
+  sourceSheet: string;
+};
+
+export type StatsConsistencyMetric = keyof PlayerStatTotals;
+
+export type StatsConsistencyDifference = {
+  field: StatsConsistencyMetric;
+  calculated: number;
+  historical: number;
+  difference: number;
+};
+
+export type StatsConsistencyPlayerResult = {
+  playerSlug: string;
+  fullName: string;
+  nickname: string;
+  status: "ok" | "divergent" | "missing_historical" | "missing_granular";
+  calculated: PlayerStatTotals;
+  historical: PlayerStatTotals;
+  differences: StatsConsistencyDifference[];
+};
+
+export type StatsConsistencyReport = {
+  generatedAt: string;
+  sourceFile: string;
+  granularSheets: string[];
+  validationSheets: string[];
+  totalPlayers: number;
+  matchingPlayers: number;
+  divergentPlayers: number;
+  missingInHistorical: string[];
+  missingInGranular: string[];
+  duplicateKeys: string[];
+  inconsistentAliases: Array<{
+    playerSlug: string;
+    names: string[];
+    nicknames: string[];
+  }>;
+  players: StatsConsistencyPlayerResult[];
 };
 
 export type RankingRow = {

@@ -15,6 +15,7 @@ const competitionKindBySlug: Record<string, CompetitionKind> = {
   "copa-futfudas": "copa-futfudas",
   "copa-amstel": "copa-amstel",
   chuteira: "chuteira",
+  estrelato: "estrelato",
   amistoso: "amistoso",
 };
 

@@ -7,6 +7,9 @@ alter table public.competitions enable row level security;
 alter table public.seasons enable row level security;
 alter table public.matches enable row level security;
 alter table public.player_match_stats enable row level security;
+alter table public.player_aliases enable row level security;
+alter table public.player_competition_stats enable row level security;
+alter table public.player_historical_stats enable row level security;
 alter table public.albums enable row level security;
 alter table public.photos enable row level security;
 alter table public.photo_player_tags enable row level security;
@@ -29,6 +32,7 @@ grant select on public.competitions to anon, authenticated;
 grant select on public.seasons to anon, authenticated;
 grant select on public.matches to anon, authenticated;
 grant select on public.player_match_stats to anon, authenticated;
+grant select on public.player_competition_stats to anon, authenticated;
 grant select on public.albums to anon, authenticated;
 grant select on public.photos to anon, authenticated;
 grant select on public.photo_player_tags to anon, authenticated;
@@ -38,6 +42,9 @@ grant select, insert, update, delete on public.competitions to authenticated;
 grant select, insert, update, delete on public.seasons to authenticated;
 grant select, insert, update, delete on public.matches to authenticated;
 grant select, insert, update, delete on public.player_match_stats to authenticated;
+grant select, insert, update, delete on public.player_aliases to authenticated;
+grant select, insert, update, delete on public.player_competition_stats to authenticated;
+grant select, insert, update, delete on public.player_historical_stats to authenticated;
 grant select, insert, update, delete on public.albums to authenticated;
 grant select, insert, update, delete on public.photos to authenticated;
 grant select, insert, update, delete on public.photo_player_tags to authenticated;
@@ -161,6 +168,13 @@ on public.player_match_stats
 for select
 using (true);
 
+drop policy if exists "Public can read player competition stats" on public.player_competition_stats;
+create policy "Public can read player competition stats"
+on public.player_competition_stats
+for select
+to anon, authenticated
+using (true);
+
 drop policy if exists "Public can read albums" on public.albums;
 create policy "Public can read albums"
 on public.albums
@@ -222,6 +236,44 @@ drop policy if exists "Sports admins can manage player match stats" on public.pl
 drop policy if exists "Admins can manage player match stats" on public.player_match_stats;
 create policy "Sports admins can manage player match stats"
 on public.player_match_stats
+for all
+to authenticated
+using (private.can_manage_sports())
+with check (private.can_manage_sports());
+
+drop policy if exists "Admins can read player aliases" on public.player_aliases;
+create policy "Admins can read player aliases"
+on public.player_aliases
+for select
+to authenticated
+using (private.is_admin());
+
+drop policy if exists "Sports admins can manage player aliases" on public.player_aliases;
+create policy "Sports admins can manage player aliases"
+on public.player_aliases
+for all
+to authenticated
+using (private.can_manage_sports())
+with check (private.can_manage_sports());
+
+drop policy if exists "Admins can read historical stat validations" on public.player_historical_stats;
+create policy "Admins can read historical stat validations"
+on public.player_historical_stats
+for select
+to authenticated
+using (private.is_admin());
+
+drop policy if exists "Sports admins can manage historical stat validations" on public.player_historical_stats;
+create policy "Sports admins can manage historical stat validations"
+on public.player_historical_stats
+for all
+to authenticated
+using (private.can_manage_sports())
+with check (private.can_manage_sports());
+
+drop policy if exists "Sports admins can manage player competition stats" on public.player_competition_stats;
+create policy "Sports admins can manage player competition stats"
+on public.player_competition_stats
 for all
 to authenticated
 using (private.can_manage_sports())

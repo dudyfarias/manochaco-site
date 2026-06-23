@@ -33,6 +33,7 @@ segurança de build, não como fonte definitiva.
 - `seasons`
 - `matches`
 - `player_match_stats`
+- `player_competition_stats`
 - `albums`
 - `photos`
 - `photo_player_tags`
@@ -41,6 +42,12 @@ O site público pode ler essas tabelas conforme as policies. Tags de foto só
 aparecem publicamente quando `confirmed_by_admin = true` e `tag_type` é
 `manual` ou `ai_confirmed`. Fotos públicas devem ter `photos.is_public = true`.
 
+`player_competition_stats` guarda os agregados importados por jogador,
+campeonato, temporada e `source_sheet`. A chave única desses quatro campos
+permite upsert idempotente sem misturar competições. Rankings e totais públicos
+são calculados dessa tabela; `player_match_stats` continua sendo a origem mais
+granular para partidas cadastradas diretamente no painel.
+
 ## Tabelas administrativas e biometria
 
 - `admin_profiles`
@@ -48,10 +55,17 @@ aparecem publicamente quando `confirmed_by_admin = true` e `tag_type` é
 - `audit_logs`
 - `player_face_references`
 - `face_detection_suggestions`
+- `player_aliases`
+- `player_historical_stats`
 
 Essas tabelas não têm leitura pública. Fotos de referência facial são privadas e
 exigem consentimento específico. Sugestões de IA ficam internas até revisão
 humana.
+
+`player_aliases` normaliza nomes e apelidos externos antes de vincular
+estatísticas ao UUID oficial. `player_historical_stats` guarda o snapshot da
+aba histórica exclusivamente para conferência administrativa. Ele não deve
+substituir nem completar automaticamente os valores granulares.
 
 `member_profiles` guarda os dados privados das contas públicas. O campo
 `account_type` aceita `supporter`, `player`, `candidate` ou `partner`; o campo
@@ -129,6 +143,14 @@ revisão/migração inicial.
 `npm run seed:supabase` envia dados locais/generated para o Supabase usando
 `SUPABASE_SERVICE_ROLE_KEY`. Esse script deve rodar apenas em ambiente local ou
 server-side confiável e nunca no client.
+
+`npm run seed:stats` faz o upsert seguro apenas de competições, temporadas,
+jogadores, aliases, estatísticas granulares e snapshots históricos. É o comando
+preferido para esta migração porque não altera fotos, álbuns ou jogos já
+mantidos pelo painel.
+
+`npm run validate:stats` compara a soma de `player_competition_stats` com o
+snapshot histórico e atualiza `data/reports/stats-consistency-report.json`.
 
 `npm run validate:prod` valida variáveis de ambiente, tabelas principais,
 buckets esperados e isolamento básico de tabelas privadas.

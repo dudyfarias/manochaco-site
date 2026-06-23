@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.12.0 - 2026-06-23
+
+- Estatísticas de jogadores reestruturadas por campeonato, temporada e aba de origem em `player_competition_stats`.
+- Aba `Estatística Histórica` convertida em fonte privada de validação, sem alimentar diretamente rankings públicos.
+- Mapeamento explícito de todas as abas esportivas, consolidadas e financeiras da planilha.
+- Normalização de jogadores por aliases e correção da colisão entre os cabeçalhos de presença e percentual de presença.
+- Importador passa a gerar 129 linhas granulares, totais calculados, snapshots históricos e relatório de consistência.
+- Scripts `seed:stats`, `validate:stats` e `audit:mocks` adicionados para carga segura, conferência e auditoria da origem pública.
+- Filtros de `/estatisticas` e totais de `/jogadores/[slug]` passam a consultar os dados granulares do Supabase.
+- Nova tabela de estatísticas por competição no perfil público e no admin do jogador.
+- Novo diagnóstico protegido em `/admin/diagnostico/dados` para comparar soma calculada e histórico.
+- A auditoria inicial encontrou 26 jogadores consistentes e 17 divergentes; diferenças permanecem visíveis para revisão, sem sobrescrita automática.
+
 ## 0.11.1 - 2026-06-23
 
 - Correção da confirmação e troca de sugestões para criar tags públicas por upsert, sem duplicatas ou vínculos antigos incorretos.

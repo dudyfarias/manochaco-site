@@ -28,6 +28,9 @@ npm run build      # build de produção
 npm run start      # executa o build
 npm run import:spreadsheet # importa a planilha Manochaco
 npm run seed:supabase # envia dados esportivos locais para Supabase
+npm run seed:stats # envia somente estatisticas granulares e validacao historica
+npm run validate:stats # compara a soma granular com a aba historica
+npm run audit:mocks # confirma que as telas publicas usam a camada Supabase
 npm run audit:images # audita imagens locais e vínculos de fotos
 npm run sync:photos # simula sincronização do bucket photos com o banco
 npm run validate:photos # valida o pipeline público de fotos e marcações
@@ -46,6 +49,13 @@ Depois da migração inicial, o Supabase passa a ser a fonte oficial. A planilha
 do Manochaco deve ser usada apenas para carga inicial ou reimportações
 controladas, com logs, dry-run e revisão para não sobrescrever edições feitas
 no painel administrativo.
+
+As estatísticas públicas ficam em `player_competition_stats`, separadas por
+jogador, campeonato, temporada e aba de origem. A aba `Estatística Histórica`
+não alimenta diretamente os rankings: ela é importada para uma tabela privada
+de conferência e comparada com a soma granular por `npm run validate:stats`.
+Em reimportações, prefira `npm run seed:stats`; o seed completo também inclui
+outros domínios e deve ser usado apenas na carga inicial revisada.
 
 Crie `.env.local` com base em `.env.example` quando o projeto Supabase existir:
 
@@ -141,8 +151,10 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
   site público.
 - Importador da planilha gera dados iniciais de jogadores, jogos, estatísticas
   e rankings para migração/revisão.
-- Estatísticas recalculadas a partir dos jogos filtrados e rankings derivados
-  dos jogadores históricos ou das abas por campeonato/temporada.
+- Estatísticas e rankings de jogadores calculados das linhas granulares do
+  Supabase, com filtros reais por campeonato e temporada.
+- Diagnóstico de consistência em `/admin/diagnostico/dados`, com divergências
+  entre a soma por competição e a aba histórica preservadas para revisão.
 
 Ainda não há financeiro completo, processamento assíncrono em background, gestão completa de usuários admin ou relatórios avançados nesta fase. O fluxo pode operar em modo mock ou com face-api.js sem AWS; o provider real depende dos modelos versionados e do Supabase configurado.
 
@@ -153,6 +165,7 @@ Ainda não há financeiro completo, processamento assíncrono em background, ges
 - `docs/ASSETS.md`
 - `docs/SPREADSHEET_IMPORT.md`
 - `docs/STATS_SYSTEM.md`
+- `docs/STATS_CONSISTENCY.md`
 - `docs/ADMIN_PHOTO_WORKFLOW.md`
 - `docs/FACE_RECOGNITION_ARCHITECTURE.md`
 - `docs/FACE_RECOGNITION_SETUP.md`

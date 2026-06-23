@@ -23,6 +23,7 @@ import {
 import {
   getAdminPlayer,
   listConfirmedPhotoTags,
+  listPlayerCompetitionStats,
   listPlayerFaceReferences,
 } from "@/lib/admin/data";
 import { getPhotosForPlayer } from "@/lib/data";
@@ -43,10 +44,11 @@ export default async function EditPlayerPage({
 }: EditPlayerPageProps) {
   const recognitionProvider = getFaceRecognitionProviderName();
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
-  const [player, faceReferences, confirmedPhotoTags] = await Promise.all([
+  const [player, faceReferences, confirmedPhotoTags, competitionStats] = await Promise.all([
     getAdminPlayer(id),
     listPlayerFaceReferences(id),
     listConfirmedPhotoTags(id),
+    listPlayerCompetitionStats(id),
   ]);
 
   if (!player) {
@@ -104,6 +106,64 @@ export default async function EditPlayerPage({
           </button>
         </form>
       </AdminCard>
+
+      <section className="mt-6">
+        <AdminPageTitle
+          eyebrow="Estatísticas"
+          title="Estatísticas por campeonato"
+          description="Dados granulares importados para o Supabase. A edição manual entra no próximo módulo esportivo."
+        />
+        <AdminCard className="mt-5 overflow-hidden p-0">
+          {competitionStats.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[900px] text-left text-sm">
+                <thead className="bg-zinc-950 text-xs uppercase text-zinc-300">
+                  <tr>
+                    <th className="px-4 py-3">Campeonato</th>
+                    <th className="px-4 py-3">Temporada</th>
+                    <th className="px-4 py-3 text-right">Jogos</th>
+                    <th className="px-4 py-3 text-right">Gols</th>
+                    <th className="px-4 py-3 text-right">Assistências</th>
+                    <th className="px-4 py-3 text-right">Cartões</th>
+                    <th className="px-4 py-3">Origem</th>
+                    <th className="px-4 py-3">Atualização</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-200">
+                  {competitionStats.map((stat) => (
+                    <tr key={stat.id}>
+                      <td className="px-4 py-3 font-black text-zinc-950">
+                        {stat.competitions?.name ?? stat.competition_id}
+                      </td>
+                      <td className="px-4 py-3 text-zinc-600">
+                        {stat.seasons?.name ?? stat.season_id}
+                      </td>
+                      <td className="px-4 py-3 text-right">{stat.matches}</td>
+                      <td className="px-4 py-3 text-right">{stat.goals}</td>
+                      <td className="px-4 py-3 text-right">{stat.assists}</td>
+                      <td className="px-4 py-3 text-right">
+                        {stat.yellow_cards}/{stat.red_cards}
+                      </td>
+                      <td className="px-4 py-3 text-zinc-600">{stat.source_sheet}</td>
+                      <td className="px-4 py-3 text-zinc-500">
+                        {stat.updated_at
+                          ? new Intl.DateTimeFormat("pt-BR").format(
+                              new Date(stat.updated_at),
+                            )
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="px-5 py-10 text-center text-sm text-zinc-500">
+              Nenhuma estatística granular vinculada a este jogador.
+            </p>
+          )}
+        </AdminCard>
+      </section>
 
       <section className="mt-6">
         <AdminPageTitle

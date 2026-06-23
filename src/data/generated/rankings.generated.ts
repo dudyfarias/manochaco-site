@@ -1,6 +1,6 @@
 // Arquivo gerado automaticamente por scripts/import-manochaco-spreadsheet.ts.
 // Fonte: planilha-manochaco.xlsx
-// Gerado em: 2026-06-18T13:57:25.949Z
+// Gerado em: 2026-06-23T15:04:37.944Z
 // Nao edite manualmente; rode npm run import:spreadsheet.
 
 import type { RankingRow } from "@/types";
@@ -10,7 +10,7 @@ export const scoringRanking: RankingRow[] = [
     playerSlug: "torres",
     fullName: "Alexandre Torres",
     nickname: "TORRES",
-    value: 52,
+    value: 50,
     unit: "gols"
   },
   {
@@ -118,7 +118,7 @@ export const assistsRanking: RankingRow[] = [
     playerSlug: "jorge",
     fullName: "Jorge Costa",
     nickname: "JORGE",
-    value: 4,
+    value: 5,
     unit: "assistências"
   },
   {
@@ -156,41 +156,41 @@ export const appearancesRanking: RankingRow[] = [
     playerSlug: "dudu",
     fullName: "Luiz Eduardo",
     nickname: "DUDU",
-    value: 47,
+    value: 48,
     unit: "jogos"
   },
   {
     playerSlug: "nikollas",
     fullName: "Nikollas Javier",
     nickname: "NIKOLLAS",
-    value: 46,
-    unit: "jogos"
-  },
-  {
-    playerSlug: "torres",
-    fullName: "Alexandre Torres",
-    nickname: "TORRES",
-    value: 43,
+    value: 47,
     unit: "jogos"
   },
   {
     playerSlug: "ed-gou",
     fullName: "Eduardo Gouveia",
     nickname: "ED GOU",
-    value: 41,
+    value: 42,
     unit: "jogos"
   },
   {
     playerSlug: "victor-erik",
     fullName: "Victor Erik",
     nickname: "VICTOR ERIK",
-    value: 41,
+    value: 42,
     unit: "jogos"
   },
   {
     playerSlug: "dudy",
     fullName: "Eduardo Farias",
     nickname: "DUDY",
+    value: 42,
+    unit: "jogos"
+  },
+  {
+    playerSlug: "torres",
+    fullName: "Alexandre Torres",
+    nickname: "TORRES",
     value: 41,
     unit: "jogos"
   },
@@ -198,7 +198,7 @@ export const appearancesRanking: RankingRow[] = [
     playerSlug: "madeus",
     fullName: "Matheus de Paula",
     nickname: "MADEUS",
-    value: 36,
+    value: 37,
     unit: "jogos"
   },
   {
@@ -229,7 +229,7 @@ export const cardRanking: RankingRow[] = [
     playerSlug: "torres",
     fullName: "Alexandre Torres",
     nickname: "TORRES",
-    value: 11,
+    value: 13,
     unit: "cartões amarelos"
   },
   {
@@ -247,6 +247,13 @@ export const cardRanking: RankingRow[] = [
     unit: "cartões amarelos"
   },
   {
+    playerSlug: "nikollas",
+    fullName: "Nikollas Javier",
+    nickname: "NIKOLLAS",
+    value: 6,
+    unit: "cartões amarelos"
+  },
+  {
     playerSlug: "bruninho",
     fullName: "Bruno Guidotte",
     nickname: "BRUNINHO",
@@ -261,16 +268,16 @@ export const cardRanking: RankingRow[] = [
     unit: "cartões amarelos"
   },
   {
-    playerSlug: "nikollas",
-    fullName: "Nikollas Javier",
-    nickname: "NIKOLLAS",
-    value: 4,
-    unit: "cartões amarelos"
-  },
-  {
     playerSlug: "dudu",
     fullName: "Luiz Eduardo",
     nickname: "DUDU",
+    value: 3,
+    unit: "cartões amarelos"
+  },
+  {
+    playerSlug: "ed-gou",
+    fullName: "Eduardo Gouveia",
+    nickname: "ED GOU",
     value: 3,
     unit: "cartões amarelos"
   },
@@ -279,13 +286,6 @@ export const cardRanking: RankingRow[] = [
     fullName: "Gian Pacífico",
     nickname: "PACÍFICO",
     value: 3,
-    unit: "cartões amarelos"
-  },
-  {
-    playerSlug: "ed-gou",
-    fullName: "Eduardo Gouveia",
-    nickname: "ED GOU",
-    value: 2,
     unit: "cartões amarelos"
   },
   {
@@ -302,7 +302,7 @@ export const goalParticipationRanking: RankingRow[] = [
     playerSlug: "torres",
     fullName: "Alexandre Torres",
     nickname: "TORRES",
-    value: 61,
+    value: 59,
     unit: "participações em gol"
   },
   {
@@ -337,7 +337,7 @@ export const goalParticipationRanking: RankingRow[] = [
     playerSlug: "jorge",
     fullName: "Jorge Costa",
     nickname: "JORGE",
-    value: 12,
+    value: 13,
     unit: "participações em gol"
   },
   {

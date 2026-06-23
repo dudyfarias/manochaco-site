@@ -1,93 +1,91 @@
 # Sistema de estatísticas
 
-O site tem uma camada híbrida em `src/lib/data.ts`: se Supabase estiver
-configurado, as páginas públicas tentam ler do banco; caso contrário, seguem
-usando dados locais/generated como fallback de desenvolvimento e preview.
+O Supabase é a fonte oficial das estatísticas exibidas em produção. A planilha
+serve para migração e conferência; os arquivos em `src/data/generated/` são
+artefatos de importação e fallback de desenvolvimento.
 
-A planilha serve como carga inicial de migração. Depois da migração, o painel
-administrativo e o Supabase devem ser a fonte oficial das estatísticas.
+## Modelo de dados
+
+`player_competition_stats` guarda uma linha por jogador, campeonato, temporada
+e aba de origem. Cada linha pode conter jogos, gols, assistências, cartões,
+clean sheets e gols sofridos. A restrição única nesses quatro identificadores
+impede duplicação em reimportações.
+
+`player_historical_stats` é privada e guarda a fotografia da aba
+`Estatística Histórica`. Ela existe somente para comparação administrativa.
+
+`player_aliases` é privada e relaciona variações de nome ou apelido ao UUID do
+jogador. O mapa inicial fica em `src/data/playerAliases.ts`.
+
+`player_match_stats` continua armazenando lançamentos por partida feitos pelo
+admin. A evolução prevista é recalcular ou reconciliar os agregados a partir
+desses lançamentos, mantendo origem e auditoria.
 
 ## Origem dos dados
 
-- `players.generated.ts`: jogadores consolidados da aba `Estatística Histórica`.
-- `matches.generated.ts`: jogos importados da aba `Jogos Histórico`.
-- `player-stats.generated.ts`: linhas de estatística por aba esportiva, como
-  Liga7, Copa Amstel e Chuteira.
-- `competitions.generated.ts`: campeonatos usados nos filtros.
-- `seasons.generated.ts`: temporadas encontradas na planilha.
+- `player-stats.generated.ts`: 129 linhas das seis abas granulares.
+- `historical-player-stats.generated.ts`: snapshot para validação.
+- `season-validation-stats.generated.ts`: consolidações anuais que não entram
+  na soma pública.
+- `stats-consistency.generated.ts`: resumo do último relatório.
+- `players.generated.ts`: jogadores com totais calculados da base granular.
+- `rankings.generated.ts`: rankings calculados da mesma base.
 
-Abas financeiras são ignoradas no site público. Quando forem estruturadas,
-devem ir para tabelas privadas com RLS e permissões financeiras.
+O mapeamento oficial das abas está em `scripts/config/sheet-mapping.ts`.
+Planilhas financeiras são ignoradas pelas páginas públicas e pelo seed de
+estatísticas.
 
-## Filtros
+## Filtros públicos
 
-Os filtros públicos usam query string:
+Os filtros usam query string e são compartilháveis:
 
 ```text
-/estatisticas?competition=liga7-playball&season=2025&ranking=goals
+/estatisticas?competition=liga7-playball&season=2024&ranking=goals
 /jogos?competition=chuteira&season=2025&result=win&q=Panelinha
 /jogadores?status=active&sort=matches
 ```
 
-`src/lib/filters.ts` centraliza:
+`getPlayerStatLines()` consulta `player_competition_stats` no Supabase. A página
+`/estatisticas` filtra essas linhas por `competitionSlug` e `seasonSlug` antes
+de gerar artilharia, assistências, presença, participações e cartões. Em
+“Todos”, soma todas as linhas granulares, sem recorrer ao snapshot histórico.
 
-- filtro de jogos por campeonato;
-- filtro de jogos por temporada;
-- filtro de jogos por resultado;
-- busca simples por adversário;
-- filtro de jogadores por status;
-- ordenação de jogadores por nome, jogos, gols ou assistências.
+## Perfil do jogador
 
-## Cálculos
+`/jogadores/[slug]` resolve primeiro o UUID do jogador, busca suas linhas
+granulares e exibe uma tabela por campeonato e temporada. O total apresentado
+é calculado da soma das linhas mostradas. O admin do jogador exibe a mesma base,
+incluindo aba de origem e última atualização.
 
-`src/lib/stats.ts` calcula:
+## Estatísticas da equipe
 
-- jogos;
-- vitórias;
-- empates;
-- derrotas;
-- gols feitos;
-- gols sofridos;
-- saldo de gols;
-- aproveitamento;
-- média de gols feitos;
-- média de gols sofridos.
+Os cards de jogos, vitórias, empates, derrotas, gols feitos e sofridos são
+calculados de `matches`. A planilha possui 36 partidas no histórico, enquanto
+algumas abas individuais registram mais presenças. Essa diferença entre
+partidas e agregados de atletas é tratada como diagnóstico de fonte, não como
+um ajuste automático.
 
-Os cards de `/estatisticas` são recalculados a partir dos jogos filtrados.
-Quando não há partidas suficientes para o recorte, a página mostra um estado
-vazio elegante.
+## Consistência
 
-## Rankings
+Rode:
 
-Rankings disponíveis:
+```bash
+npm run validate:stats
+```
 
-- artilharia;
-- assistências;
-- presença;
-- participação em gols, calculada como gols + assistências;
-- cartões amarelos;
-- cartões vermelhos.
+O comando compara cada campo agregado com a aba histórica e atualiza
+`data/reports/stats-consistency-report.json`. Divergências permanecem visíveis
+em `/admin/diagnostico/dados`. Use `npm run validate:stats -- --strict` somente
+quando a planilha tiver sido reconciliada e qualquer diferença precisar falhar
+o processo.
 
-Quando há filtro por campeonato ou temporada, os rankings usam
-`player-stats.generated.ts`. Sem filtro contextual, os rankings usam a base
-histórica consolidada de jogadores.
+Consulte `docs/STATS_CONSISTENCY.md` para o procedimento completo.
 
 ## Limitações atuais
 
-- A relação jogador-partida ainda não vem normalizada da planilha.
-- Algumas partidas ainda têm competição ou local marcados como `A revisar`.
-- Os filtros por campeonato dependem da inferência feita no importador.
-- Fotos por jogo e por jogador continuam usando relações mockadas.
+- Nem toda estatística agregada tem uma linha correspondente por partida.
+- A planilha contém divergências reais entre as abas granulares e o histórico.
+- A edição de `player_competition_stats` no admin ainda é somente leitura.
+- Uma reimportação deve usar `seed:stats` e passar por revisão antes de produção.
 
-## Evolução futura
-
-Com Supabase, estes cálculos devem evoluir para consultas e views públicas sobre:
-
-- `matches`;
-- `players`;
-- `player_match_stats`;
-- `competitions`;
-- `seasons`.
-
-Dados financeiros continuarão em tabelas admin-only, protegidas por autenticação
-e RLS, sem retorno em rotas públicas.
+Dados financeiros continuam privados e nunca participam dessas consultas.

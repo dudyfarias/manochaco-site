@@ -1,6 +1,6 @@
 // Arquivo gerado automaticamente por scripts/import-manochaco-spreadsheet.ts.
 // Fonte: planilha-manochaco.xlsx
-// Gerado em: 2026-06-18T13:57:25.948Z
+// Gerado em: 2026-06-23T15:04:37.943Z
 // Nao edite manualmente; rode npm run import:spreadsheet.
 
 import type { Match } from "@/types";

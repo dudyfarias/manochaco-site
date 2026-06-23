@@ -2,12 +2,18 @@ import { createSupabaseServiceClient } from "../src/lib/supabase/service";
 import {
   albums,
   competitions,
+  historicalPlayerStatLines,
   matches,
   photoPlayers,
   photos,
+  playerStatLines,
   players,
   seasons,
 } from "../src/data";
+import {
+  getAliasesForPlayer,
+  normalizePlayerAlias,
+} from "../src/data/playerAliases";
 
 type IdSlugRow = {
   id: string;
@@ -16,6 +22,7 @@ type IdSlugRow = {
 
 let supabase: ReturnType<typeof createSupabaseServiceClient>;
 const isDryRun = process.argv.includes("--dry-run");
+const isStatsOnly = process.argv.includes("--stats-only");
 
 function toDate(value?: string) {
   return value ? value.slice(0, 10) : null;
@@ -110,6 +117,88 @@ async function main() {
   const competitionIdBySlug = await getIdBySlug("competitions");
   const seasonIdBySlug = await getIdBySlug("seasons");
   const playerIdBySlug = await getIdBySlug("players");
+
+  const usedAliases = new Set<string>();
+  await upsertRows(
+    "player_aliases",
+    players.flatMap((player) =>
+      getAliasesForPlayer(player).flatMap((alias) => {
+        const normalizedAlias = normalizePlayerAlias(alias);
+        if (!normalizedAlias || usedAliases.has(normalizedAlias)) return [];
+        const playerId = playerIdBySlug.get(player.slug);
+        if (!playerId) return [];
+        usedAliases.add(normalizedAlias);
+
+        return [{
+          player_id: playerId,
+          alias,
+          normalized_alias: normalizedAlias,
+        }];
+      }),
+    ),
+    "normalized_alias",
+  );
+
+  await upsertRows(
+    "player_competition_stats",
+    playerStatLines.flatMap((line) => {
+      const playerId = playerIdBySlug.get(line.playerSlug);
+      const competitionId = line.competitionSlug
+        ? competitionIdBySlug.get(line.competitionSlug)
+        : undefined;
+      const seasonId = line.seasonSlug
+        ? seasonIdBySlug.get(line.seasonSlug)
+        : undefined;
+
+      if (!playerId || !competitionId || !seasonId) {
+        console.warn(
+          `- player_competition_stats: linha ignorada sem relação (${line.playerSlug}, ${line.competitionSlug}, ${line.seasonSlug})`,
+        );
+        return [];
+      }
+
+      return [{
+        player_id: playerId,
+        competition_id: competitionId,
+        season_id: seasonId,
+        source_sheet: line.sourceSheet,
+        matches: line.matches,
+        goals: line.goals,
+        assists: line.assists,
+        yellow_cards: line.yellowCards ?? 0,
+        red_cards: line.redCards ?? 0,
+        clean_sheets: line.cleanSheets ?? 0,
+        goals_conceded: line.goalsConceded ?? 0,
+      }];
+    }),
+    "player_id,competition_id,season_id,source_sheet",
+  );
+
+  await upsertRows(
+    "player_historical_stats",
+    historicalPlayerStatLines.flatMap((line) => {
+      const playerId = playerIdBySlug.get(line.playerSlug);
+      if (!playerId) return [];
+
+      return [{
+        player_id: playerId,
+        source_sheet: line.sourceSheet,
+        matches: line.matches,
+        goals: line.goals,
+        assists: line.assists,
+        yellow_cards: line.yellowCards,
+        red_cards: line.redCards,
+        clean_sheets: line.cleanSheets,
+        goals_conceded: line.goalsConceded,
+      }];
+    }),
+    "player_id,source_sheet",
+  );
+
+  if (isStatsOnly) {
+    console.log("Seed esportivo concluído; jogos, galeria e fotos não foram alterados.");
+    return;
+  }
 
   const playedMatches = matches.filter((match) => match.status === "played" && match.result);
   const skippedMatches = matches.length - playedMatches.length;

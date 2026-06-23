@@ -6,6 +6,7 @@ import readExcelFile from "read-excel-file/node";
 import type {
   ClubStats,
   Competition,
+  HistoricalPlayerStatLine,
   Match,
   MatchResult,
   Player,
@@ -13,7 +14,19 @@ import type {
   PlayerStatLine,
   RankingRow,
   Season,
+  StatsConsistencyReport,
 } from "../src/types";
+import {
+  getCompetitionStatMappings,
+  getSheetMapping,
+  getValidationMappings,
+  type SheetMapping,
+} from "./config/sheet-mapping";
+import { resolveCanonicalPlayerSlug } from "../src/data/playerAliases";
+import {
+  aggregatePlayerStatLines,
+  buildStatsConsistencyReport,
+} from "../src/lib/stats-consistency";
 
 type Cell = string | number | boolean | Date | null;
 type Row = Cell[];
@@ -39,6 +52,7 @@ type RawGeneratedStats = {
 const PROJECT_ROOT = process.cwd();
 const DEFAULT_INPUT = path.join(PROJECT_ROOT, "data/raw/planilha-manochaco.xlsx");
 const GENERATED_DIR = path.join(PROJECT_ROOT, "src/data/generated");
+const REPORTS_DIR = path.join(PROJECT_ROOT, "data/reports");
 const PUBLIC_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp"] as const;
 
 const HISTORICAL_STATS_SHEET = "Estatística Histórica";
@@ -79,46 +93,6 @@ const EXPECTED_TOTALS = {
   titles: 2,
 };
 
-const PRIVATE_SHEET_PATTERNS = [
-  /financeiro/i,
-  /money/i,
-  /página28/i,
-  /pagina28/i,
-  /^amstel 1 2026$/i,
-  /^chuteira 1 2026$/i,
-  /^amstel 2s 2025$/i,
-];
-
-const PUBLIC_SPORT_SHEETS = [
-  HISTORICAL_STATS_SHEET,
-  MATCH_HISTORY_SHEET,
-  "Estatística Geral 2025",
-  "Liga 7 2025",
-  "Chuteira 2025",
-  "AMSTEL1 Estatística 2025",
-  "LIGA 7 Estatística 2023",
-  "LIGA 7 Estatística 2024",
-  "ESTRELATO Estatística 2024",
-  "Estatística 2024",
-];
-
-const PLAYER_SLUG_OVERRIDES: Record<string, string> = {
-  TORRES: "torres",
-  DUDU: "dudu",
-  BRUNINHO: "bruninho",
-  PEDRINHO: "pedrinho",
-  MADEUS: "madeus",
-  NIKOLLAS: "nikollas",
-  "ED GOU": "ed-gou",
-  "VICTOR ERIK": "victor-erik",
-  CASANOVA: "raphael-casanova",
-  DED: "andre-gouveia",
-  "DE MARCO": "de-marco",
-  "CARLOS JR": "carlos-jr",
-  "PE LIMA": "pe-lima",
-  "JF FAGUNDES": "jf-fagundes",
-};
-
 const PLAYER_BIOS: Record<string, string> = {
   torres:
     "Artilheiro histórico do Manochaco, referência ofensiva e líder em gols na base estatística oficial.",
@@ -142,17 +116,6 @@ const PLAYER_BIOS: Record<string, string> = {
     "Ex-jogador registrado no histórico e antigo técnico do Manochaco.",
 };
 
-const STAT_SHEETS_TO_IMPORT = [
-  "Estatística Geral 2025",
-  "ESTRELATO Estatística 2024",
-  "LIGA 7 Estatística 2024",
-  "AMSTEL1 Estatística 2025",
-  "Estatística 2024",
-  "LIGA 7 Estatística 2023",
-  "Liga 7 2025",
-  "Chuteira 2025",
-];
-
 function stripAccents(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
@@ -174,7 +137,7 @@ function buildHeaderMap(headerRow: Row) {
   const map = new Map<string, number>();
   headerRow.forEach((cell, index) => {
     const key = normalizeHeader(cell);
-    if (key) {
+    if (key && !map.has(key)) {
       map.set(key, index);
     }
   });
@@ -253,14 +216,18 @@ function parsePlayerName(value: string) {
     return null;
   }
 
-  return {
-    fullName: match[1].trim(),
-    nickname: match[2].trim().toUpperCase(),
-  };
+  const fullName = match[1].trim();
+  const nickname = match[2].trim().toUpperCase();
+
+  if (!fullName || fullName.length > 80 || !nickname || nickname.length > 30) {
+    return null;
+  }
+
+  return { fullName, nickname };
 }
 
 function toPlayerSlug(fullName: string, nickname: string) {
-  return PLAYER_SLUG_OVERRIDES[nickname] ?? slugify(nickname || fullName);
+  return resolveCanonicalPlayerSlug(fullName, nickname);
 }
 
 function resolvePublicImagePath(assetPathWithoutExtension: string) {
@@ -323,19 +290,12 @@ function makePlayerBio(player: {
 }
 
 function isPrivateSheet(sheetName: string) {
-  return PRIVATE_SHEET_PATTERNS.some((pattern) => pattern.test(sheetName));
+  return getSheetMapping(sheetName)?.financial === true;
 }
 
 function isPublicSportSheet(sheetName: string) {
-  if (isPrivateSheet(sheetName)) {
-    return false;
-  }
-
-  return (
-    PUBLIC_SPORT_SHEETS.includes(sheetName) ||
-    /estatística/i.test(sheetName) ||
-    /estatistica/i.test(sheetName)
-  );
+  const mapping = getSheetMapping(sheetName);
+  return Boolean(mapping?.import && !mapping.financial);
 }
 
 function parseHistoricalPlayers(sheet: Sheet) {
@@ -432,29 +392,7 @@ function parseHistoricalPlayers(sheet: Sheet) {
   return { players, warnings };
 }
 
-function inferCompetitionIdFromSheetName(sheetName: string) {
-  const normalized = stripAccents(sheetName).toLowerCase();
-
-  if (normalized.includes("liga 7") || normalized.includes("liga7")) {
-    return "liga7-playball";
-  }
-
-  if (normalized.includes("amstel")) {
-    return "copa-amstel";
-  }
-
-  if (normalized.includes("chuteira")) {
-    return "chuteira";
-  }
-
-  if (normalized.includes("futfudas")) {
-    return "copa-futfudas";
-  }
-
-  return undefined;
-}
-
-function parsePlayerStatLines(sheet: Sheet) {
+function parsePlayerStatLines(sheet: Sheet, mapping: SheetMapping) {
   const warnings: string[] = [];
   const headerIndex = sheet.data.findIndex((row) =>
     row.some((cell) => normalizeHeader(cell) === "jogadores"),
@@ -465,10 +403,10 @@ function parsePlayerStatLines(sheet: Sheet) {
   }
 
   const headers = buildHeaderMap(sheet.data[headerIndex]);
-  const season = extractYearFromSheetName(sheet.sheet);
-  const seasonSlug = season ? String(season) : undefined;
-  const competitionId = inferCompetitionIdFromSheetName(sheet.sheet);
-  const competitionSlug = competitionId;
+  const seasonSlug = mapping.seasonSlug;
+  const season = seasonSlug;
+  const competitionId = mapping.competitionSlug;
+  const competitionSlug = mapping.competitionSlug;
   const statLines: PlayerStatLine[] = [];
   const seenKeys = new Set<string>();
 
@@ -505,12 +443,28 @@ function parsePlayerStatLines(sheet: Sheet) {
     const redCards = Math.round(
       asNumber(getCell(row, headers, ["Cartões Vermelhos", "Cartões Vermelho"])),
     );
+    const cleanSheets = Math.round(
+      asNumber(getCell(row, headers, ["Clean-sheet", "Clean-Sheet", "Clean sheet"])),
+    );
+    const goalsConceded = Math.round(
+      asNumber(getCell(row, headers, ["Gols Sofridos", "Gols sofridos"])),
+    );
+    const position = toPosition(asText(getCell(row, headers, ["Posição"])));
+    const shirtNumber = asOptionalNumber(
+      getCell(row, headers, [
+        "Nº da Camisa",
+        "Nº da Camisa Branca",
+        "Nº da Camisa Preta",
+      ]),
+    );
 
     statLines.push({
       id: `stat-${slugify(sheet.sheet)}-${playerSlug}`,
       playerSlug,
       fullName: parsedName.fullName,
       nickname: parsedName.nickname,
+      position,
+      ...(shirtNumber ? { shirtNumber } : {}),
       ...(competitionId ? { competitionId } : {}),
       ...(competitionSlug ? { competitionSlug } : {}),
       ...(season ? { season: String(season) } : {}),
@@ -521,11 +475,94 @@ function parsePlayerStatLines(sheet: Sheet) {
       assists,
       yellowCards,
       redCards,
+      cleanSheets,
+      goalsConceded,
       goalParticipation: goals + assists,
     });
   }
 
   return { statLines, warnings };
+}
+
+function toHistoricalPlayerStatLines(statLines: PlayerStatLine[]) {
+  return statLines.map<HistoricalPlayerStatLine>((line) => ({
+    playerSlug: line.playerSlug,
+    fullName: line.fullName,
+    nickname: line.nickname,
+    sourceSheet: line.sourceSheet,
+    matches: line.matches,
+    goals: line.goals,
+    assists: line.assists,
+    yellowCards: line.yellowCards ?? 0,
+    redCards: line.redCards ?? 0,
+    cleanSheets: line.cleanSheets ?? 0,
+    goalsConceded: line.goalsConceded ?? 0,
+  }));
+}
+
+function applyCalculatedStats(players: Player[], statLines: PlayerStatLine[]) {
+  const totalsByPlayer = aggregatePlayerStatLines(statLines);
+
+  return players.map((player) => {
+    const totals = totalsByPlayer.get(player.slug);
+    if (!totals) return player;
+
+    return {
+      ...player,
+      stats: {
+        matches: totals.matches,
+        goals: totals.goals,
+        assists: totals.assists,
+        yellowCards: totals.yellowCards,
+        redCards: totals.redCards,
+        goalParticipation: totals.goals + totals.assists,
+      },
+    };
+  });
+}
+
+function addGranularOnlyPlayers(players: Player[], statLines: PlayerStatLine[]) {
+  const existingSlugs = new Set(players.map((player) => player.slug));
+  const totalsByPlayer = aggregatePlayerStatLines(statLines);
+  const sourceByPlayer = new Map(
+    statLines.map((line) => [line.playerSlug, line]),
+  );
+  const additions: Player[] = [];
+
+  for (const [playerSlug, totals] of totalsByPlayer) {
+    if (existingSlugs.has(playerSlug)) continue;
+    if (!totals.matches && !totals.goals && !totals.assists) continue;
+
+    const source = sourceByPlayer.get(playerSlug);
+    if (!source) continue;
+    const imagePath = resolvePublicImagePath(`/players/${playerSlug}`);
+
+    additions.push({
+      id: `player-${playerSlug}`,
+      slug: playerSlug,
+      name: source.fullName,
+      fullName: source.fullName,
+      nickname: source.nickname,
+      position: source.position ?? "Ala",
+      ...(source.shirtNumber ? { number: source.shirtNumber } : {}),
+      ...(source.shirtNumber ? { shirtNumber: source.shirtNumber } : {}),
+      status: "former",
+      image: imagePath,
+      profileImage: imagePath,
+      joinedYear: Number(source.seasonSlug) || 2023,
+      bio: "Atleta presente em uma aba esportiva granular e ainda sem linha correspondente na consolidação histórica.",
+      stats: {
+        matches: totals.matches,
+        goals: totals.goals,
+        assists: totals.assists,
+        yellowCards: totals.yellowCards,
+        redCards: totals.redCards,
+        goalParticipation: totals.goals + totals.assists,
+      },
+    });
+  }
+
+  return [...players, ...additions];
 }
 
 function inferCompetitionId(stage: string) {
@@ -816,6 +853,15 @@ function getCompetitions(): Competition[] {
       type: "cup",
     },
     {
+      id: "estrelato",
+      slug: "estrelato",
+      name: "Estrelato",
+      shortName: "Estrelato",
+      description:
+        "Competição registrada na planilha esportiva de 2024 do Manochaco.",
+      type: "other",
+    },
+    {
       id: "copa-amstel",
       slug: "copa-amstel",
       name: "Copa Amstel de sábado",
@@ -975,6 +1021,41 @@ function toPlayerStatsFile(statLines: PlayerStatLine[], sourceFile: string) {
   )};\n`;
 }
 
+function toHistoricalPlayerStatsFile(
+  statLines: HistoricalPlayerStatLine[],
+  sourceFile: string,
+) {
+  return `${makeGeneratedHeader(sourceFile)}import type { HistoricalPlayerStatLine } from "@/types";\n\nexport const historicalPlayerStatLines: HistoricalPlayerStatLine[] = ${serializeTs(
+    statLines,
+  )};\n`;
+}
+
+function toSeasonValidationStatsFile(
+  statLines: PlayerStatLine[],
+  sourceFile: string,
+) {
+  return `${makeGeneratedHeader(sourceFile)}import type { PlayerStatLine } from "@/types";\n\nexport const seasonValidationStatLines: PlayerStatLine[] = ${serializeTs(
+    statLines,
+  )};\n`;
+}
+
+function toStatsConsistencyFile(
+  report: StatsConsistencyReport,
+  sourceFile: string,
+) {
+  return `${makeGeneratedHeader(sourceFile)}import type { StatsConsistencyReport } from "@/types";\n\nexport const statsConsistencyReport: StatsConsistencyReport = ${serializeTs(
+    report,
+  )};\n`;
+}
+
+async function writeConsistencyReport(report: StatsConsistencyReport) {
+  await fs.mkdir(REPORTS_DIR, { recursive: true });
+  await fs.writeFile(
+    path.join(REPORTS_DIR, "stats-consistency-report.json"),
+    `${JSON.stringify(report, null, 2)}\n`,
+  );
+}
+
 async function pathExists(filePath: string) {
   try {
     await fs.access(filePath);
@@ -1062,11 +1143,13 @@ async function main() {
   const availableSheets = sheets.map((sheet) => sheet.sheet);
   const privateSheets = availableSheets.filter(isPrivateSheet);
   const publicSportSheets = availableSheets.filter(isPublicSportSheet);
+  const unmappedSheets = availableSheets.filter((sheetName) => !getSheetMapping(sheetName));
 
   console.log(`Planilha: ${inputPath}`);
   console.log(`Abas encontradas (${availableSheets.length}): ${availableSheets.join(", ")}`);
   console.log(`Abas esportivas usadas: ${publicSportSheets.join(", ")}`);
   console.log(`Abas privadas ignoradas: ${privateSheets.join(", ") || "nenhuma"}`);
+  console.log(`Abas sem mapeamento: ${unmappedSheets.join(", ") || "nenhuma"}`);
 
   const historicalSheet = sheets.find((sheet) => sheet.sheet === HISTORICAL_STATS_SHEET);
   const matchSheet = sheets.find((sheet) => sheet.sheet === MATCH_HISTORY_SHEET);
@@ -1079,31 +1162,87 @@ async function main() {
     throw new Error(`Aba obrigatoria ausente: ${MATCH_HISTORY_SHEET}`);
   }
 
+  const historicalMapping = getSheetMapping(HISTORICAL_STATS_SHEET);
+  if (!historicalMapping) {
+    throw new Error(`Mapeamento ausente: ${HISTORICAL_STATS_SHEET}`);
+  }
+
   const playerResult = parseHistoricalPlayers(historicalSheet);
   const matchResult = parseHistoricalMatches(matchSheet);
-  const statLineResults = sheets
-    .filter((sheet) => STAT_SHEETS_TO_IMPORT.includes(sheet.sheet))
-    .map(parsePlayerStatLines);
-  const playerStatLines = statLineResults.flatMap((result) => result.statLines);
+  const statLineResults = getCompetitionStatMappings().map((mapping) => {
+    const sheet = sheets.find((item) => item.sheet === mapping.sheetName);
+    return sheet
+      ? parsePlayerStatLines(sheet, mapping)
+      : {
+          statLines: [] as PlayerStatLine[],
+          warnings: [`Aba granular mapeada não encontrada: ${mapping.sheetName}.`],
+        };
+  });
+  const historicalPlayerSlugs = new Set(
+    playerResult.players.map((player) => player.slug),
+  );
+  const playerStatLines = statLineResults
+    .flatMap((result) => result.statLines)
+    .filter(
+      (line) =>
+        historicalPlayerSlugs.has(line.playerSlug) ||
+        line.matches > 0 ||
+        line.goals > 0 ||
+        line.assists > 0 ||
+        (line.yellowCards ?? 0) > 0 ||
+        (line.redCards ?? 0) > 0,
+    );
+  const historicalStatResult = parsePlayerStatLines(
+    historicalSheet,
+    historicalMapping,
+  );
+  const historicalPlayerStatLines = toHistoricalPlayerStatLines(
+    historicalStatResult.statLines,
+  );
+  const seasonValidationResults = getValidationMappings()
+    .filter((mapping) => mapping.kind === "season_validation")
+    .map((mapping) => {
+      const sheet = sheets.find((item) => item.sheet === mapping.sheetName);
+      return sheet
+        ? parsePlayerStatLines(sheet, mapping)
+        : {
+            statLines: [] as PlayerStatLine[],
+            warnings: [`Aba de validação não encontrada: ${mapping.sheetName}.`],
+          };
+    });
+  const seasonValidationStatLines = seasonValidationResults.flatMap(
+    (result) => result.statLines,
+  );
+  const calculatedPlayers = applyCalculatedStats(
+    addGranularOnlyPlayers(playerResult.players, playerStatLines),
+    playerStatLines,
+  );
+  const consistencyReport = buildStatsConsistencyReport({
+    sourceFile: path.basename(inputPath),
+    granularSheets: getCompetitionStatMappings().map((mapping) => mapping.sheetName),
+    validationSheets: getValidationMappings().map((mapping) => mapping.sheetName),
+    statLines: playerStatLines,
+    historicalLines: historicalPlayerStatLines,
+  });
   const rawStats = calculateStats(matchResult.matches);
-  const scoringRanking = rankPlayers(playerResult.players, "goals", "gols");
+  const scoringRanking = rankPlayers(calculatedPlayers, "goals", "gols");
   const assistsRanking = rankPlayers(
-    playerResult.players,
+    calculatedPlayers,
     "assists",
     "assistências",
   );
   const appearancesRanking = rankPlayers(
-    playerResult.players,
+    calculatedPlayers,
     "matches",
     "jogos",
   );
   const cardRanking = rankPlayers(
-    playerResult.players,
+    calculatedPlayers,
     "yellowCards",
     "cartões amarelos",
   );
   const goalParticipationRanking = rankPlayers(
-    playerResult.players,
+    calculatedPlayers,
     "goalParticipation",
     "participações em gol",
   );
@@ -1130,7 +1269,7 @@ async function main() {
 
   await writeGeneratedFile(
     "players.generated.ts",
-    toPlayersFile(playerResult.players, path.basename(inputPath)),
+    toPlayersFile(calculatedPlayers, path.basename(inputPath)),
   );
   await writeGeneratedFile(
     "matches.generated.ts",
@@ -1165,20 +1304,44 @@ async function main() {
     "player-stats.generated.ts",
     toPlayerStatsFile(playerStatLines, path.basename(inputPath)),
   );
+  await writeGeneratedFile(
+    "historical-player-stats.generated.ts",
+    toHistoricalPlayerStatsFile(historicalPlayerStatLines, path.basename(inputPath)),
+  );
+  await writeGeneratedFile(
+    "season-validation-stats.generated.ts",
+    toSeasonValidationStatsFile(seasonValidationStatLines, path.basename(inputPath)),
+  );
+  await writeGeneratedFile(
+    "stats-consistency.generated.ts",
+    toStatsConsistencyFile(consistencyReport, path.basename(inputPath)),
+  );
+  await writeConsistencyReport(consistencyReport);
 
   logWarnings("Avisos de jogadores", playerResult.warnings);
   logWarnings(
     "Avisos de estatísticas por aba",
     statLineResults.flatMap((result) => result.warnings),
   );
+  logWarnings(
+    "Avisos de estatísticas históricas",
+    historicalStatResult.warnings,
+  );
+  logWarnings(
+    "Avisos de consolidações anuais",
+    seasonValidationResults.flatMap((result) => result.warnings),
+  );
   logWarnings("Avisos de jogos", matchResult.warnings);
   logWarnings("Avisos de rankings", rankingWarnings);
   logWarnings("Avisos de estatísticas", statsWarnings);
 
   console.log("\nImportação concluída.");
-  console.log(`Jogadores gerados: ${playerResult.players.length}`);
+  console.log(`Jogadores gerados: ${calculatedPlayers.length}`);
   console.log(`Jogos gerados: ${matchResult.matches.length}`);
   console.log(`Linhas de estatísticas por aba geradas: ${playerStatLines.length}`);
+  console.log(
+    `Consistência histórica: ${consistencyReport.matchingPlayers} OK, ${consistencyReport.divergentPlayers} divergentes.`,
+  );
   console.log(`Temporadas geradas: ${seasons.length}`);
   console.log(`Saída: ${path.relative(PROJECT_ROOT, GENERATED_DIR)}`);
 }

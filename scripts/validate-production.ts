@@ -10,6 +10,9 @@ const requiredTables = [
   "seasons",
   "matches",
   "player_match_stats",
+  "player_aliases",
+  "player_competition_stats",
+  "player_historical_stats",
   "albums",
   "photos",
   "photo_player_tags",
@@ -26,6 +29,8 @@ const requiredTables = [
 ];
 
 const privateTables = [
+  "player_aliases",
+  "player_historical_stats",
   "player_face_references",
   "face_detection_suggestions",
   "member_profiles",

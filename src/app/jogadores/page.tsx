@@ -86,8 +86,8 @@ export default async function JogadoresPage({ searchParams }: JogadoresPageProps
           <div>
             <SectionTitle
               eyebrow="Jogadores"
-              title="Atletas históricos do Manochaco"
-              description="A página mostra por padrão todos os jogadores da aba Estatística Histórica da planilha. Use os filtros para ver ativos, ex-jogadores e comissão."
+              title="Atletas do Manochaco"
+              description="A página usa a base esportiva oficial do Supabase, com totais calculados pela soma das competições."
               tone="dark"
             />
             <div className="mt-8 flex flex-wrap gap-3">
@@ -102,7 +102,7 @@ export default async function JogadoresPage({ searchParams }: JogadoresPageProps
               dark
               label="Históricos"
               value={players.length}
-              detail="jogadores da planilha"
+              detail="jogadores na base"
             />
             <StatCard dark label="Ativos" value={activeCount} detail="grupo atual" />
             <StatCard

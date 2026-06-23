@@ -18,6 +18,10 @@ estruturados em `src/data/generated/` para revisão, preview e seed inicial:
 - competições;
 - temporadas.
 
+A aba histórica é uma referência de conferência. As estatísticas públicas são
+montadas das abas por competição e temporada, nunca copiadas do consolidado
+histórico para completar diferenças silenciosamente.
+
 Depois da migração, administradores devem manter os dados pelo painel:
 jogadores, jogos, estatísticas, fotos, álbuns, campeonatos, temporadas,
 patrocínios e financeiro privado.
@@ -63,29 +67,35 @@ planilha mais recente na pasta `Downloads` com o padrão de nome do Manochaco.
 Depois de revisar os dados gerados e configurar `.env.local`, rode:
 
 ```bash
-npm run seed:supabase
+npm run seed:stats
+npm run validate:stats
 ```
 
 Esse comando usa `SUPABASE_SERVICE_ROLE_KEY`, então deve rodar somente em
 ambiente local ou server-side confiável. Ele não deve ir para Client Components.
 
-## Abas usadas para dados esportivos
+`seed:stats` é o modo seguro para reimportação: não altera fotos, álbuns ou
+jogos já mantidos pelo admin. `seed:supabase` permanece reservado para a carga
+inicial completa e revisada.
 
-O script considera esportivas:
+## Mapeamento das abas esportivas
 
-- `Estatística Histórica`
-- `Jogos Histórico`
-- `Estatística Geral 2025`
-- `Liga 7 2025`
-- `Chuteira 2025`
-- `AMSTEL1 Estatística 2025`
-- `LIGA 7 Estatística 2023`
-- `LIGA 7 Estatística 2024`
-- `ESTRELATO Estatística 2024`
-- `Estatística 2024`
+O mapeamento fica em `scripts/config/sheet-mapping.ts`. As fontes granulares
+importadas para `player_competition_stats` são:
 
-Na importação atual, perfis de jogador vêm da aba `Estatística Histórica`, e
-jogos vêm da aba `Jogos Histórico`.
+| Aba | Campeonato | Temporada |
+| --- | --- | --- |
+| `LIGA 7 Estatística 2023` | Liga7 Playball | 2023 |
+| `ESTRELATO Estatística 2024` | Estrelato | 2024 |
+| `LIGA 7 Estatística 2024` | Liga7 Playball | 2024 |
+| `Liga 7 2025` | Liga7 Playball | 2025 |
+| `AMSTEL1 Estatística 2025` | Copa Amstel | 2025 |
+| `Chuteira 2025` | Chuteira | 2025 |
+
+`Estatística Histórica` é validação histórica; `Estatística 2024` e
+`Estatística Geral 2025` são consolidações anuais de validação. Somá-las às
+fontes granulares duplicaria dados. `Jogos Histórico` alimenta partidas, não os
+agregados individuais por competição.
 
 ## Abas privadas ou bloqueadas no site público
 
@@ -111,11 +121,17 @@ src/data/generated/
 ├── players.generated.ts
 ├── matches.generated.ts
 ├── player-stats.generated.ts
+├── historical-player-stats.generated.ts
+├── season-validation-stats.generated.ts
+├── stats-consistency.generated.ts
 ├── stats.generated.ts
 ├── rankings.generated.ts
 ├── competitions.generated.ts
 └── seasons.generated.ts
 ```
+
+O relatório detalhado também é salvo em
+`data/reports/stats-consistency-report.json`.
 
 Esses arquivos alimentam fallback local, preview e seed inicial. A fonte oficial
 após a migração deve ser o Supabase.
@@ -131,6 +147,8 @@ O script registra avisos para:
 - partidas sem placar válido;
 - rankings divergentes dos valores esperados;
 - estatísticas totais divergentes;
+- aliases ou apelidos inconsistentes entre abas;
+- diferenças campo a campo entre a soma granular e o histórico;
 - abas financeiras ignoradas.
 
 Avisos não interrompem a importação quando o dado pode ser revisado
@@ -138,16 +156,19 @@ manualmente.
 
 ## Nomes duplicados e slugs
 
-Os slugs são gerados a partir do apelido entre parênteses. Alguns apelidos têm
-mapa manual para preservar URLs importantes:
+Os slugs são resolvidos por `src/data/playerAliases.ts`. O arquivo reúne nome,
+apelido e variações conhecidas sob um único slug canônico. Exemplos:
 
 - `TORRES` vira `torres`
 - `DUDU` vira `dudu`
 - `ED GOU` vira `ed-gou`
 - `CASANOVA` vira `raphael-casanova`
 - `DED` vira `andre-gouveia`
+- `GRANDO` e `JOHN` viram `john`
 
-Se um slug duplicado aparecer, o script registra aviso e ignora o duplicado.
+Aliases também são enviados para a tabela privada `player_aliases`. Duplicatas
+ou ambiguidades são registradas no relatório e devem ser corrigidas no mapa,
+sem fundir jogadores automaticamente.
 
 ## Reimportações futuras
 
@@ -174,3 +195,9 @@ Reimportar planilhas depois do painel administrativo existir exige cuidado:
 A aba `Jogos Histórico` não possui coluna explícita de campeonato ou local.
 Por isso, partidas importadas usam fallback visual e marcam local/competição
 como dados preparados para revisão manual futura no painel.
+
+A primeira auditoria granular encontrou 26 jogadores sem divergência e 17 com
+diferenças em relação ao histórico. Entre os casos há valores realmente
+distintos nas abas de origem e um atleta presente apenas nas fontes granulares.
+Essas diferenças são preservadas em `docs/STATS_CONSISTENCY.md` e no relatório;
+o importador não fabrica lançamentos para forçar igualdade.

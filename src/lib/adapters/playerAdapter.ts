@@ -22,6 +22,15 @@ export type SupabasePlayerMatchStatsRow = {
   red_cards?: number | null;
 };
 
+export type SupabasePlayerCompetitionStatsRow = {
+  player_id: string;
+  matches?: number | null;
+  goals?: number | null;
+  assists?: number | null;
+  yellow_cards?: number | null;
+  red_cards?: number | null;
+};
+
 export type PlayerStatsAggregate = {
   matches: number;
   goals: number;
@@ -65,6 +74,29 @@ export function aggregatePlayerStats(rows: SupabasePlayerMatchStatsRow[]) {
       };
 
     current.matches += row.was_present === false ? 0 : 1;
+    current.goals += row.goals ?? 0;
+    current.assists += row.assists ?? 0;
+    current.yellowCards += row.yellow_cards ?? 0;
+    current.redCards += row.red_cards ?? 0;
+    aggregate.set(row.player_id, current);
+
+    return aggregate;
+  }, new Map());
+}
+
+export function aggregatePlayerCompetitionStats(
+  rows: SupabasePlayerCompetitionStatsRow[],
+) {
+  return rows.reduce<Map<string, PlayerStatsAggregate>>((aggregate, row) => {
+    const current = aggregate.get(row.player_id) ?? {
+      matches: 0,
+      goals: 0,
+      assists: 0,
+      yellowCards: 0,
+      redCards: 0,
+    };
+
+    current.matches += row.matches ?? 0;
     current.goals += row.goals ?? 0;
     current.assists += row.assists ?? 0;
     current.yellowCards += row.yellow_cards ?? 0;
