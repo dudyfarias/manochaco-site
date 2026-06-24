@@ -100,6 +100,9 @@ export class AwsRekognitionProvider implements FaceRecognitionProvider {
   }
 
   async indexPlayerFace(input: IndexPlayerFaceInput): Promise<IndexedPlayerFace> {
+    if (!input.imageBytes) {
+      throw new FaceRecognitionError("aws_image_missing", "Bytes da imagem ausentes.");
+    }
     await this.createOrEnsureCollection();
     const response = await this.client.send(
       new IndexFacesCommand({
@@ -134,7 +137,10 @@ export class AwsRekognitionProvider implements FaceRecognitionProvider {
     };
   }
 
-  async searchFacesInPhoto(input: SearchPhotoInput): Promise<FaceRecognitionMatch[]> {
+  async searchFacesInPhoto(input: SearchPhotoInput) {
+    if (!input.imageBytes) {
+      throw new FaceRecognitionError("aws_image_missing", "Bytes da imagem ausentes.");
+    }
     await this.createOrEnsureCollection();
     const scanExternalId = `scan-${input.photoId}-${Date.now()}`.slice(0, 255);
     const indexed = await this.client.send(
@@ -202,7 +208,11 @@ export class AwsRekognitionProvider implements FaceRecognitionProvider {
         });
       }
 
-      return matches;
+      return {
+        facesDetected: indexed.FaceRecords?.length ?? 0,
+        matches,
+        model: indexed.FaceModelVersion,
+      };
     } finally {
       if (temporaryFaceIds.length > 0) {
         try {

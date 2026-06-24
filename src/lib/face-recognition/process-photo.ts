@@ -10,7 +10,10 @@ import {
   getMinimumConfidence,
 } from "./index";
 import { FaceRecognitionError } from "./provider";
-import { readGalleryPhoto } from "./image-source";
+import {
+  createGalleryPhotoProcessingUrl,
+  readGalleryPhoto,
+} from "./image-source";
 
 type RecognitionPhotoRow = {
   id: string;
@@ -18,14 +21,16 @@ type RecognitionPhotoRow = {
   url: string;
 };
 
-type IndexedReferenceRow = {
+type IndexedEmbeddingRow = {
   id: string;
   player_id: string;
-  provider_face_id: string | null;
+  face_reference_id: string;
   embedding: unknown;
-  embedding_model: string | null;
+  embedding_model: string;
+  provider: string;
   approved_for_recognition: boolean;
   consent_given: boolean;
+  players?: { slug?: string | null } | null;
 };
 
 function numberArray(value: unknown): number[] | null {
@@ -132,47 +137,48 @@ export async function processGalleryPhoto(
   }
 
   try {
-    const imageBytes = await readGalleryPhoto(supabase, photo.url, requestOrigin);
     const provider = await getFaceRecognitionProvider();
-    const { data: referenceData, error: referenceError } = await supabase
-      .from("player_face_references")
+    const imageUrl = provider.name === "insightface"
+      ? await createGalleryPhotoProcessingUrl(supabase, photo.url, requestOrigin)
+      : undefined;
+    const imageBytes = provider.name === "insightface"
+      ? undefined
+      : await readGalleryPhoto(supabase, photo.url, requestOrigin);
+    const { data: embeddingData, error: embeddingError } = await supabase
+      .from("player_face_embeddings")
       .select(
-        "id, player_id, provider_face_id, embedding, embedding_model, approved_for_recognition, consent_given",
+        "id, player_id, face_reference_id, embedding, embedding_model, provider, approved_for_recognition, consent_given, players(slug)",
       )
       .eq("provider", provider.name)
       .eq("approved_for_recognition", true)
       .eq("consent_given", true);
 
-    if (referenceError) {
-      throw new FaceRecognitionError("reference_lookup_failed", referenceError.message);
+    if (embeddingError) {
+      throw new FaceRecognitionError("embedding_lookup_failed", embeddingError.message);
     }
 
-    const references = (referenceData ?? []) as IndexedReferenceRow[];
-    const embeddings = references.flatMap((reference) => {
-      const embedding = numberArray(reference.embedding);
+    const embeddingRows = (embeddingData ?? []) as IndexedEmbeddingRow[];
+    const embeddings = embeddingRows.flatMap((row) => {
+      const embedding = numberArray(row.embedding);
 
-      return embedding && reference.embedding_model
+      return embedding && row.players?.slug
         ? [{
-            referenceId: reference.id,
-            playerId: reference.player_id,
-            providerFaceId: reference.provider_face_id ?? undefined,
+            referenceId: row.face_reference_id,
+            playerId: row.player_id,
+            playerSlug: row.players.slug,
             embedding,
-            embeddingModel: reference.embedding_model,
+            embeddingModel: row.embedding_model,
           }]
         : [];
     });
-    const matches = await provider.searchFacesInPhoto({
+    const result = await provider.searchFacesInPhoto({
       imageBytes,
+      imageUrl,
       photoId: photo.id,
       minConfidence: getMinimumConfidence(),
       maxDistance: getMaximumDistance(),
       references: embeddings,
     });
-    const referencesByFaceId = new Map(
-      references
-        .filter((reference) => reference.provider_face_id)
-        .map((reference) => [reference.provider_face_id as string, reference]),
-    );
 
     const { error: cleanupError } = await supabase
       .from("face_detection_suggestions")
@@ -184,14 +190,10 @@ export async function processGalleryPhoto(
       throw new FaceRecognitionError("suggestion_cleanup_failed", cleanupError.message);
     }
 
-    if (matches.length > 0) {
-      const suggestions = matches.map((match) => ({
+    if (result.matches.length > 0) {
+      const suggestions = result.matches.map((match) => ({
         photo_id: photo.id,
-        suggested_player_id:
-          match.playerExternalId ??
-          (match.providerFaceId
-            ? referencesByFaceId.get(match.providerFaceId)?.player_id ?? null
-            : null),
+        suggested_player_id: match.playerExternalId ?? null,
         provider: match.provider,
         provider_face_id: match.providerFaceId ?? null,
         confidence: match.confidence,
@@ -208,7 +210,7 @@ export async function processGalleryPhoto(
       }
     }
 
-    const nextStatus = matches.length > 0 ? "needs_review" : "processed";
+    const nextStatus = result.matches.length > 0 ? "needs_review" : "processed";
     const { error: finalStatusError } = await supabase
       .from("photos")
       .update({ face_recognition_status: nextStatus })
@@ -219,20 +221,16 @@ export async function processGalleryPhoto(
     }
     await logAudit(context, "process_face_recognition", "photos", photo.id, {
       provider: provider.name,
-      detectedFaces: matches.length,
-      suggestedPlayers: matches.filter((match) =>
-        Boolean(
-          match.playerExternalId ||
-          (match.providerFaceId && referencesByFaceId.has(match.providerFaceId)),
-        ),
-      ).length,
+      model: result.model ?? null,
+      detectedFaces: result.facesDetected,
+      suggestedPlayers: result.matches.filter((match) => Boolean(match.playerExternalId)).length,
     });
 
     return {
       photoId: photo.id,
       photoSlug: photo.slug,
-      detectedFaces: matches.length,
-      suggestions: matches.length,
+      detectedFaces: result.facesDetected,
+      suggestions: result.matches.length,
       status: nextStatus,
     };
   } catch (error) {

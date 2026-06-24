@@ -8,7 +8,6 @@ import sharp from "sharp";
 import { FaceRecognitionError } from "./provider";
 import { findBestMatch } from "./similarity";
 import type {
-  FaceRecognitionMatch,
   FaceRecognitionProvider,
   IndexedPlayerFace,
   IndexPlayerFaceInput,
@@ -148,6 +147,9 @@ export class FaceApiRecognitionProvider implements FaceRecognitionProvider {
   }
 
   async indexPlayerFace(input: IndexPlayerFaceInput): Promise<IndexedPlayerFace> {
+    if (!input.imageBytes) {
+      throw new FaceRecognitionError("faceapi_image_missing", "Bytes da imagem ausentes.");
+    }
     const result = await detectDescriptors(input.imageBytes);
 
     if (result.detections.length === 0) {
@@ -182,10 +184,13 @@ export class FaceApiRecognitionProvider implements FaceRecognitionProvider {
     };
   }
 
-  async searchFacesInPhoto(input: SearchPhotoInput): Promise<FaceRecognitionMatch[]> {
+  async searchFacesInPhoto(input: SearchPhotoInput) {
+    if (!input.imageBytes) {
+      throw new FaceRecognitionError("faceapi_image_missing", "Bytes da imagem ausentes.");
+    }
     const result = await detectDescriptors(input.imageBytes);
 
-    return result.detections.map((detection) => {
+    const matches = result.detections.map((detection) => {
       const descriptor = Array.from(detection.descriptor);
       const match = findBestMatch(descriptor, input.references, input.maxDistance);
       const accepted = Boolean(match?.accepted);
@@ -209,6 +214,8 @@ export class FaceApiRecognitionProvider implements FaceRecognitionProvider {
         },
       };
     });
+
+    return { facesDetected: result.detections.length, matches, model: MODEL_NAME };
   }
 
   async deleteIndexedFace() {

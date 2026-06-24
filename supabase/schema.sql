@@ -248,6 +248,28 @@ create table if not exists public.player_face_references (
   )
 );
 
+create table if not exists public.player_face_embeddings (
+  id uuid primary key default gen_random_uuid(),
+  player_id uuid not null references public.players(id) on delete cascade,
+  face_reference_id uuid not null unique references public.player_face_references(id) on delete cascade,
+  embedding jsonb not null,
+  embedding_model text not null,
+  provider text not null default 'insightface',
+  consent_given boolean not null default false,
+  approved_for_recognition boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint player_face_embeddings_array_check check (
+    jsonb_typeof(embedding) = 'array' and jsonb_array_length(embedding) > 0
+  ),
+  constraint player_face_embeddings_provider_check check (
+    provider in ('insightface', 'faceapi', 'aws', 'mock')
+  ),
+  constraint player_face_embeddings_consent_check check (
+    consent_given and approved_for_recognition
+  )
+);
+
 create table if not exists public.face_detection_suggestions (
   id uuid primary key default gen_random_uuid(),
   photo_id uuid references public.photos(id) on delete cascade,
@@ -443,6 +465,8 @@ create index if not exists photos_is_public_idx on public.photos(is_public);
 create index if not exists photo_player_tags_photo_id_idx on public.photo_player_tags(photo_id);
 create index if not exists photo_player_tags_player_id_idx on public.photo_player_tags(player_id);
 create index if not exists face_detection_suggestions_status_idx on public.face_detection_suggestions(status);
+create index if not exists player_face_embeddings_player_id_idx on public.player_face_embeddings(player_id);
+create index if not exists player_face_embeddings_provider_idx on public.player_face_embeddings(provider);
 create index if not exists photos_face_recognition_queue_idx
 on public.photos(face_recognition_status, uploaded_at)
 where face_recognition_status in ('not_processed', 'queued', 'error');
@@ -500,6 +524,11 @@ for each row execute function public.set_updated_at();
 drop trigger if exists set_player_face_references_updated_at on public.player_face_references;
 create trigger set_player_face_references_updated_at
 before update on public.player_face_references
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_player_face_embeddings_updated_at on public.player_face_embeddings;
+create trigger set_player_face_embeddings_updated_at
+before update on public.player_face_embeddings
 for each row execute function public.set_updated_at();
 
 drop trigger if exists set_face_detection_suggestions_updated_at on public.face_detection_suggestions;

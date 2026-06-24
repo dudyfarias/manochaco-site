@@ -17,6 +17,7 @@ const requiredTables = [
   "photos",
   "photo_player_tags",
   "player_face_references",
+  "player_face_embeddings",
   "face_detection_suggestions",
   "admin_profiles",
   "member_profiles",
@@ -32,6 +33,7 @@ const privateTables = [
   "player_aliases",
   "player_historical_stats",
   "player_face_references",
+  "player_face_embeddings",
   "face_detection_suggestions",
   "member_profiles",
   "financial_transactions",
@@ -138,16 +140,53 @@ async function validateBuckets() {
   });
 }
 
-function validateFaceRecognitionEnv() {
-  const provider = process.env.FACE_RECOGNITION_PROVIDER ?? "mock";
-  const confidence = Number(process.env.FACE_RECOGNITION_MIN_CONFIDENCE ?? "0.75");
+async function validateFaceRecognitionEnv() {
+  const provider = process.env.FACE_RECOGNITION_PROVIDER?.trim() || "insightface";
+  const confidence = Number(
+    process.env.FACE_RECOGNITION_MIN_CONFIDENCE?.trim() || "0.75",
+  );
   const normalizedConfidence = confidence > 1 ? confidence / 100 : confidence;
-  const maxDistance = Number(process.env.FACE_RECOGNITION_MAX_DISTANCE ?? "0.6");
+  const maxDistance = Number(
+    process.env.FACE_RECOGNITION_MAX_DISTANCE?.trim() || "0.6",
+  );
 
-  if (!["mock", "faceapi", "aws"].includes(provider)) {
+  if (!["insightface", "faceapi", "aws", "mock"].includes(provider)) {
     fail(`FACE_RECOGNITION_PROVIDER não implementado: ${provider}.`);
   } else {
     pass(`Provider de reconhecimento facial configurado como ${provider}`);
+  }
+
+  if (provider !== "insightface") {
+    fail(`Produção deve usar FACE_RECOGNITION_PROVIDER=insightface; recebido ${provider}.`);
+  } else {
+    const apiUrl = process.env.FACE_RECOGNITION_API_URL?.trim();
+    const apiKey = process.env.FACE_RECOGNITION_API_KEY?.trim();
+    if (!apiUrl || !apiKey) {
+      fail("FACE_RECOGNITION_API_URL ou FACE_RECOGNITION_API_KEY ausente.");
+    } else {
+      try {
+        const response = await fetch(`${apiUrl.replace(/\/$/, "")}/health`, {
+          cache: "no-store",
+          signal: AbortSignal.timeout(15_000),
+        });
+        if (!response.ok) {
+          fail(`Health do InsightFace retornou HTTP ${response.status}.`);
+        } else {
+          const health = (await response.json()) as { ok?: boolean; model?: string };
+          if (health.ok) pass(`InsightFace disponível com modelo ${health.model ?? "não informado"}`);
+          else fail("Health do InsightFace não confirmou disponibilidade.");
+        }
+      } catch (error) {
+        fail(`InsightFace indisponível: ${error instanceof Error ? error.message : "erro de rede"}`);
+      }
+    }
+  }
+
+  const batchLimit = Number(process.env.FACE_RECOGNITION_BATCH_LIMIT?.trim() || "5");
+  if (!Number.isInteger(batchLimit) || batchLimit < 1 || batchLimit > 20) {
+    fail("FACE_RECOGNITION_BATCH_LIMIT deve estar entre 1 e 20.");
+  } else {
+    pass(`Lote facial limitado a ${batchLimit} foto(s)`);
   }
 
   if (provider === "aws") {
@@ -214,6 +253,10 @@ async function validateFaceRecognitionSchema() {
     .from("face_detection_suggestions")
     .select("id, provider, provider_face_id, raw_response, status")
     .limit(1);
+  const { error: embeddingError } = await supabase
+    .from("player_face_embeddings")
+    .select("id, player_id, face_reference_id, embedding_model, provider, consent_given, approved_for_recognition")
+    .limit(1);
 
   if (referenceError) {
     fail(`Schema de referências faciais: ${referenceError.message}`);
@@ -225,6 +268,12 @@ async function validateFaceRecognitionSchema() {
     fail(`Schema de sugestões faciais: ${suggestionError.message}`);
   } else {
     pass("Schema de sugestões faciais atualizado");
+  }
+
+  if (embeddingError) {
+    fail(`Schema de embeddings faciais: ${embeddingError.message}`);
+  } else {
+    pass("Schema privado de embeddings faciais atualizado");
   }
 }
 
@@ -250,7 +299,7 @@ async function main() {
     process.exit(1);
   }
 
-  validateFaceRecognitionEnv();
+  await validateFaceRecognitionEnv();
 
   for (const table of requiredTables) {
     await validateTable(table);

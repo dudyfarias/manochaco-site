@@ -5,7 +5,10 @@ import { logAudit } from "@/lib/admin/audit";
 import { getAdminSupabase } from "@/lib/admin/data";
 import { getFaceRecognitionProvider } from "./index";
 import { FaceRecognitionError } from "./provider";
-import { readPrivateFaceReference } from "./image-source";
+import {
+  createPrivateFaceReferenceUrl,
+  readPrivateFaceReference,
+} from "./image-source";
 
 type FaceReferenceRow = {
   id: string;
@@ -64,13 +67,43 @@ export async function indexPlayerFace(
   }
 
   try {
-    const imageBytes = await readPrivateFaceReference(supabase, reference.storage_path);
     const provider = await getFaceRecognitionProvider();
+    const imageUrl = provider.name === "insightface"
+      ? await createPrivateFaceReferenceUrl(supabase, reference.storage_path)
+      : undefined;
+    const imageBytes = provider.name === "insightface"
+      ? undefined
+      : await readPrivateFaceReference(supabase, reference.storage_path);
     const indexed = await provider.indexPlayerFace({
       imageBytes,
+      imageUrl,
       externalImageId: reference.player_id,
       referenceId: reference.id,
     });
+
+    if (!indexed.embedding || !indexed.embeddingModel) {
+      throw new FaceRecognitionError(
+        "embedding_missing",
+        "O provider não retornou um embedding persistível.",
+        "O serviço não retornou um embedding válido para a referência.",
+      );
+    }
+
+    const { error: embeddingError } = await supabase
+      .from("player_face_embeddings")
+      .upsert({
+        player_id: reference.player_id,
+        face_reference_id: reference.id,
+        embedding: indexed.embedding,
+        embedding_model: indexed.embeddingModel,
+        provider: indexed.provider,
+        consent_given: true,
+        approved_for_recognition: true,
+      }, { onConflict: "face_reference_id" });
+
+    if (embeddingError) {
+      throw new FaceRecognitionError("embedding_update_failed", embeddingError.message);
+    }
 
     const { error: updateError } = await supabase
       .from("player_face_references")
@@ -78,11 +111,9 @@ export async function indexPlayerFace(
         provider: indexed.provider,
         provider_face_id: indexed.providerFaceId,
         provider_collection_id: indexed.providerCollectionId,
-        embedding: indexed.embedding ?? null,
+        embedding: null,
         embedding_model: indexed.embeddingModel ?? null,
-        embedding_generated_at: indexed.embedding
-          ? new Date().toISOString()
-          : null,
+        embedding_generated_at: new Date().toISOString(),
         indexing_status: "indexed",
         indexing_error: null,
         indexed_at: new Date().toISOString(),

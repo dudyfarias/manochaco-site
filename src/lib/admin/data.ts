@@ -193,6 +193,18 @@ export type AdminFaceReferenceRow = {
   indexed_at: string | null;
   created_at: string | null;
   signed_url?: string | null;
+  face_embedding_id?: string | null;
+};
+
+export type AdminFaceEmbeddingRow = {
+  id: string;
+  player_id: string;
+  face_reference_id: string;
+  embedding_model: string;
+  provider: string;
+  consent_given: boolean;
+  approved_for_recognition: boolean;
+  updated_at: string | null;
 };
 
 export type AdminConfirmedPhotoTagRow = {
@@ -583,27 +595,58 @@ export async function listPhotoTags(photoId: string) {
 
 export async function listPlayerFaceReferences(playerId: string) {
   const supabase = await getAdminSupabase();
-  const { data, error } = await supabase
-    .from("player_face_references")
-    .select("*")
-    .eq("player_id", playerId)
-    .order("created_at", { ascending: false });
+  const [{ data, error }, embeddingResult] = await Promise.all([
+    supabase
+      .from("player_face_references")
+      .select("*")
+      .eq("player_id", playerId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("player_face_embeddings")
+      .select("id, player_id, face_reference_id, embedding_model, provider, consent_given, approved_for_recognition, updated_at")
+      .eq("player_id", playerId),
+  ]);
   const references = (assertAdminData(data, error, "player_face_references") ??
     []) as AdminFaceReferenceRow[];
+  const embeddings = (assertAdminData(
+    embeddingResult.data,
+    embeddingResult.error,
+    "player_face_embeddings",
+  ) ?? []) as AdminFaceEmbeddingRow[];
+  const embeddingByReference = new Map(
+    embeddings.map((embedding) => [embedding.face_reference_id, embedding]),
+  );
 
   return Promise.all(
     references.map(async (reference) => {
+      const embedding = embeddingByReference.get(reference.id);
+      const enrichedReference = {
+        ...reference,
+        embedding: null,
+        embedding_model: embedding?.embedding_model ?? reference.embedding_model,
+        embedding_generated_at: embedding?.updated_at ?? reference.embedding_generated_at,
+        face_embedding_id: embedding?.id ?? null,
+      };
       if (!reference.storage_path) {
-        return reference;
+        return enrichedReference;
       }
 
       const { data: signedData } = await supabase.storage
         .from("face-references")
         .createSignedUrl(reference.storage_path, 15 * 60);
 
-      return { ...reference, signed_url: signedData?.signedUrl ?? null };
+      return { ...enrichedReference, signed_url: signedData?.signedUrl ?? null };
     }),
   );
+}
+
+export async function countPlayerFaceEmbeddings() {
+  const supabase = await getAdminSupabase();
+  const { count, error } = await supabase
+    .from("player_face_embeddings")
+    .select("id", { count: "exact", head: true });
+  assertAdminData(null, error, "player_face_embeddings.count");
+  return count ?? 0;
 }
 
 export async function listPendingRecognitionPhotos() {

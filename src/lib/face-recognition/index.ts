@@ -1,5 +1,6 @@
 import {
   assertHumanReviewRequired,
+  assertProviderAllowedInRuntime,
   FaceRecognitionError,
   getFaceRecognitionProviderName,
 } from "./provider";
@@ -13,6 +14,7 @@ export async function getFaceRecognitionProvider(
 ): Promise<FaceRecognitionProvider> {
   assertHumanReviewRequired();
   const provider = requestedProvider ?? getFaceRecognitionProviderName();
+  assertProviderAllowedInRuntime(provider);
 
   if (provider === "mock") {
     const { MockFaceRecognitionProvider } = await import("./mock-provider");
@@ -29,10 +31,15 @@ export async function getFaceRecognitionProvider(
     return new AwsRekognitionProvider();
   }
 
+  if (provider === "insightface") {
+    const { InsightFaceRecognitionProvider } = await import("./insightface-provider");
+    return new InsightFaceRecognitionProvider();
+  }
+
   throw new FaceRecognitionError(
     "provider_not_implemented",
-    "O provider InsightFace ainda não foi implementado.",
-    "O InsightFace está reservado para uma integração futura. Use faceapi ou mock.",
+    `Provider não implementado: ${provider}.`,
+    "O provedor de reconhecimento facial não está disponível.",
   );
 }
 

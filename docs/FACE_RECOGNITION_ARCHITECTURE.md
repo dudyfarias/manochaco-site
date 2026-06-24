@@ -3,71 +3,94 @@
 ## Objetivo
 
 O reconhecimento facial organiza o acervo sugerindo jogadores presentes nas
-fotos. Nenhum resultado é publicado automaticamente: toda sugestão precisa ser
-confirmada, corrigida ou ignorada por um administrador.
+fotos. InsightFace detecta e compara rostos, mas não publica marcações. Toda
+sugestão precisa ser confirmada, corrigida ou ignorada por um administrador.
 
-## Providers
+## Componentes
 
-O contrato `FaceRecognitionProvider` fica em `src/lib/face-recognition/` e
-isola as telas e o banco da tecnologia usada:
+```text
+Next.js / Vercel
+├── autentica o admin
+├── gera URLs temporárias do Storage
+├── chama o microserviço com uma chave server-side
+├── grava embeddings e sugestões no Supabase
+└── mantém a revisão humana
 
-- `mock-provider.ts`: simula embeddings e sugestões para testar o fluxo.
-- `faceapi-provider.ts`: implementação open source com o fork mantido
-  `@vladmandic/face-api`, TensorFlow.js e modelos versionados em
-  `public/models/face-api/`.
-- `aws-rekognition.ts`: integração opcional legada.
-- `insightface`: reservado para um microserviço futuro.
+Microserviço Python / InsightFace
+├── valida a chave x-face-api-key
+├── baixa a imagem de origem segura
+├── detecta todos os rostos
+├── gera embeddings normalizados
+├── compara com embeddings autorizados
+└── retorna resultados sem acessar o Supabase
 
-O provider padrão é `mock`. `faceapi` roda apenas no Node.js server-side; a
-Vercel inclui os modelos no trace das duas Route Handlers.
+Supabase
+├── player_face_references: consentimento, arquivo e estado
+├── player_face_embeddings: vetores biométricos privados
+├── face_detection_suggestions: sugestões privadas
+└── photo_player_tags: somente vínculos revisados
+```
 
-## Referências e embeddings
+O serviço fica em `services/face-recognition/`. A integração server-side fica
+em `src/lib/face-recognition/insightface-provider.ts`. Face-api e AWS
+permanecem apenas como providers legados; o padrão é `insightface`. O provider
+`mock` é bloqueado quando `NODE_ENV=production`.
 
-1. O admin envia JPEG/PNG de até 5 MB em `/admin/jogadores/[id]`.
-2. A imagem entra no bucket privado `face-references`.
-3. Consentimento e aprovação ficam em `player_face_references`.
-4. A API autenticada valida a role e as duas autorizações.
-5. O provider detecta exatamente um rosto e gera um descritor de 128 valores.
-6. O embedding, modelo e data ficam em colunas privadas da referência.
+## Referência facial
 
-Revogar consentimento ou aprovação limpa embedding, identificadores e data de
-geração. Remover a referência também remove o arquivo privado.
+1. O admin envia JPEG ou PNG ao bucket privado `face-references`.
+2. `player_face_references` registra consentimento e aprovação.
+3. O Next.js cria uma URL assinada de cinco minutos.
+4. `/embed-face` exige exatamente um rosto e retorna o embedding.
+5. O Next.js grava o vetor em `player_face_embeddings` e atualiza o estado da
+   referência.
+6. Revogar consentimento ou remover a referência exclui o embedding privado.
 
-## Processamento da galeria
+O microserviço não recebe credenciais Supabase e não persiste dados.
 
-1. O admin solicita o processamento de uma foto.
-2. A foto passa para `processing` e é carregada de origem autorizada.
-3. O face-api detecta rostos e gera um embedding para cada um.
-4. `findBestMatch` compara o rosto com referências consentidas do provider.
-5. Distância máxima e confiança mínima decidem se há jogador sugerido.
-6. Cada rosto detectado gera uma sugestão `pending`, inclusive sem match.
+## Processamento de foto
+
+1. O admin solicita o processamento individual ou de até cinco fotos por lote.
+2. A foto muda para `processing`.
+3. O Next.js busca somente embeddings com consentimento e aprovação.
+4. `/process-photo` detecta todos os rostos e encontra o melhor match.
+5. Apenas matches aceitos voltam como sugestões.
+6. O Next.js grava cada resultado como `pending` em
+   `face_detection_suggestions`.
 7. A foto fica `needs_review`, `processed` ou `error`.
 
-`FACE_RECOGNITION_MAX_DISTANCE` controla o match do face-api por distância
-euclidiana; o padrão `0.6` é um ponto inicial, não uma garantia.
-`FACE_RECOGNITION_MIN_CONFIDENCE` permanece no contrato normalizado para
-providers baseados em confiança, como AWS. Os limiares precisam ser calibrados
-com fotos reais.
+Nenhum passo cria `photo_player_tags`. Essa tabela só é alterada pela decisão
+humana em `/admin/fotos/revisao`.
 
-## Revisão e publicação
+## Métrica e calibração
 
-`/admin/fotos/revisao` mostra bounding box, confiança e provider. Confirmar ou
-trocar cria `photo_player_tags` com `tag_type = ai_confirmed` e
-`confirmed_by_admin = true`. Ignorar não cria tag.
+O InsightFace retorna embeddings normalizados. O serviço usa similaridade de
+cosseno para aceite e mantém a distância euclidiana como diagnóstico:
 
-O site público consulta apenas tags confirmadas. Nunca consulta embeddings,
-fotos de referência, sugestões pendentes, respostas brutas ou IDs internos.
+- `FACE_MIN_CONFIDENCE`: confiança mínima da detecção do rosto;
+- `FACE_MATCH_THRESHOLD`: similaridade cosseno mínima no microserviço, padrão `0.35`;
+- `FACE_RECOGNITION_MIN_CONFIDENCE`: filtro adicional do Next.js, padrão
+  `0.75`;
+- `FACE_RECOGNITION_BATCH_LIMIT`: máximo por execução, padrão `5`.
 
-## Segurança e limites
+Esses valores devem ser calibrados com fotos reais do Manochaco. O valor
+`confidence` é um escore normalizado de ordenação, não uma probabilidade.
+Confiança alta nunca equivale a aprovação automática.
 
-- APIs exigem sessão e role administrativa de fotos.
-- Referências e embeddings são dados biométricos privados protegidos por RLS.
+## Segurança
+
+- A chave do microserviço nunca usa prefixo `NEXT_PUBLIC_`.
+- Apenas `/health` é público; os demais endpoints exigem `x-face-api-key`.
+- URLs locais, redes privadas, redirects e imagens acima do limite são
+  bloqueados pelo serviço.
+- Recomenda-se restringir hosts com `FACE_ALLOWED_IMAGE_HOSTS`.
+- Referências, embeddings, sugestões e respostas técnicas têm RLS privada.
 - `FACE_RECOGNITION_AUTO_APPROVE=true` é bloqueado em runtime.
-- Imagens externas arbitrárias são bloqueadas.
-- O processamento é síncrono e usa TensorFlow.js em CPU, portanto lotes grandes
-  devem migrar para fila ou microserviço.
-- Fotos coletivas pequenas, ângulo, luz e resolução afetam a detecção.
-- O provider `mock` é identificado no admin e não representa reconhecimento real.
+- Site público consulta somente tags com `confirmed_by_admin = true`.
 
-Se precisão ou escala forem insuficientes, a evolução recomendada está em
-`docs/INSIGHTFACE_FUTURE.md`.
+## Limites operacionais
+
+O `buffalo_l` tem download e inicialização pesados. O modelo é carregado uma
+vez por processo e fica fora da Vercel. Para escala maior, o próximo passo é
+uma fila assíncrona, cache persistente do modelo e métricas de precisão por
+tipo de foto.

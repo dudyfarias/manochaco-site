@@ -48,6 +48,25 @@ export async function readPrivateFaceReference(
   return blobToFaceImageBytes(data);
 }
 
+export async function createPrivateFaceReferenceUrl(
+  supabase: SupabaseClient,
+  storagePath: string,
+) {
+  const { data, error } = await supabase.storage
+    .from("face-references")
+    .createSignedUrl(storagePath, 5 * 60);
+
+  if (error || !data?.signedUrl) {
+    throw new FaceRecognitionError(
+      "reference_signed_url_failed",
+      error?.message ?? "Não foi possível assinar a referência facial.",
+      "Não foi possível criar uma URL temporária para a foto de referência.",
+    );
+  }
+
+  return data.signedUrl;
+}
+
 function storagePathFromPublicPhotoUrl(photoUrl: string) {
   try {
     const url = new URL(photoUrl);
@@ -123,4 +142,36 @@ export async function readGalleryPhoto(
   }
 
   return blobToFaceImageBytes(await response.blob());
+}
+
+export async function createGalleryPhotoProcessingUrl(
+  supabase: SupabaseClient,
+  photoUrl: string,
+  requestOrigin: string,
+) {
+  const storagePath = storagePathFromPublicPhotoUrl(photoUrl);
+
+  if (storagePath) {
+    const { data, error } = await supabase.storage
+      .from("photos")
+      .createSignedUrl(storagePath, 5 * 60);
+    if (error || !data?.signedUrl) {
+      throw new FaceRecognitionError(
+        "photo_signed_url_failed",
+        error?.message ?? "Não foi possível assinar a foto.",
+        "Não foi possível criar uma URL temporária para a foto.",
+      );
+    }
+    return data.signedUrl;
+  }
+
+  const target = new URL(photoUrl, requestOrigin);
+  if (!new Set(["http:", "https:"]).has(target.protocol)) {
+    throw new FaceRecognitionError(
+      "photo_source_not_allowed",
+      `Protocolo não autorizado: ${target.protocol}`,
+      "A foto precisa estar disponível por HTTP ou HTTPS.",
+    );
+  }
+  return target.toString();
 }

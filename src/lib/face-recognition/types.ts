@@ -9,13 +9,15 @@ export type FaceRecognitionProviderName =
 export interface FaceReferenceEmbedding {
   referenceId: string;
   playerId: string;
+  playerSlug: string;
   embedding: number[];
   embeddingModel: string;
   providerFaceId?: string;
 }
 
 export interface IndexPlayerFaceInput {
-  imageBytes: Uint8Array;
+  imageBytes?: Uint8Array;
+  imageUrl?: string;
   externalImageId: string;
   referenceId: string;
 }
@@ -31,7 +33,8 @@ export interface IndexedPlayerFace {
 }
 
 export interface SearchPhotoInput {
-  imageBytes: Uint8Array;
+  imageBytes?: Uint8Array;
+  imageUrl?: string;
   photoId: string;
   minConfidence: number;
   maxDistance: number;
@@ -47,10 +50,24 @@ export interface FaceRecognitionMatch {
   raw?: unknown;
 }
 
+export interface FaceSearchResult {
+  facesDetected: number;
+  matches: FaceRecognitionMatch[];
+  model?: string;
+}
+
+export interface FaceRecognitionHealth {
+  ok: boolean;
+  provider: FaceRecognitionProviderName;
+  model?: string;
+  modelLoaded?: boolean;
+}
+
 export interface FaceRecognitionProvider {
   readonly name: FaceRecognitionProviderName;
   createOrEnsureCollection(): Promise<string>;
   indexPlayerFace(input: IndexPlayerFaceInput): Promise<IndexedPlayerFace>;
-  searchFacesInPhoto(input: SearchPhotoInput): Promise<FaceRecognitionMatch[]>;
+  searchFacesInPhoto(input: SearchPhotoInput): Promise<FaceSearchResult>;
   deleteIndexedFace(providerFaceId: string): Promise<void>;
+  health?(): Promise<FaceRecognitionHealth>;
 }

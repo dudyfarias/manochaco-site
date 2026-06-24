@@ -28,6 +28,7 @@ import {
   listPhotoTags,
 } from "@/lib/admin/data";
 import { faceRecognitionStatusLabels } from "@/lib/photos";
+import { getFaceRecognitionProviderName } from "@/lib/face-recognition/provider";
 import type { FaceRecognitionStatus } from "@/types";
 
 type PhotoDetailPageProps = {
@@ -44,6 +45,7 @@ export default async function PhotoDetailPage({
   searchParams,
 }: PhotoDetailPageProps) {
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const recognitionProvider = getFaceRecognitionProviderName();
   const [photo, albums, matches, competitions, seasons, players, tags] =
     await Promise.all([
       getAdminPhoto(id),
@@ -222,6 +224,14 @@ export default async function PhotoDetailPage({
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
               O processamento gera sugestões internas. Nenhuma marcação será publicada sem confirmação humana na fila de revisão.
             </p>
+            <p className="mt-2 text-xs font-black uppercase text-[#9a6a12]">
+              Provider: {recognitionProvider}
+            </p>
+            {recognitionProvider !== "insightface" ? (
+              <p className="mt-2 text-sm font-bold text-amber-800">
+                Configure o InsightFace antes de processar fotos reais em produção.
+              </p>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-start gap-3">
             <FaceRecognitionActionButton

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.13.0 - 2026-06-24
+
+- Criação do microserviço FastAPI em `services/face-recognition` com InsightFace, ONNX Runtime, autenticação por chave e Dockerfile.
+- Implementação real de `/health`, `/embed-face`, `/process-photo` e `/compare`, com limites de imagem, timeout e proteção contra URLs privadas.
+- Novo provider `insightface` server-side no Next.js; mock passa a ser bloqueado em produção e face-api fica como legado.
+- Referências privadas passam a usar URLs assinadas curtas; o microserviço não recebe credenciais Supabase.
+- Criação de `player_face_embeddings` com RLS privada, migração de vetores legados e remoção automática por cascade.
+- Processamento consulta somente embeddings consentidos e salva sugestões pendentes sem publicar tags automaticamente.
+- Admin de reconhecimento passa a exibir health, URL, modelo, total de embeddings, fila e teste de conexão.
+- Lote limitado por `FACE_RECOGNITION_BATCH_LIMIT`, com relatório de processadas, sugestões, fotos sem rosto e erros.
+- Calibração inicial com três referências reais do DUDU e correção do aceite para similaridade de cosseno.
+- Teste real do `buffalo_l` detectou 11 rostos na imagem coletiva usada para validação local.
+- Documentação de arquitetura, setup, deploy separado, LGPD, Storage e segurança atualizada.
+
 ## 0.12.0 - 2026-06-23
 
 - Estatísticas de jogadores reestruturadas por campeonato, temporada e aba de origem em `player_competition_stats`.

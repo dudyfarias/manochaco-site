@@ -49,7 +49,10 @@ face-references/dudu/reference-001.jpg
 - O perfil admin do jogador envia JPEG/PNG de até 5 MB para `face-references`.
 - A interface recebe apenas signed URL temporária para pré-visualização administrativa.
 - `storage_path` é usado pelo servidor para download autenticado durante a indexação.
-- Revogar consentimento limpa o embedding; remover a referência também exclui o objeto privado.
+- `player_face_embeddings` guarda o vetor separado da referência e sem leitura
+  pública.
+- Revogar consentimento remove o embedding; remover a referência exclui vetor e
+  objeto privado.
 
 ## Reconhecimento facial
 
@@ -57,7 +60,8 @@ face-references/dudu/reference-001.jpg
 - O download do bucket privado usa a sessão Supabase do admin e as policies de `storage.objects`.
 - Fotos públicas do bucket `photos` são baixadas pelo SDK quando a URL permite recuperar o path.
 - Arquivos locais do próprio site podem ser processados; hosts externos arbitrários são bloqueados.
-- O face-api processa bytes apenas no servidor. Providers externos opcionais não recebem credenciais Supabase.
+- O Next.js cria URLs assinadas curtas para o microserviço InsightFace.
+- O microserviço não recebe credenciais Supabase e não grava no banco.
 
 ## Relação com o site
 

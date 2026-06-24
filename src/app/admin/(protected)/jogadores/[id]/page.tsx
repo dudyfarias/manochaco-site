@@ -174,6 +174,11 @@ export default async function EditPlayerPage({
         <p className="mt-3 text-xs font-black uppercase text-[#9a6a12]">
           Provedor ativo: {recognitionProvider === "mock" ? "simulação local" : recognitionProvider}
         </p>
+        {recognitionProvider !== "insightface" ? (
+          <p className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-950">
+            O provider ativo não é InsightFace. Não gere novas referências em produção até concluir a configuração do microserviço.
+          </p>
+        ) : null}
 
         <div className="mt-6 grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
           <AdminCard>
@@ -240,6 +245,11 @@ export default async function EditPlayerPage({
                     <p className="mt-2 text-xs text-zinc-600">
                       Consentimento: {reference.consent_given ? "sim" : "não"} · Aprovação: {reference.approved_for_recognition ? "sim" : "não"}
                     </p>
+                    {reference.face_embedding_id ? (
+                      <p className="mt-2 break-all text-xs text-zinc-500">
+                        Embedding privado: {reference.face_embedding_id}
+                      </p>
+                    ) : null}
                     {reference.provider_face_id ? (
                       <p className="mt-2 break-all text-xs text-zinc-500">
                         Face ID: {reference.provider_face_id}

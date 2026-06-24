@@ -30,6 +30,27 @@ async function main() {
     console.log("✓ A camada pública consulta player_competition_stats");
   }
 
+  const providerLayer = await fs.readFile("src/lib/face-recognition/provider.ts", "utf8");
+  const providerFactory = await fs.readFile("src/lib/face-recognition/index.ts", "utf8");
+  if (!providerLayer.includes('return "insightface"')) {
+    failures += 1;
+    console.error("✗ InsightFace não é o provider padrão");
+  } else {
+    console.log("✓ InsightFace é o provider padrão");
+  }
+  if (!providerLayer.includes('provider === "mock"') || !providerLayer.includes('NODE_ENV === "production"')) {
+    failures += 1;
+    console.error("✗ Provider mock não está bloqueado em produção");
+  } else {
+    console.log("✓ Provider mock está bloqueado em produção");
+  }
+  if (!providerFactory.includes('import("./insightface-provider")')) {
+    failures += 1;
+    console.error("✗ Factory não carrega o provider InsightFace");
+  } else {
+    console.log("✓ Factory carrega o provider InsightFace apenas server-side");
+  }
+
   const env = getSupabasePublicEnv();
   if (env.url && env.anonKey) {
     const supabase = createClient(env.url, env.anonKey, {

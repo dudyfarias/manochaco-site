@@ -21,7 +21,10 @@ import {
   listPendingRecognitionPhotos,
   getPhotoRecognitionSummary,
 } from "@/lib/admin/data";
-import { getFaceRecognitionProviderName } from "@/lib/face-recognition/provider";
+import {
+  getFaceRecognitionBatchLimit,
+  getFaceRecognitionProviderName,
+} from "@/lib/face-recognition/provider";
 
 type ReviewPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -33,6 +36,7 @@ export const metadata: Metadata = {
 
 export default async function AdminReviewPage({ searchParams }: ReviewPageProps) {
   const provider = getFaceRecognitionProviderName();
+  const batchLimit = getFaceRecognitionBatchLimit();
   const [params, suggestions, players, pendingPhotos, summary] = await Promise.all([
     searchParams,
     listPendingFaceSuggestions(),
@@ -66,6 +70,7 @@ export default async function AdminReviewPage({ searchParams }: ReviewPageProps)
           <ProcessPendingPhotosButton
             photoIds={pendingPhotos.map((photo) => photo.id)}
             provider={provider}
+            batchLimit={batchLimit}
           />
         </div>
       </AdminCard>

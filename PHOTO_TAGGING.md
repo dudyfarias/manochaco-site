@@ -66,10 +66,12 @@ A persistência real será feita nas tabelas:
 - `albums`;
 - `photo_player_tags`;
 - `player_face_references`;
+- `player_face_embeddings`;
 - `face_detection_suggestions`.
 
 O site público consulta somente `photo_player_tags` confirmadas. Sugestões em
-`face_detection_suggestions` seguem internas até revisão humana.
+`face_detection_suggestions` seguem internas até revisão humana; embeddings
+permanecem privados e nunca são conteúdo público.
 
 No Storage:
 
@@ -94,10 +96,11 @@ Reconhecimento facial só deve sugerir marcações. O fluxo correto:
 5. Um humano confirma, troca ou ignora cada sugestão.
 6. Apenas marcações aprovadas aparecem no site público.
 
-O fluxo usa provider modular: `faceapi` gera embeddings open source no servidor
-e `mock` testa a operação sem ML real. A revisão fica em
+O fluxo usa provider modular: o microserviço InsightFace gera embeddings fora
+da Vercel. Mock existe apenas para testes automatizados e é bloqueado em
+produção. A revisão fica em
 `/admin/fotos/revisao`, com confiança, provider e bounding box. A interface
-processa fotos pendentes uma por vez.
+processa lotes pequenos e limitados.
 
 ## Cuidados
 

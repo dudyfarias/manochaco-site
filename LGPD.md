@@ -64,11 +64,15 @@ uso real:
 
 - A referência fica no bucket privado `face-references`.
 - Consentimento e aprovação são validados antes da indexação.
-- O face-api.js gera um embedding no servidor; referência e embedding permanecem privados no Supabase.
+- O microserviço InsightFace gera o embedding sem acesso direto ao Supabase.
+- O vetor fica em `player_face_embeddings`, separado da referência e protegido
+  por RLS.
 - Fotos coletivas geram sugestões pendentes, nunca tags públicas automáticas.
 - Confirmar ou trocar uma sugestão é uma decisão humana auditada.
 - Revogar consentimento limpa embedding, identificadores e metadados; integrações externas são removidas em melhor esforço sem impedir o direito de exclusão local.
 - `raw_response`, Face IDs e referências não são expostos nas APIs públicas.
+- URLs de referências expiram rapidamente e o serviço exige uma chave
+  server-side.
 
 Antes da ativação em produção, o clube deve registrar base legal aplicável,
 responsável pelo tratamento, política de retenção e canal de atendimento ao

@@ -345,11 +345,18 @@ export async function updatePlayerFaceReferenceConsent(formData: FormData) {
   const consentGiven = formData.get("consent_given") === "on";
   const approvedForRecognition =
     formData.get("approved_for_recognition") === "on";
-  const { data, error } = await supabase
-    .from("player_face_references")
-    .select("provider, provider_face_id, embedding")
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data, error }, embeddingResult] = await Promise.all([
+    supabase
+      .from("player_face_references")
+      .select("provider, provider_face_id, embedding")
+      .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("player_face_embeddings")
+      .select("id")
+      .eq("face_reference_id", id)
+      .maybeSingle(),
+  ]);
 
   if (error || !data) {
     redirect(
@@ -361,12 +368,31 @@ export async function updatePlayerFaceReferenceConsent(formData: FormData) {
     );
   }
 
+  if (embeddingResult.error) {
+    redirect(
+      adminMessageHref(
+        `/admin/jogadores/${playerId}`,
+        "error",
+        embeddingResult.error.message,
+      ),
+    );
+  }
+
   const revokingIndexedReference =
-    Boolean(data.provider_face_id || data.embedding) &&
+    Boolean(data.provider_face_id || data.embedding || embeddingResult.data) &&
     (!consentGiven || !approvedForRecognition);
 
   if (revokingIndexedReference) {
     await removeProviderFaceBestEffort(data.provider, data.provider_face_id);
+    const { error: embeddingDeleteError } = await supabase
+      .from("player_face_embeddings")
+      .delete()
+      .eq("face_reference_id", id);
+    if (embeddingDeleteError) {
+      redirect(
+        adminMessageHref(`/admin/jogadores/${playerId}`, "error", embeddingDeleteError.message),
+      );
+    }
   }
 
   const { error: updateError } = await supabase

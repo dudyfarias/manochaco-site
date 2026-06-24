@@ -37,21 +37,22 @@ export class MockFaceRecognitionProvider implements FaceRecognitionProvider {
     };
   }
 
-  async searchFacesInPhoto(input: SearchPhotoInput): Promise<FaceRecognitionMatch[]> {
+  async searchFacesInPhoto(input: SearchPhotoInput) {
     const reference = input.references[0];
 
     if (!reference) {
-      return [];
+      return { facesDetected: 0, matches: [] };
     }
 
-    return [{
+    const match: FaceRecognitionMatch = {
       provider: this.name,
       providerFaceId: reference.providerFaceId ?? `mock-${reference.referenceId}`,
       playerExternalId: reference.playerId,
       confidence: 0.95,
       boundingBox: { x: 0.35, y: 0.2, width: 0.3, height: 0.45 },
       raw: { simulated: true, model: "mock-embedding-v1" },
-    }];
+    };
+    return { facesDetected: 1, matches: [match], model: "mock-embedding-v1" };
   }
 
   async deleteIndexedFace() {}

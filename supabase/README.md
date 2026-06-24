@@ -26,6 +26,8 @@ O Auth usa `https://manochaco-site.vercel.app` como Site URL e aceita o callback
   `search_path` e remove execução pública de função administrativa.
 - `migrations/20260622164522_add_member_birth_date.sql`: troca a coleta do ano
   pela data de nascimento completa e descontinua a mensagem livre no cadastro.
+- `migrations/20260624140800_add_insightface_embeddings.sql`: cria a tabela
+  privada de embeddings e migra vetores legados consentidos.
 
 ## Ordem sugerida
 
@@ -67,7 +69,7 @@ service role não participa das rotas de indexação ou processamento.
   `sponsorship_contracts`.
 - As tabelas financeiras não possuem leitura pública e devem ser acessadas
   apenas por `super_admin` ou `finance_admin`.
-- Sugestões de IA e referências faciais não possuem policy de leitura pública.
+- Sugestões, referências e embeddings faciais não possuem leitura pública.
 - Perfis de membros não possuem leitura anônima; cada usuário lê o próprio
   registro e somente admins esportivos revisam a fila completa.
 - Tipo de conta pública nunca deve ser confundido com role administrativa.

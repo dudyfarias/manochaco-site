@@ -14,6 +14,7 @@ alter table public.albums enable row level security;
 alter table public.photos enable row level security;
 alter table public.photo_player_tags enable row level security;
 alter table public.player_face_references enable row level security;
+alter table public.player_face_embeddings enable row level security;
 alter table public.face_detection_suggestions enable row level security;
 alter table public.admin_profiles enable row level security;
 alter table public.member_profiles enable row level security;
@@ -49,6 +50,7 @@ grant select, insert, update, delete on public.albums to authenticated;
 grant select, insert, update, delete on public.photos to authenticated;
 grant select, insert, update, delete on public.photo_player_tags to authenticated;
 grant select, insert, update, delete on public.player_face_references to authenticated;
+grant select, insert, update, delete on public.player_face_embeddings to authenticated;
 grant select, insert, update, delete on public.face_detection_suggestions to authenticated;
 grant select, insert, update, delete on public.admin_profiles to authenticated;
 grant select, insert, update on public.member_profiles to authenticated;
@@ -310,6 +312,14 @@ drop policy if exists "Photo admins can manage face references" on public.player
 drop policy if exists "Admins can manage face references" on public.player_face_references;
 create policy "Photo admins can manage face references"
 on public.player_face_references
+for all
+to authenticated
+using (private.can_manage_photos())
+with check (private.can_manage_photos());
+
+drop policy if exists "Photo admins can manage face embeddings" on public.player_face_embeddings;
+create policy "Photo admins can manage face embeddings"
+on public.player_face_embeddings
 for all
 to authenticated
 using (private.can_manage_photos())

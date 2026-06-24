@@ -2,8 +2,8 @@
 
 O admin MVP implementa autenticação, upload de fotos públicas no Supabase
 Storage e persistência de álbuns, fotos e tags manuais. A Fase 9 adiciona
-referências privadas, embeddings com face-api.js e revisão real de sugestões em
-`/admin/fotos/revisao`.
+referências privadas, embeddings com InsightFace em microserviço e revisão real
+de sugestões em `/admin/fotos/revisao`.
 
 O painel é a fonte oficial para fotos, álbuns e marcações depois da migração
 inicial. O acervo local em `public/` fica como fallback e apoio de
@@ -30,9 +30,9 @@ desenvolvimento.
 6. Administrador confirma, troca jogador ou ignora.
 7. Apenas sugestões confirmadas viram tags públicas `ai_confirmed`.
 
-O processamento em lote é sequencial: o navegador chama uma Route Handler por
-foto. Esse desenho reduz timeout e deixa cada falha identificável, mas ainda não
-substitui uma fila durável para grandes volumes.
+O processamento em lote é sequencial e limitado por configuração: o navegador
+chama uma Route Handler por foto. Esse desenho reduz timeout e deixa cada falha
+identificável, mas ainda não substitui uma fila durável para grandes volumes.
 
 ## Campos principais
 

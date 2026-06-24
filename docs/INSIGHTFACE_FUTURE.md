@@ -1,20 +1,18 @@
-# InsightFace futuro
+# Evolução futura do InsightFace
 
 ## Por que considerar
 
-InsightFace oferece modelos modernos e costuma ser mais robusto que face-api
-em variações de pose, iluminação e idade. É a evolução recomendada se os testes
-com fotos reais do Manochaco mostrarem precisão insuficiente.
+InsightFace já é o provider principal. Este documento registra as evoluções
+posteriores ao microserviço inicial.
 
 ## Arquitetura proposta
 
-- Microserviço Python separado da Vercel, com CPU dedicada ou GPU.
-- API interna autenticada para gerar embeddings e processar fotos.
+- Fila durável para processamento assíncrono.
+- CPU dedicada ou GPU conforme medição.
 - Supabase Storage continua guardando imagens públicas e referências privadas.
 - Supabase Postgres continua guardando embeddings, sugestões e revisão.
-- Next.js envia trabalhos ao serviço e recebe resultados normalizados pelo
-  contrato `FaceRecognitionProvider`.
-- Em escala, uma fila processa fotos fora da request do navegador.
+- Métricas de falsos positivos e negativos por tipo de foto.
+- Migração opcional para `pgvector` quando houver volume que justifique índice.
 
 ## Segurança
 
@@ -24,5 +22,5 @@ com fotos reais do Manochaco mostrarem precisão insuficiente.
 - Embeddings tratados como biometria e removíveis.
 - Sugestões continuam `pending`; revisão humana permanece obrigatória.
 
-Uma migração futura pode mover `embedding jsonb` para `pgvector`, após avaliar
-dimensão, índice, volume e política de retenção.
+O deploy atual está documentado em
+`docs/FACE_RECOGNITION_INSIGHTFACE_DEPLOYMENT.md`.

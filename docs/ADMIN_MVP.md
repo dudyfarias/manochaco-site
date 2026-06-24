@@ -79,7 +79,8 @@ cria administradores; roles continuam em `admin_profiles`.
 - `/admin/diagnostico/fotos` explica por que cada foto entra ou não na fila.
 - APIs em `/api/admin/face-recognition/*` exigem sessão e role autorizada.
 - Confirmar ou trocar cria tag `ai_confirmed`; ignorar não publica nada.
-- O provider padrão é `mock`; `faceapi` oferece processamento open source server-side e AWS permanece opcional.
+- InsightFace é o provider padrão em microserviço separado. Mock é bloqueado em
+  produção; face-api e AWS permanecem somente como providers legados.
 
 ## Relação com o site público
 

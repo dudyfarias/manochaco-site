@@ -15,7 +15,7 @@ export function getFaceRecognitionProviderName(): FaceRecognitionProviderName {
   const provider = process.env.FACE_RECOGNITION_PROVIDER?.trim().toLowerCase();
 
   if (!provider) {
-    return "mock";
+    return "insightface";
   }
 
   if (["aws", "mock", "faceapi", "insightface"].includes(provider)) {
@@ -29,8 +29,29 @@ export function getFaceRecognitionProviderName(): FaceRecognitionProviderName {
   );
 }
 
+export function assertProviderAllowedInRuntime(provider: FaceRecognitionProviderName) {
+  if (provider === "mock" && process.env.NODE_ENV === "production") {
+    throw new FaceRecognitionError(
+      "mock_provider_forbidden",
+      "O provider mock não pode ser usado em produção.",
+      "O reconhecimento facial de produção precisa usar o microserviço InsightFace.",
+    );
+  }
+}
+
+export function getFaceRecognitionBatchLimit() {
+  const value = Number(process.env.FACE_RECOGNITION_BATCH_LIMIT?.trim() || "5");
+  if (!Number.isInteger(value) || value < 1 || value > 20) {
+    throw new FaceRecognitionError(
+      "invalid_batch_limit",
+      "FACE_RECOGNITION_BATCH_LIMIT deve estar entre 1 e 20.",
+    );
+  }
+  return value;
+}
+
 export function getMinimumConfidence() {
-  const raw = Number(process.env.FACE_RECOGNITION_MIN_CONFIDENCE ?? "0.75");
+  const raw = Number(process.env.FACE_RECOGNITION_MIN_CONFIDENCE?.trim() || "0.75");
 
   if (!Number.isFinite(raw) || raw < 0 || raw > 100) {
     throw new FaceRecognitionError(
@@ -43,7 +64,7 @@ export function getMinimumConfidence() {
 }
 
 export function getMaximumDistance() {
-  const raw = Number(process.env.FACE_RECOGNITION_MAX_DISTANCE ?? "0.6");
+  const raw = Number(process.env.FACE_RECOGNITION_MAX_DISTANCE?.trim() || "0.6");
 
   if (!Number.isFinite(raw) || raw <= 0 || raw > 2) {
     throw new FaceRecognitionError(

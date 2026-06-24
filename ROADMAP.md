@@ -154,7 +154,8 @@
 
 ## Fase 9 - Reconhecimento facial assistido open source
 
-- Status: refinada em 2026-06-23; ativação real usa face-api.js e Supabase, com mock seguro para fallback.
+- Status: fase inicial concluída em 2026-06-23 e substituída pelo microserviço
+  InsightFace na Fase 9.4.
 - Provider modular com face-api.js open source, mock explícito e AWS opcional.
 - Upload privado de referências faciais com consentimento e aprovação.
 - Geração e persistência privada de embeddings faciais por jogador.
@@ -164,7 +165,8 @@
 - Publicação limitada a `photo_player_tags` confirmadas.
 - Revogação de consentimento remove embedding e metadados biométricos.
 - Auditoria de eventos principais e documentação de setup operacional.
-- Próxima evolução: microserviço InsightFace, fila/background job e política formal de retenção biométrica.
+- Evolução adotada: microserviço InsightFace; fila/background job continua como
+  próximo passo.
 
 ## Fase 9.1 - Contas públicas e comunidade
 
@@ -204,6 +206,19 @@
 - Diagnóstico administrativo disponível em `/admin/diagnostico/dados`.
 - Próxima evolução: edição granular no admin com auditoria e reconciliação
   assistida das divergências encontradas.
+
+## Fase 9.4 - Microserviço InsightFace
+
+- Status: implementação e banco concluídos em 2026-06-24; ativação pública
+  depende da hospedagem do container e configuração das secrets na Vercel.
+- FastAPI, InsightFace e ONNX Runtime isolados em serviço Python com Docker.
+- Endpoints protegidos para embedding, processamento e comparação.
+- URLs assinadas e chave compartilhada somente server-side.
+- Embeddings movidos para tabela privada própria com RLS.
+- Diagnóstico de health e processamento em lote limitado no admin.
+- Mock bloqueado em produção; face-api preservado apenas como legado.
+- Próxima evolução: fila assíncrona, cache persistente de modelos, métricas de
+  precisão e política operacional de retenção biométrica.
 
 ## Fase 10 - Financeiro
 

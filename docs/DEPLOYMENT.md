@@ -43,9 +43,12 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SUPABASE_SERVICE_ROLE_KEY=
-FACE_RECOGNITION_PROVIDER=mock
+FACE_RECOGNITION_PROVIDER=insightface
+FACE_RECOGNITION_API_URL=
+FACE_RECOGNITION_API_KEY=
 FACE_RECOGNITION_MIN_CONFIDENCE=0.75
 FACE_RECOGNITION_MAX_DISTANCE=0.6
+FACE_RECOGNITION_BATCH_LIMIT=5
 FACE_RECOGNITION_AUTO_APPROVE=false
 ```
 
@@ -91,17 +94,20 @@ pública básica e isolamento de tabelas privadas.
    - `NEXT_PUBLIC_SITE_URL` com `https://manochaco-site.vercel.app`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `FACE_RECOGNITION_PROVIDER`
+   - `FACE_RECOGNITION_API_URL`
+   - `FACE_RECOGNITION_API_KEY`
    - `FACE_RECOGNITION_MIN_CONFIDENCE`
    - `FACE_RECOGNITION_MAX_DISTANCE`
+   - `FACE_RECOGNITION_BATCH_LIMIT`
    - `FACE_RECOGNITION_AUTO_APPROVE`
 4. Faça o primeiro preview.
 5. Valide rotas públicas e admin.
 6. Promova para produção em `https://manochaco-site.vercel.app`.
 
-Use `FACE_RECOGNITION_PROVIDER=mock` para homologar o workflow sem ML. Depois
-de validar tempo e memória da função, use `faceapi` para processamento open
-source. Variáveis AWS são necessárias somente se o provider legado `aws` for
-escolhido.
+Produção deve usar `FACE_RECOGNITION_PROVIDER=insightface`. Hospede primeiro o
+container descrito em `docs/FACE_RECOGNITION_INSIGHTFACE_DEPLOYMENT.md`, valide
+`/health` e só então configure URL e chave na Vercel. Mock não é aceito em
+produção; face-api e AWS permanecem somente como legado.
 
 ## 7. Checklist rápido
 
@@ -122,5 +128,4 @@ escolhido.
 - `FACE_RECOGNITION_AUTO_APPROVE` está `false`.
 - Confirmação na revisão cria tag pública somente após ação humana.
 
-O setup de IAM, collection, custos e teste manual está em
-`docs/FACE_RECOGNITION_SETUP.md`.
+O setup e teste manual estão em `docs/FACE_RECOGNITION_SETUP.md`.

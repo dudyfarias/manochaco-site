@@ -5,7 +5,8 @@
 1. A imagem existe no Storage ou em uma origem permitida pelo servidor.
 2. A tabela `photos` possui um registro com `id`, `slug`, `url`, categoria e status.
 3. Fotos `not_processed`, `queued` ou `error` entram na fila.
-4. O provider gera sugestões pendentes em `face_detection_suggestions`.
+4. O microserviço InsightFace retorna sugestões e o Next.js as grava em
+   `face_detection_suggestions`.
 5. Um administrador confirma, troca ou ignora cada sugestão.
 6. Confirmar ou trocar faz upsert em `photo_player_tags` com
    `tag_type = ai_confirmed` e `confirmed_by_admin = true`.
@@ -34,6 +35,7 @@ já cadastradas e insere apenas os ausentes. O status inicial é
 ## Diagnóstico no admin
 
 - `/admin/reconhecimento-facial`: totais da operação e tags já publicadas.
+- `/admin/reconhecimento-facial`: health do serviço, modelo, embeddings e lote.
 - `/admin/diagnostico/fotos`: todas as fotos, seus status, sugestões, tags e o
   motivo de entrada ou exclusão da fila.
 - `/admin/jogadores/[id]`: fotos públicas vinculadas ao jogador e alerta de

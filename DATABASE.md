@@ -54,6 +54,7 @@ granular para partidas cadastradas diretamente no painel.
 - `member_profiles`
 - `audit_logs`
 - `player_face_references`
+- `player_face_embeddings`
 - `face_detection_suggestions`
 - `player_aliases`
 - `player_historical_stats`
@@ -82,10 +83,11 @@ conta, mas nunca definem role administrativa. RLS permite ao usuário ler e
 atualizar apenas seus dados editáveis; status, tipo, e-mail e vínculo são
 protegidos por trigger e pelas policies.
 
-`player_face_references` registra `storage_path`, provider, identificador,
-embedding JSON privado, modelo, estado/erro e data de geração. Consentimento e
-aprovação são obrigatórios antes de gerar o embedding. A opção JSON permite a
-primeira versão sem extensão; uma evolução pode migrar para `pgvector`.
+`player_face_references` registra arquivo privado, consentimento, aprovação e
+estado de geração. `player_face_embeddings` guarda o vetor JSON, modelo e
+provider em tabela separada, privada e removida por cascade. Consentimento e
+aprovação verdadeiros são constraints para qualquer embedding persistido. Uma
+evolução pode migrar o vetor para `pgvector` após medir volume e consultas.
 
 `face_detection_suggestions` registra provider, Face ID correspondente,
 confiança normalizada, bounding box, status e `raw_response` privada. Os status

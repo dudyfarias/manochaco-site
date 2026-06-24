@@ -7,20 +7,52 @@ import {
   AdminStatCard,
 } from "@/components/admin/AdminUI";
 import { SmartImage } from "@/components/SmartImage";
+import { FaceRecognitionActionButton } from "@/components/admin/FaceRecognitionActionButton";
+import { ProcessPendingPhotosButton } from "@/components/admin/ProcessPendingPhotosButton";
 import {
+  countPlayerFaceEmbeddings,
   getPhotoRecognitionSummary,
   listConfirmedPhotoTags,
+  listPendingFaceSuggestions,
+  listPendingRecognitionPhotos,
 } from "@/lib/admin/data";
+import { getFaceRecognitionProvider } from "@/lib/face-recognition";
+import {
+  getFaceRecognitionBatchLimit,
+  getFaceRecognitionProviderName,
+} from "@/lib/face-recognition/provider";
 
 export const metadata: Metadata = {
   title: "Admin - Reconhecimento facial",
 };
 
 export default async function FaceRecognitionAdminPage() {
-  const [summary, confirmedTags] = await Promise.all([
+  const providerName = getFaceRecognitionProviderName();
+  const batchLimit = getFaceRecognitionBatchLimit();
+  const [summary, confirmedTags, embeddingCount, pendingPhotos, pendingSuggestions] = await Promise.all([
     getPhotoRecognitionSummary(),
     listConfirmedPhotoTags(),
+    countPlayerFaceEmbeddings(),
+    listPendingRecognitionPhotos(),
+    listPendingFaceSuggestions(),
   ]);
+  let health: { ok: boolean; model?: string; modelLoaded?: boolean; error?: string } = {
+    ok: false,
+  };
+  if (providerName === "insightface") {
+    try {
+      const provider = await getFaceRecognitionProvider();
+      health = provider.health
+        ? await provider.health()
+        : { ok: false, error: "Provider sem health check." };
+    } catch (error) {
+      health = {
+        ok: false,
+        error: error instanceof Error ? error.message : "Serviço indisponível.",
+      };
+    }
+  }
+  const configuredUrl = process.env.FACE_RECOGNITION_API_URL?.trim() || "Não configurada";
 
   return (
     <div>
@@ -38,13 +70,59 @@ export default async function FaceRecognitionAdminPage() {
         }
       />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      {providerName !== "insightface" ? (
+        <div className="mt-6 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-950">
+          Provider ativo: {providerName}. Configure InsightFace antes de usar reconhecimento em produção.
+        </div>
+      ) : null}
+
+      <AdminCard className="mt-6">
+        <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-start">
+          <div>
+            <p className="text-xs font-black uppercase text-[#9a6a12]">Serviço de ML</p>
+            <h2 className="mt-2 text-xl font-black text-zinc-950">
+              {health.ok ? "InsightFace disponível" : "InsightFace indisponível"}
+            </h2>
+            <p className="mt-2 break-all text-sm text-zinc-600">URL: {configuredUrl}</p>
+            <p className="mt-1 text-sm text-zinc-600">
+              Modelo: {health.model ?? "não informado"} · carregado: {health.modelLoaded ? "sim" : "não"}
+            </p>
+            {health.error ? <p className="mt-2 text-sm font-bold text-red-700">{health.error}</p> : null}
+          </div>
+          <FaceRecognitionActionButton
+            endpoint="/api/admin/face-recognition/health"
+            payload={{}}
+            label="Testar conexão"
+            pendingLabel="Testando serviço..."
+          />
+        </div>
+      </AdminCard>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-7">
         <AdminStatCard label="Fotos" value={summary.total} detail="cadastradas no banco" />
         <AdminStatCard label="Na fila" value={summary.pending} detail="elegíveis" />
         <AdminStatCard label="Revisão" value={summary.needsReview} detail="aguardando decisão" />
         <AdminStatCard label="Aprovadas" value={summary.approved} detail="processamento concluído" />
         <AdminStatCard label="Tags públicas" value={summary.confirmedTags} detail="marcações confirmadas" />
+        <AdminStatCard label="Embeddings" value={embeddingCount} detail="referências privadas" />
+        <AdminStatCard label="Sugestões" value={pendingSuggestions.length} detail="pendentes" />
       </div>
+
+      <AdminCard className="mt-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-zinc-950">Processamento em lote</h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-600">
+              Cada execução processa no máximo {batchLimit} fotos para reduzir risco de timeout.
+            </p>
+          </div>
+          <ProcessPendingPhotosButton
+            photoIds={pendingPhotos.map((photo) => photo.id)}
+            provider={providerName}
+            batchLimit={batchLimit}
+          />
+        </div>
+      </AdminCard>
 
       <AdminCard className="mt-6 overflow-hidden p-0">
         <div className="border-b border-zinc-200 p-5">

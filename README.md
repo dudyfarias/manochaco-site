@@ -64,9 +64,12 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SUPABASE_SERVICE_ROLE_KEY=
-FACE_RECOGNITION_PROVIDER=mock
+FACE_RECOGNITION_PROVIDER=insightface
+FACE_RECOGNITION_API_URL=
+FACE_RECOGNITION_API_KEY=
 FACE_RECOGNITION_MIN_CONFIDENCE=0.75
 FACE_RECOGNITION_MAX_DISTANCE=0.6
+FACE_RECOGNITION_BATCH_LIMIT=5
 FACE_RECOGNITION_AUTO_APPROVE=false
 ```
 
@@ -90,6 +93,7 @@ src/data/generated dados gerados pela planilha
 src/lib          helpers, camada híbrida de dados, Supabase e adapters
 src/types        contratos TypeScript
 scripts          importadores e automações locais
+services         microserviços separados da Vercel
 supabase         schema, policies, storage e seed SQL
 data/raw         planilhas brutas locais ignoradas pelo Git
 public/logos     logos e escudo oficial
@@ -134,7 +138,8 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
   `/admin/reconhecimento-facial` e `/admin/diagnostico/fotos`.
 - Sincronização segura entre o bucket `photos` e a tabela `photos`, com dry-run
   por padrão e validação automatizada do pipeline.
-- Reconhecimento facial modular com provider mock e face-api.js open source, embeddings privados, consentimento e revisão humana obrigatória.
+- Reconhecimento facial com microserviço Python/InsightFace separado da Vercel,
+  embeddings privados, consentimento e revisão humana obrigatória.
 - Financeiro disponível apenas como rota protegida placeholder.
 - Filtros públicos por campeonato, temporada, resultado, adversário e status do jogador.
 - Páginas de jogadores e jogos por slug.
@@ -156,7 +161,9 @@ identificar caminhos ausentes, imagens remotas e vínculos quebrados.
 - Diagnóstico de consistência em `/admin/diagnostico/dados`, com divergências
   entre a soma por competição e a aba histórica preservadas para revisão.
 
-Ainda não há financeiro completo, processamento assíncrono em background, gestão completa de usuários admin ou relatórios avançados nesta fase. O fluxo pode operar em modo mock ou com face-api.js sem AWS; o provider real depende dos modelos versionados e do Supabase configurado.
+Ainda não há financeiro completo, fila assíncrona em background, gestão completa
+de usuários admin ou relatórios avançados. InsightFace é o provider padrão; a
+ativação em produção depende do container externo e das variáveis server-side.
 
 ## Documentação do produto
 
@@ -170,6 +177,7 @@ Ainda não há financeiro completo, processamento assíncrono em background, ges
 - `docs/FACE_RECOGNITION_ARCHITECTURE.md`
 - `docs/FACE_RECOGNITION_SETUP.md`
 - `docs/FACE_RECOGNITION_OPERATIONS.md`
+- `docs/FACE_RECOGNITION_INSIGHTFACE_DEPLOYMENT.md`
 - `docs/INSIGHTFACE_FUTURE.md`
 - `docs/AUTH_ADMIN.md`
 - `docs/PUBLIC_ACCOUNTS.md`

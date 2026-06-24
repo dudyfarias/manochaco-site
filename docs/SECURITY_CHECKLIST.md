@@ -9,6 +9,7 @@
 - `photo_player_tags` públicas somente com `confirmed_by_admin = true`.
 - `photos` públicas somente com `is_public = true`.
 - `player_face_references` sem leitura pública.
+- `player_face_embeddings` sem leitura pública.
 - `face_detection_suggestions` sem leitura pública.
 - Tabelas financeiras sem leitura pública.
 - `audit_logs` sem leitura pública.
@@ -23,6 +24,7 @@
 - `.env.local` ignorado pelo Git.
 - `.env.example` sem valores reais.
 - Credenciais AWS, quando o provider opcional for usado, somente server-side.
+- `FACE_RECOGNITION_API_KEY` somente server-side e igual à `FACE_API_KEY` do serviço.
 - Módulos do provider protegidos por `server-only`.
 - `FACE_RECOGNITION_AUTO_APPROVE=false` em todos os ambientes.
 
@@ -50,6 +52,8 @@
 - Assinatura binária JPEG/PNG validada antes do upload privado.
 - Fotos processadas só podem vir do site ou do host Supabase configurado.
 - Redirects de download são bloqueados para reduzir risco de SSRF.
+- Microserviço bloqueia redes privadas e permite restringir hosts por
+  `FACE_ALLOWED_IMAGE_HOSTS`.
 
 ## LGPD
 
@@ -75,5 +79,6 @@
 - Configurar Site URL, Redirect URLs e SMTP próprio no Supabase Auth.
 - Confirmar que conta comum não acessa `/admin`.
 - Validar que o menu público não mostra admin.
-- Validar que o provider de produção não ficou em `mock` por engano.
+- Validar que produção usa `FACE_RECOGNITION_PROVIDER=insightface`.
+- Validar `/health` do microserviço antes do deploy do Next.js.
 - Testar geração e remoção de embedding com uma referência consentida antes de liberar o lote.
