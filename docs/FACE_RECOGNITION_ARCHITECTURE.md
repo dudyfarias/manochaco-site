@@ -67,13 +67,18 @@ humana em `/admin/fotos/revisao`.
 Quando um rosto não possui correspondência, a fila mostra **Rosto sem
 identificação**. Ao escolher manualmente um jogador:
 
-1. a marcação confirmada é criada em `photo_player_tags`;
-2. o embedding privado daquela detecção é vinculado ao jogador;
+1. o embedding privado daquela detecção é vinculado ao jogador;
+2. a marcação confirmada é criada em `photo_player_tags`;
 3. `player_face_references` registra foto, bounding box e sugestão de origem;
 4. processamentos posteriores passam a comparar contra essa nova referência.
 
 O sistema não altera pesos do InsightFace. O “aprendizado” é a expansão
 controlada do conjunto de embeddings revisados por humanos.
+
+O cadastro do jogador pressupõe autorização documentada pelo clube. Por isso,
+novas referências nascem com `consent_given` e
+`approved_for_recognition` ativos. A revogação continua disponível no admin e
+remove o embedding associado.
 
 ## Métrica e calibração
 
@@ -103,7 +108,7 @@ Confiança alta nunca equivale a aprovação automática.
 
 ## Limites operacionais
 
-O `buffalo_l` tem download e inicialização pesados. O modelo é carregado uma
-vez por processo e fica fora da Vercel. Para escala maior, o próximo passo é
+O `buffalo_sc` é o padrão de produção por caber na instância de 512 MB usada no
+Render. O modelo é carregado uma vez por processo e fica fora da Vercel. Para escala maior, o próximo passo é
 uma fila assíncrona, cache persistente do modelo e métricas de precisão por
 tipo de foto.

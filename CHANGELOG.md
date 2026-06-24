@@ -1,5 +1,14 @@
 # Changelog
 
+## Não publicado
+
+- Autorização facial passa a ser herdada automaticamente do cadastro do jogador.
+- Identificação manual de um rosto desconhecido salva primeiro a referência privada e depois publica a tag confirmada.
+- Admin mantém uma ação explícita para revogar ou reativar a autorização facial por jogador.
+- Criação de importador idempotente do acervo do Google Drive para Storage, álbuns e tabela `photos`.
+- Criação de processamento facial em lote retomável para todas as fotos elegíveis.
+- Adoção de `buffalo_sc` como modelo padrão para manter o InsightFace compatível com 512 MB no Render.
+
 ## 0.13.0 - 2026-06-24
 
 - Criação do microserviço FastAPI em `services/face-recognition` com InsightFace, ONNX Runtime, autenticação por chave e Dockerfile.

@@ -253,19 +253,19 @@ export default async function EditPlayerPage({
                         {reference.indexing_error}
                       </p>
                     ) : null}
-                    <form action={updatePlayerFaceReferenceConsent} className="mt-4 grid gap-2 border-t border-zinc-100 pt-4">
+                    <form action={updatePlayerFaceReferenceConsent} className="mt-4 border-t border-zinc-100 pt-4">
                       <input type="hidden" name="id" value={reference.id} />
                       <input type="hidden" name="player_id" value={player.id} />
-                      <label className="flex items-start gap-2 text-xs font-bold text-zinc-700">
-                        <input name="consent_given" type="checkbox" defaultChecked={reference.consent_given} />
-                        Consentimento registrado
-                      </label>
-                      <label className="flex items-start gap-2 text-xs font-bold text-zinc-700">
-                        <input name="approved_for_recognition" type="checkbox" defaultChecked={reference.approved_for_recognition} />
-                        Aprovada para reconhecimento
-                      </label>
+                      {!reference.consent_given || !reference.approved_for_recognition ? (
+                        <>
+                          <input type="hidden" name="consent_given" value="on" />
+                          <input type="hidden" name="approved_for_recognition" value="on" />
+                        </>
+                      ) : null}
                       <button className="justify-self-start text-xs font-black text-[#9a6a12]">
-                        Salvar permissões
+                        {reference.consent_given && reference.approved_for_recognition
+                          ? "Revogar autorização facial"
+                          : "Reativar autorização facial"}
                       </button>
                     </form>
                     <div className="mt-4 flex flex-wrap items-start gap-2">

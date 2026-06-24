@@ -32,6 +32,8 @@ npm run seed:stats # envia somente estatisticas granulares e validacao historica
 npm run validate:stats # compara a soma granular com a aba historica
 npm run audit:mocks # confirma que as telas publicas usam a camada Supabase
 npm run audit:images # audita imagens locais e vínculos de fotos
+npm run import:drive-photos -- --source /caminho/do/acervo --apply
+npm run process:faces -- --all --apply # processa toda a fila com InsightFace
 npm run sync:photos # simula sincronização do bucket photos com o banco
 npm run validate:photos # valida o pipeline público de fotos e marcações
 npm run validate:prod # valida env, Supabase, tabelas e buckets

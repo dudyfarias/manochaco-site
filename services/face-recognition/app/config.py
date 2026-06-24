@@ -47,7 +47,7 @@ def get_settings() -> Settings:
     )
     settings = Settings(
         api_key=os.getenv("FACE_API_KEY", "").strip(),
-        model_name=os.getenv("FACE_MODEL_NAME", "buffalo_l").strip() or "buffalo_l",
+        model_name=os.getenv("FACE_MODEL_NAME", "buffalo_sc").strip() or "buffalo_sc",
         detection_size=_int_env("FACE_DETECTION_SIZE", 640),
         min_confidence=_float_env("FACE_MIN_CONFIDENCE", 0.45),
         match_threshold=_float_env("FACE_MATCH_THRESHOLD", 0.35),

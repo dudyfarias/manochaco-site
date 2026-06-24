@@ -27,7 +27,7 @@ Variáveis:
 
 ```env
 FACE_API_KEY=uma-chave-longa-e-aleatoria
-FACE_MODEL_NAME=buffalo_l
+FACE_MODEL_NAME=buffalo_sc
 FACE_DETECTION_SIZE=640
 FACE_MIN_CONFIDENCE=0.45
 FACE_MATCH_THRESHOLD=0.35

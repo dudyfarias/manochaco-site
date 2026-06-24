@@ -17,6 +17,11 @@ Quando a IA não reconhecer alguém, use **Identificar como** na fila. Essa
 decisão cria também uma referência supervisionada privada; as próximas fotos
 podem reconhecer o jogador a partir desse embedding confirmado.
 
+Todo jogador cadastrado já possui autorização documentada pelo clube para esse
+fluxo. A referência aprendida entra ativa automaticamente, sem uma segunda
+etapa de consentimento na fila. O admin mantém a ação de revogação para atender
+pedidos do titular.
+
 Nenhuma sugestão pendente é publicada automaticamente.
 
 ## Storage e banco
@@ -35,6 +40,25 @@ npm run sync:photos -- --apply
 O script percorre o bucket `photos`, compara o caminho de cada objeto com as URLs
 já cadastradas e insere apenas os ausentes. O status inicial é
 `not_processed`.
+
+Para importar um acervo já baixado do Google Drive, mantendo as pastas como
+álbuns e evitando duplicatas por slug e caminho determinísticos:
+
+```bash
+npm run import:drive-photos -- --source /caminho/do/acervo
+npm run import:drive-photos -- --source /caminho/do/acervo --apply
+```
+
+Depois, o lote facial pode ser retomado sempre que necessário. Por padrão ele
+processa cinco fotos; `--all` consome todas as fotos elegíveis:
+
+```bash
+npm run process:faces -- --limit 5
+npm run process:faces -- --all --apply
+```
+
+Os comandos usam `SUPABASE_SERVICE_ROLE_KEY` somente no processo server-side.
+O lote também exige a URL e a chave privada do InsightFace.
 
 ## Diagnóstico no admin
 

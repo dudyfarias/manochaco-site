@@ -1026,6 +1026,19 @@ export async function changeFaceSuggestion(formData: FormData) {
     redirect(adminMessageHref("/admin/fotos/revisao", "error", "Sugestão inválida."));
   }
 
+  let learnedReferenceId: string | null = null;
+  try {
+    learnedReferenceId = await saveSupervisedFaceReference(supabase, suggestion, playerId);
+  } catch (error) {
+    redirect(
+      adminMessageHref(
+        "/admin/fotos/revisao",
+        "error",
+        error instanceof Error ? error.message : "Falha ao aprender o novo rosto.",
+      ),
+    );
+  }
+
   if (
     suggestion.suggested_player_id &&
     suggestion.suggested_player_id !== playerId
@@ -1056,19 +1069,6 @@ export async function changeFaceSuggestion(formData: FormData) {
 
   if (tagError) {
     redirect(adminMessageHref("/admin/fotos/revisao", "error", tagError.message));
-  }
-
-  let learnedReferenceId: string | null = null;
-  try {
-    learnedReferenceId = await saveSupervisedFaceReference(supabase, suggestion, playerId);
-  } catch (error) {
-    redirect(
-      adminMessageHref(
-        "/admin/fotos/revisao",
-        "error",
-        error instanceof Error ? error.message : "Falha ao aprender o novo rosto.",
-      ),
-    );
   }
 
   const { error: updateSuggestionError } = await supabase

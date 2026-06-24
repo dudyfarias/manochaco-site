@@ -20,15 +20,15 @@ cp .env.example .env
 uvicorn main:app --reload
 ```
 
-O primeiro processamento baixa o pacote `buffalo_l`, com aproximadamente
-326 MB, para o cache do usuário. O `/health` não carrega o modelo e continua
+O primeiro processamento baixa o pacote `buffalo_sc`, com aproximadamente
+16 MB, para o cache do usuário. O `/health` não carrega o modelo e continua
 rápido durante deploys e probes.
 
 ## Configuração
 
 ```env
 FACE_API_KEY=uma-chave-longa-e-aleatoria
-FACE_MODEL_NAME=buffalo_l
+FACE_MODEL_NAME=buffalo_sc
 FACE_DETECTION_SIZE=640
 FACE_MIN_CONFIDENCE=0.45
 FACE_MATCH_THRESHOLD=0.35

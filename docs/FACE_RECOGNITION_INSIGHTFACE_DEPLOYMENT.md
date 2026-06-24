@@ -22,7 +22,7 @@ Configure no serviço:
 
 ```env
 FACE_API_KEY=
-FACE_MODEL_NAME=buffalo_l
+FACE_MODEL_NAME=buffalo_sc
 FACE_DETECTION_SIZE=640
 FACE_MIN_CONFIDENCE=0.45
 FACE_MATCH_THRESHOLD=0.35
@@ -38,7 +38,7 @@ docker build -t manochaco-insightface .
 docker run --rm -p 8000:8000 --env-file .env manochaco-insightface
 ```
 
-O primeiro processamento baixa o `buffalo_l`. Em produção, use disco ou cache
+O primeiro processamento baixa o `buffalo_sc`. Em produção, use disco ou cache
 persistente para `~/.insightface/models` quando o provedor permitir.
 
 ## Render
@@ -50,6 +50,9 @@ persistente para `~/.insightface/models` quando o provedor permitir.
 5. Configure o health check como `/health`.
 6. Use uma instância com memória suficiente para modelo e runtime ONNX.
 
+O plano gratuito possui 512 MB. O pacote `buffalo_sc` foi escolhido porque tem
+16 MB e a mesma acurácia publicada para `buffalo_s`; `buffalo_l` e `buffalo_s`
+reiniciaram a instância durante a inicialização por falta de memória.
 Planos que entram em suspensão aumentam o primeiro tempo de resposta.
 
 ## Railway
@@ -61,7 +64,7 @@ Planos que entram em suspensão aumentam o primeiro tempo de resposta.
 
 O container respeita a variável `PORT` fornecida pela plataforma. Para reduzir
 o consumo de memória, o serviço carrega somente os módulos `detection` e
-`recognition` do pacote `buffalo_l`.
+`recognition` do pacote `buffalo_sc`.
 
 ## Fly.io
 
