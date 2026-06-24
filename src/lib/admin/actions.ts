@@ -71,6 +71,102 @@ async function revalidatePublicPhotoRelations(
   }
 }
 
+function embeddingFromSuggestionRaw(rawResponse: unknown) {
+  if (!rawResponse || typeof rawResponse !== "object") return null;
+  const value = (rawResponse as Record<string, unknown>).faceEmbedding;
+  if (!Array.isArray(value) || value.length === 0) return null;
+  const embedding = value.map(Number);
+  return embedding.every(Number.isFinite) ? embedding : null;
+}
+
+async function saveSupervisedFaceReference(
+  supabase: SupabaseClient,
+  suggestion: {
+    id: string;
+    photo_id: string;
+    provider: string | null;
+    provider_face_id: string | null;
+    bounding_box: unknown;
+    raw_response: unknown;
+  },
+  playerId: string,
+) {
+  const embedding = embeddingFromSuggestionRaw(suggestion.raw_response);
+  if (!embedding || suggestion.provider !== "insightface") return null;
+
+  const raw = suggestion.raw_response as Record<string, unknown>;
+  const model = typeof raw.model === "string" ? raw.model : "buffalo_l";
+  const { data: photo, error: photoError } = await supabase
+    .from("photos")
+    .select("url")
+    .eq("id", suggestion.photo_id)
+    .single();
+  if (photoError || !photo?.url) throw photoError ?? new Error("Foto de origem ausente.");
+
+  const { data: existing, error: existingError } = await supabase
+    .from("player_face_references")
+    .select("id")
+    .eq("source_suggestion_id", suggestion.id)
+    .maybeSingle();
+  if (existingError) throw existingError;
+
+  const now = new Date().toISOString();
+  const referencePayload = {
+    player_id: playerId,
+    image_url: photo.url,
+    storage_path: null,
+    provider: "insightface",
+    provider_face_id: suggestion.provider_face_id,
+    provider_collection_id: model,
+    embedding: null,
+    embedding_model: model,
+    embedding_generated_at: now,
+    source_photo_id: suggestion.photo_id,
+    source_suggestion_id: suggestion.id,
+    source_bounding_box: suggestion.bounding_box,
+    source_kind: "confirmed_photo_tag",
+    approved_for_recognition: true,
+    consent_given: true,
+    indexing_status: "indexed",
+    indexing_error: null,
+    indexed_at: now,
+  };
+
+  let referenceId = existing?.id;
+  if (referenceId) {
+    const { error } = await supabase
+      .from("player_face_references")
+      .update(referencePayload)
+      .eq("id", referenceId);
+    if (error) throw error;
+  } else {
+    const { data, error } = await supabase
+      .from("player_face_references")
+      .insert(referencePayload)
+      .select("id")
+      .single();
+    if (error) throw error;
+    referenceId = data.id;
+  }
+
+  const { error: embeddingError } = await supabase
+    .from("player_face_embeddings")
+    .upsert(
+      {
+        player_id: playerId,
+        face_reference_id: referenceId,
+        embedding,
+        embedding_model: model,
+        provider: "insightface",
+        consent_given: true,
+        approved_for_recognition: true,
+      },
+      { onConflict: "face_reference_id" },
+    );
+  if (embeddingError) throw embeddingError;
+  return referenceId;
+}
+
 function ensureStatus(value: string) {
   return ["active", "former", "staff"].includes(value) ? value : "active";
 }
@@ -317,8 +413,8 @@ export async function addPlayerFaceReference(formData: FormData) {
       image_url: `storage://face-references/${storagePath}`,
       storage_path: storagePath,
       provider: getFaceRecognitionProviderName(),
-      approved_for_recognition: formData.get("approved_for_recognition") === "on",
-      consent_given: formData.get("consent_given") === "on",
+      approved_for_recognition: true,
+      consent_given: true,
       indexing_status: "not_indexed",
     })
     .select("id")
@@ -331,8 +427,9 @@ export async function addPlayerFaceReference(formData: FormData) {
 
   await logAudit(context, "add_face_reference", "player_face_references", data.id, {
     playerId,
-    consentGiven: formData.get("consent_given") === "on",
-    approvedForRecognition: formData.get("approved_for_recognition") === "on",
+    consentGiven: true,
+    approvedForRecognition: true,
+    consentSource: "player-registration-prerequisite",
   });
   redirect(adminMessageHref(`/admin/jogadores/${playerId}`, "saved", "face-reference"));
 }
@@ -919,7 +1016,9 @@ export async function changeFaceSuggestion(formData: FormData) {
 
   const { data: suggestion, error: suggestionError } = await supabase
     .from("face_detection_suggestions")
-    .select("id, photo_id, suggested_player_id, confidence, bounding_box, status")
+    .select(
+      "id, photo_id, suggested_player_id, confidence, bounding_box, status, provider, provider_face_id, raw_response",
+    )
     .eq("id", id)
     .single();
 
@@ -959,6 +1058,19 @@ export async function changeFaceSuggestion(formData: FormData) {
     redirect(adminMessageHref("/admin/fotos/revisao", "error", tagError.message));
   }
 
+  let learnedReferenceId: string | null = null;
+  try {
+    learnedReferenceId = await saveSupervisedFaceReference(supabase, suggestion, playerId);
+  } catch (error) {
+    redirect(
+      adminMessageHref(
+        "/admin/fotos/revisao",
+        "error",
+        error instanceof Error ? error.message : "Falha ao aprender o novo rosto.",
+      ),
+    );
+  }
+
   const { error: updateSuggestionError } = await supabase
     .from("face_detection_suggestions")
     .update({ status: "changed", suggested_player_id: playerId })
@@ -973,6 +1085,7 @@ export async function changeFaceSuggestion(formData: FormData) {
     playerId,
     previousPlayerId: suggestion.suggested_player_id,
     tagId: tag.id,
+    learnedReferenceId,
   });
   console.info("[face-recognition] sugestão alterada e confirmada", {
     suggestionId: id,

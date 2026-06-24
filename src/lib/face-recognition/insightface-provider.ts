@@ -218,32 +218,43 @@ export class InsightFaceRecognitionProvider implements FaceRecognitionProvider {
       );
     }
 
-    const matches = response.suggestions.flatMap((value): FaceRecognitionMatch[] => {
+    const matches = response.suggestions.flatMap((value, index): FaceRecognitionMatch[] => {
       if (!value || typeof value !== "object") return [];
       const suggestion = value as Record<string, unknown>;
       const box = boundingBox(suggestion.boundingBox);
+      const faceEmbedding = numberArray(suggestion.faceEmbedding);
       const confidence = Number(suggestion.confidence);
       const distance = Number(suggestion.distance);
       const playerId = typeof suggestion.playerId === "string" ? suggestion.playerId : null;
+      const matched = suggestion.matched === true;
       if (
         !box ||
-        !playerId ||
+        !faceEmbedding ||
         !Number.isFinite(confidence) ||
-        confidence < input.minConfidence ||
         confidence > 1
       ) {
         return [];
       }
+      const acceptedPlayerId = matched && playerId && confidence >= input.minConfidence
+        ? playerId
+        : undefined;
       return [{
         provider: this.name,
-        playerExternalId: playerId,
+        providerFaceId: `insightface-${input.photoId}-${index}`,
+        playerExternalId: acceptedPlayerId,
         confidence,
         boundingBox: box,
+        faceEmbedding,
+        matched: Boolean(acceptedPlayerId),
         raw: {
           model: response.model ?? null,
           distance: Number.isFinite(distance) ? distance : null,
+          faceEmbedding,
+          matched: Boolean(acceptedPlayerId),
           playerSlug:
-            typeof suggestion.playerSlug === "string" ? suggestion.playerSlug : null,
+            acceptedPlayerId && typeof suggestion.playerSlug === "string"
+              ? suggestion.playerSlug
+              : null,
         },
       }];
     });

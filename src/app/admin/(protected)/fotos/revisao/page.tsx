@@ -96,7 +96,9 @@ export default async function AdminReviewPage({ searchParams }: ReviewPageProps)
                 />
               <div className="p-5">
                 <p className="text-xs font-black uppercase text-[#9a6a12]">
-                  {Math.round(suggestion.confidence * 100)}% de confiança
+                  {suggestion.suggested_player_id
+                    ? `${Math.round(suggestion.confidence * 100)}% de confiança`
+                    : "Rosto sem identificação"}
                 </p>
                 <h2 className="mt-2 text-xl font-black text-zinc-950">
                   {suggestion.photos?.title ?? "Foto sem título"}
@@ -140,7 +142,10 @@ export default async function AdminReviewPage({ searchParams }: ReviewPageProps)
                 </div>
                 <form action={changeFaceSuggestion} className="mt-4 grid gap-2">
                   <input type="hidden" name="id" value={suggestion.id} />
-                  <SelectField label="Trocar por" name="player_id">
+                  <SelectField
+                    label={suggestion.suggested_player_id ? "Trocar por" : "Identificar como"}
+                    name="player_id"
+                  >
                     {players.map((player) => (
                       <option key={player.id} value={player.id}>
                         {player.nickname} - {player.name}
@@ -148,7 +153,7 @@ export default async function AdminReviewPage({ searchParams }: ReviewPageProps)
                     ))}
                   </SelectField>
                   <button className="rounded-md border border-zinc-300 px-3 py-2 text-xs font-black text-zinc-700">
-                    Salvar troca
+                    {suggestion.suggested_player_id ? "Salvar troca" : "Confirmar identidade"}
                   </button>
                 </form>
               </div>

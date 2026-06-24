@@ -61,7 +61,7 @@ def test_embed_face_returns_embedding(monkeypatch):
     assert response.json()["embedding"] == [1.0, 0.0, 0.0]
 
 
-def test_process_photo_returns_only_accepted_matches(monkeypatch):
+def test_process_photo_returns_matched_and_unknown_faces(monkeypatch):
     test_client = client(monkeypatch, [face([1, 0, 0]), face([0, 1, 0])])
     response = test_client.post(
         "/process-photo",
@@ -80,8 +80,12 @@ def test_process_photo_returns_only_accepted_matches(monkeypatch):
     )
     assert response.status_code == 200
     assert response.json()["facesDetected"] == 2
-    assert len(response.json()["suggestions"]) == 1
+    assert len(response.json()["suggestions"]) == 2
     assert response.json()["suggestions"][0]["playerSlug"] == "dudu"
+    assert response.json()["suggestions"][0]["matched"] is True
+    assert response.json()["suggestions"][1]["playerId"] is None
+    assert response.json()["suggestions"][1]["matched"] is False
+    assert response.json()["suggestions"][1]["faceEmbedding"] == [0.0, 1.0, 0.0]
 
 
 def test_similarity_threshold_accepts_realistic_pose_variation(monkeypatch):

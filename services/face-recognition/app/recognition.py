@@ -40,6 +40,7 @@ class RecognitionEngine:
             settings = get_settings()
             model = FaceAnalysis(
                 name=settings.model_name,
+                allowed_modules=["detection", "recognition"],
                 providers=["CPUExecutionProvider"],
             )
             model.prepare(

@@ -184,7 +184,7 @@ export default async function EditPlayerPage({
           <AdminCard>
             <h2 className="text-xl font-black text-zinc-950">Adicionar referência</h2>
             <p className="mt-2 text-sm leading-6 text-zinc-600">
-              Esta foto será usada como referência para reconhecimento facial do jogador. Use somente com autorização.
+              O cadastro do jogador pressupõe autorização registrada pelo clube. A referência entra aprovada e pode ser revogada posteriormente.
             </p>
             <form action={addPlayerFaceReference} className="mt-5 grid gap-4">
               <input type="hidden" name="player_id" value={player.id} />
@@ -200,18 +200,6 @@ export default async function EditPlayerPage({
                   required
                   className="mt-2 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
                 />
-              </label>
-              <label className="flex items-start gap-3 text-sm font-bold text-zinc-800">
-                <input name="consent_given" type="checkbox" className="mt-1" />
-                Consentimento específico para reconhecimento facial foi obtido.
-              </label>
-              <label className="flex items-start gap-3 text-sm font-bold text-zinc-800">
-                <input
-                  name="approved_for_recognition"
-                  type="checkbox"
-                  className="mt-1"
-                />
-                Referência revisada e aprovada para indexação.
               </label>
               <SubmitButton>Salvar referência privada</SubmitButton>
             </form>

@@ -233,6 +233,10 @@ create table if not exists public.player_face_references (
   embedding jsonb,
   embedding_model text,
   embedding_generated_at timestamptz,
+  source_photo_id uuid references public.photos(id) on delete set null,
+  source_suggestion_id uuid,
+  source_bounding_box jsonb,
+  source_kind text not null default 'upload',
   approved_for_recognition boolean not null default false,
   consent_given boolean not null default false,
   indexing_status text not null default 'not_indexed',
@@ -245,6 +249,12 @@ create table if not exists public.player_face_references (
   ),
   constraint player_face_references_embedding_array_check check (
     embedding is null or jsonb_typeof(embedding) = 'array'
+  ),
+  constraint player_face_references_source_kind_check check (
+    source_kind in ('upload', 'confirmed_photo_tag')
+  ),
+  constraint player_face_references_source_bounding_box_check check (
+    source_bounding_box is null or jsonb_typeof(source_bounding_box) = 'object'
   )
 );
 
@@ -289,6 +299,29 @@ create table if not exists public.face_detection_suggestions (
     status in ('pending', 'confirmed', 'changed', 'ignored', 'error')
   )
 );
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'player_face_references_source_suggestion_fkey'
+  ) then
+    alter table public.player_face_references
+      add constraint player_face_references_source_suggestion_fkey
+      foreign key (source_suggestion_id)
+      references public.face_detection_suggestions(id)
+      on delete set null;
+  end if;
+end;
+$$;
+
+create unique index if not exists player_face_references_source_suggestion_uidx
+on public.player_face_references(source_suggestion_id)
+where source_suggestion_id is not null;
+
+create index if not exists player_face_references_source_photo_idx
+on public.player_face_references(source_photo_id)
+where source_photo_id is not null;
 
 create table if not exists public.admin_profiles (
   id uuid primary key default gen_random_uuid(),

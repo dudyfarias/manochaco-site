@@ -45,11 +45,13 @@ class ProcessPhotoRequest(ApiModel):
 
 
 class FaceSuggestion(ApiModel):
-    player_id: str = Field(alias="playerId")
-    player_slug: str = Field(alias="playerSlug")
+    player_id: str | None = Field(default=None, alias="playerId")
+    player_slug: str | None = Field(default=None, alias="playerSlug")
     confidence: float = Field(ge=0, le=1)
-    distance: float = Field(ge=0)
+    distance: float | None = Field(default=None, ge=0)
     bounding_box: BoundingBox = Field(alias="boundingBox")
+    face_embedding: list[float] = Field(alias="faceEmbedding", min_length=1)
+    matched: bool
 
 
 class ProcessPhotoResponse(ApiModel):

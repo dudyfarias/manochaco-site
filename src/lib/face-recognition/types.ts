@@ -47,6 +47,8 @@ export interface FaceRecognitionMatch {
   playerExternalId?: string;
   confidence: number;
   boundingBox: BoundingBox;
+  faceEmbedding?: number[];
+  matched?: boolean;
   raw?: unknown;
 }
 

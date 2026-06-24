@@ -92,16 +92,18 @@ def process_photo(payload: ProcessPhotoRequest) -> ProcessPhotoResponse:
             payload.known_faces,
             settings.match_threshold,
         )
-        if not match or not match.accepted:
-            continue
+        accepted = bool(match and match.accepted)
+        similarity = match.similarity if match else -1
         suggestions.append(
             FaceSuggestion(
-                player_id=match.known_face.player_id,
-                player_slug=match.known_face.player_slug,
+                player_id=match.known_face.player_id if accepted and match else None,
+                player_slug=match.known_face.player_slug if accepted and match else None,
                 # This is a normalized ranking score, not a biometric probability.
-                confidence=max(0, min(1, (match.similarity + 1) / 2)),
-                distance=match.distance,
+                confidence=max(0, min(1, (similarity + 1) / 2)),
+                distance=match.distance if match else None,
                 bounding_box=face.bounding_box,
+                face_embedding=face.embedding,
+                matched=accepted,
             )
         )
 

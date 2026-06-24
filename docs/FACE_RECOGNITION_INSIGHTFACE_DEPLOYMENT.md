@@ -59,6 +59,10 @@ Planos que entram em suspensão aumentam o primeiro tempo de resposta.
 3. Use o Dockerfile e exponha a porta fornecida pela plataforma.
 4. Cadastre variáveis e volume de cache quando disponível.
 
+O container respeita a variável `PORT` fornecida pela plataforma. Para reduzir
+o consumo de memória, o serviço carrega somente os módulos `detection` e
+`recognition` do pacote `buffalo_l`.
+
 ## Fly.io
 
 Crie o app no diretório do serviço, configure secrets com `fly secrets set` e

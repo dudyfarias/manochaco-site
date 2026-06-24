@@ -46,6 +46,8 @@ Reconhecimento facial envolve dado biométrico, que é sensível. Antes de qualq
 uso real:
 
 - Obter consentimento específico.
+- No fluxo atual, a autorização é pré-requisito para cadastrar o jogador; novas
+  referências herdam essa autorização, que deve permanecer documentada pelo clube.
 - Explicar finalidade e funcionamento.
 - Manter revisão humana obrigatória.
 - Permitir revogação de consentimento.

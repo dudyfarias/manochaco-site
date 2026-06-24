@@ -53,14 +53,27 @@ O microserviço não recebe credenciais Supabase e não persiste dados.
 1. O admin solicita o processamento individual ou de até cinco fotos por lote.
 2. A foto muda para `processing`.
 3. O Next.js busca somente embeddings com consentimento e aprovação.
-4. `/process-photo` detecta todos os rostos e encontra o melhor match.
-5. Apenas matches aceitos voltam como sugestões.
-6. O Next.js grava cada resultado como `pending` em
+4. `/process-photo` detecta todos os rostos e encontra o melhor match disponível.
+5. Rostos conhecidos e desconhecidos voltam como sugestões privadas.
+6. O Next.js grava cada detecção como `pending` em
    `face_detection_suggestions`.
 7. A foto fica `needs_review`, `processed` ou `error`.
 
 Nenhum passo cria `photo_player_tags`. Essa tabela só é alterada pela decisão
 humana em `/admin/fotos/revisao`.
+
+## Aprendizado supervisionado
+
+Quando um rosto não possui correspondência, a fila mostra **Rosto sem
+identificação**. Ao escolher manualmente um jogador:
+
+1. a marcação confirmada é criada em `photo_player_tags`;
+2. o embedding privado daquela detecção é vinculado ao jogador;
+3. `player_face_references` registra foto, bounding box e sugestão de origem;
+4. processamentos posteriores passam a comparar contra essa nova referência.
+
+O sistema não altera pesos do InsightFace. O “aprendizado” é a expansão
+controlada do conjunto de embeddings revisados por humanos.
 
 ## Métrica e calibração
 

@@ -5,13 +5,17 @@
 1. A imagem existe no Storage ou em uma origem permitida pelo servidor.
 2. A tabela `photos` possui um registro com `id`, `slug`, `url`, categoria e status.
 3. Fotos `not_processed`, `queued` ou `error` entram na fila.
-4. O microserviço InsightFace retorna sugestões e o Next.js as grava em
+4. O microserviço InsightFace retorna todos os rostos, identificados ou não, e o Next.js os grava em
    `face_detection_suggestions`.
 5. Um administrador confirma, troca ou ignora cada sugestão.
 6. Confirmar ou trocar faz upsert em `photo_player_tags` com
    `tag_type = ai_confirmed` e `confirmed_by_admin = true`.
 7. O site público consulta as relações por UUID e mostra somente fotos públicas
    e tags confirmadas.
+
+Quando a IA não reconhecer alguém, use **Identificar como** na fila. Essa
+decisão cria também uma referência supervisionada privada; as próximas fotos
+podem reconhecer o jogador a partir desse embedding confirmado.
 
 Nenhuma sugestão pendente é publicada automaticamente.
 

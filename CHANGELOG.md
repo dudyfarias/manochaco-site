@@ -11,6 +11,9 @@
 - Admin de reconhecimento passa a exibir health, URL, modelo, total de embeddings, fila e teste de conexão.
 - Lote limitado por `FACE_RECOGNITION_BATCH_LIMIT`, com relatório de processadas, sugestões, fotos sem rosto e erros.
 - Calibração inicial com três referências reais do DUDU e correção do aceite para similaridade de cosseno.
+- Container preparado para porta dinâmica do Render e carregamento apenas dos módulos de detecção e reconhecimento.
+- Rostos desconhecidos passam a entrar na revisão e a identificação manual gera uma nova referência privada para reconhecimentos futuros.
+- Novas referências herdam a autorização exigida no cadastro do jogador, preservando revogação e auditoria.
 - Teste real do `buffalo_l` detectou 11 rostos na imagem coletiva usada para validação local.
 - Documentação de arquitetura, setup, deploy separado, LGPD, Storage e segurança atualizada.
 
